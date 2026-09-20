@@ -310,6 +310,12 @@ No `TZ` is set. Every rendered date goes through `params.spectrum.timezone`
 rather than the build machine's zone, so the deploy and CI agree by
 construction.
 
+`/css/` and `/fonts/` are served `immutable` for a year. Both are fingerprinted
+with the sha256 of their own contents, so a change produces a different URL
+rather than different bytes at the same one, and the cache can never be stale.
+The security headers are the ordinary ones; there is deliberately no CSP, because
+the footer ships an inline `<script>` and a policy worth having needs its hash.
+
 ## Checks
 
 ```
