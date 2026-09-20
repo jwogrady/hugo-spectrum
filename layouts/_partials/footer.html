@@ -189,9 +189,16 @@
   /* ── the selector ──────────────────────────────────────────────────── */
   var picker = document.querySelector('.clock__zones');
   var buttons = picker ? [].slice.call(picker.querySelectorAll('[data-tz]')) : [];
+  /* Pressed means "this button is showing the time on screen", not "this is
+     the button you clicked" — so every zone agreeing with the current one
+     lights, and a reader never sees Local dark beside a CT that reads the
+     same. They are toggles, not a radio group, so more than one being on is
+     what it says it is. */
   function mark() {
+    var cur = zoneOf(tz);
     buttons.forEach(function (b) {
-      b.setAttribute('aria-pressed', String(b.getAttribute('data-tz') === tz));
+      b.setAttribute('aria-pressed',
+        String(sameWall(zoneOf(b.getAttribute('data-tz')), cur)));
     });
   }
   buttons.forEach(function (b) {
