@@ -1,0 +1,38 @@
+{{- /*
+  The banner plate.
+
+    page  the page (required)
+
+  The pool is a page bundle named by site.Params.spectrum.banners — the plates
+  gallery, in the demo. A page can name its own image with `banner = "x.png"`
+  in front matter, resolved against its own bundle.
+
+  Which plate a page gets is derived from the page's own permalink rather than
+  shuffled. `shuffle` and `seq | shuffle` both re-roll on every build, so the
+  same commit would publish a different banner each time it was built and the
+  determinism check would be the only thing that noticed. A hash of the path
+  is stable for a page, different between pages, and free.
+
+  Cropped rather than scaled: a banner is a band, and the plates are 1.6:1.
+  Fill takes the centre so a tall source cannot letterbox the band.
+*/ -}}
+{{- $p := .page -}}
+{{- $img := false -}}
+{{- with $p.Params.banner }}{{ $img = $p.Resources.GetMatch . }}{{ end -}}
+{{- if not $img -}}
+  {{- with site.Params.spectrum.banners -}}
+    {{- with site.GetPage . -}}
+      {{- $pool := .Resources.ByType "image" -}}
+      {{- if $pool -}}
+        {{- $img = index $pool (mod (hash.FNV32a $p.RelPermalink) (len $pool)) -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- with $img }}
+{{- $b := .Process "fill 1400x420 center webp q82" }}
+<img class="hero__plate" src="{{ $b.RelPermalink }}"
+     width="{{ $b.Width }}" height="{{ $b.Height }}"
+     alt="{{ with .Params.alt }}{{ . }}{{ else }}{{ or .Title .Name }}{{ end }}"
+     loading="eager" decoding="async">
+{{- end }}

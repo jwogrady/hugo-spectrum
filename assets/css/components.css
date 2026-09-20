@@ -241,6 +241,14 @@
 /* The banner headline. It is the same head object as every other, set
    large — a hero that hand-rolled its own <h1> would be the fifth
    implementation of the thing this partial exists to hold. */
+/* The banner plate: a band across the frame, above the headline. Text is not
+   set over it — the palettes guarantee their contrast against a surface
+   token, and nothing can guarantee it against a photograph. */
+.hero__plate {
+  display: block; width: 100%; height: auto;
+  border-radius: var(--radius-panel);
+  margin-bottom: var(--space-section);
+}
 .hd--hero .hd__title { font-size: var(--size-4xl); line-height: var(--lh-tight); }
 .hd--panel {
   background: var(--band); color: var(--band-ink);

@@ -3,11 +3,16 @@
 **A field manual for work that has to be read, not skimmed.**
 
 Spectrum is a Hugo theme for sites whose substance is text: a journal, a
-catalog of what you do, a set of standing pages. It assumes nobody is going
-to be tempted into reading by a hero image, and that the way to make dense
-prose compelling is to give it the apparatus of a publication — dated,
+catalog of what you do, a set of standing pages. It assumes no entry is going
+to be read because of a picture at the top of it, and that the way to make
+dense prose compelling is to give it the apparatus of a publication — dated,
 numbered, ruled, findable — and then to spend the interest budget on the
 index rather than on the page.
+
+That is a claim about the journal, where the reader has already arrived. A
+front door is a different job: the hero and landing layouts carry a banner
+plate, because a page whose work is to make someone stay has to do something
+in the first screen.
 
 The index is where that budget goes. Every subject carries a colour derived
 from how often it is used, so a table of fifty entries is legible as a field
@@ -108,8 +113,12 @@ still sums to 72rem. It costs reading width — 29.53rem is under the 34rem
 measure — which is the trade: two columns of apparatus are only worth it when
 the apparatus is the point.
 
-The hero is a banner made of type, rule and space. There is no image slot and
-it does not break the frame; see the first paragraph of this README for why.
+The hero is a banner plate above a large headline. The plate is drawn from a
+page bundle named by `spectrum.banners`, chosen per page from a hash of the
+page's own path — not shuffled, so a commit builds the same banner every time.
+A page can name its own with `banner = "x.png"`. Text is never set over the
+plate: the palettes guarantee contrast against a surface token and nothing can
+guarantee it against a photograph. The band keeps the frame.
 A landing page carries its bands in front matter rather than markup, like the
 contact form, because a landing page is data.
 

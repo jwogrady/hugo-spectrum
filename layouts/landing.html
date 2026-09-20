@@ -17,6 +17,7 @@
           title = "..."  url = "/..."  blurb = "..."
   */ -}}
   <div class="hero">
+    {{ partial "banner.html" (dict "page" .) }}
     {{ partial "heading.html" (dict "title" .Title "level" 1 "variant" "hero") }}
     {{- with .Params.standfirst }}<p class="hero__standfirst">{{ . }}</p>{{ end }}
   </div>
