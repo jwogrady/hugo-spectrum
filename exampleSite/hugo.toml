@@ -60,7 +60,6 @@ timeZone = 'America/Chicago'
   palette    = ''                    # '' default, 'ultraviolet' for the preset
   timezone   = 'America/Chicago'     # must equal timeZone above
   copyright  = 'Status26, Inc.'                    # the entity, where owner is the masthead name
-  footerNote = 'Set in Source Serif 4 and Public Sans.'
   banners    = '/plates'            # the pool the hero and landing banners draw from
   disallow   = ['/r/']              # citation handles resolve, but are not indexed
 
