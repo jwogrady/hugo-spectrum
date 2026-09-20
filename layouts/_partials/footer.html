@@ -25,10 +25,15 @@
              the frame a reader already looks for something other than the
              publication's own voice. */ -}}
       {{- if ne site.Params.spectrum.themeCredit false }}
+      {{- /* Two lines by construction, not by luck. One sentence of seventy
+             characters carrying three links, ranged right in a 17rem column,
+             breaks wherever the column runs out — it was splitting
+             "MIT-licensed" from "Hugo" and straddling the break with an
+             underline. Each line is a whole clause now and holds its own
+             links: what it is on the first, what it costs on the second. */ -}}
       <p class="hint site-foot__about"><a href="https://github.com/jwogrady/hugo-pulse-spectrum">Spectrum</a>
-        is an open-source,
-        <a href="https://github.com/jwogrady/hugo-pulse-spectrum/blob/master/LICENSE">MIT-licensed</a>
-        <a href="https://gohugo.io/">Hugo</a> theme for growth hackers.</p>
+        &mdash; a <a href="https://gohugo.io/">Hugo</a> theme for growth hackers<br>
+        Open source, <a href="https://github.com/jwogrady/hugo-pulse-spectrum/blob/master/LICENSE">MIT-licensed</a></p>
       {{- end }}
     </div>
   </div>

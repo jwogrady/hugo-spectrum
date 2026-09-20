@@ -254,10 +254,9 @@ figcaption { margin-top: var(--space-tight); font-size: var(--size-xs); color: v
 }
 /* One pair of lines, set as a pair: the hair step, not the tight one. */
 .site-foot__credit { margin-top: var(--space-hair); }
-/* Balanced, so the two lines come out close to even instead of breaking
-   after "MIT-licensed" and leaving "Hugo" to start the second line alone.
-   Ragged-left only reads as deliberate when the rag is shallow. */
-.site-foot__about { margin-top: 0; text-wrap: balance; }
+/* The breaks are in the markup now, so balance has nothing left to improve
+   and would only fight them at the widths where a clause still wraps. */
+.site-foot__about { margin-top: 0; }
 
 /* The foot speaks quietly, and its links speak in its voice.
    Three amber links in one sentence made the right column louder than the
