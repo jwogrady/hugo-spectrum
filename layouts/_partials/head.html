@@ -30,6 +30,10 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin href="{{ partial "fonturl.html" . }}">
   {{- end }}
 
+  {{- /* Structured data last: it restates in machine terms what the tags
+         above state for a preview card, and it is the longest thing here. */ -}}
+  {{ partial "schema.html" . }}
+
   {{- with .OutputFormats.Get "rss" }}
   <link rel="alternate" type="application/rss+xml" href="{{ .RelPermalink }}" title="{{ site.Title }}">
   {{- end }}

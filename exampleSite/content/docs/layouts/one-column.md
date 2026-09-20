@@ -1,6 +1,6 @@
 +++
 title   = "One column"
-weight  = 10
+weight = 10
 columns = "one"
 +++
 

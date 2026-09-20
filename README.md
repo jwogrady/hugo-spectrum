@@ -107,6 +107,7 @@ changes it, so the outer edges sit in the same place everywhere.
 | three columns | 29.53 + 17 + 17 | reference material that is consulted, not read |
 | hero | 72rem | a page that must announce itself before it explains itself |
 | landing | 72rem | a front door: a set of routes, not a document |
+| conversion | 72rem | products, services and booking — a page that asks for something |
 
 The third column is the aside again rather than a new width, so the frame
 still sums to 72rem. It costs reading width — 29.53rem is under the 34rem
@@ -130,6 +131,33 @@ clock's zone selector on the right — so a headline does not drop by the
 trail's height the moment a page is nested, and the panels do not rise on
 pages that have no selector. Navigating changes the contents of the columns
 and nothing else.
+
+## Structured data
+
+Every page carries a JSON-LD graph. It is built as Hugo maps and handed to
+`jsonify`, never written out as JSON in a template — a title like
+`The "drift" problem` ends a hand-written string early and silently drops the
+whole graph.
+
+The graph always names the publication and the page. What else it carries is
+keyed off the front matter the page declares, so the page a reader sees and
+the graph a crawler reads are built from one source and cannot drift:
+
+| front matter | graph |
+|---|---|
+| a dated entry in `posts` | `BlogPosting`, with its tags as keywords and its citation handle as `identifier` |
+| a page inside a branch | `TechArticle` |
+| `sku` | `Product` with `Offer`, and `AggregateRating` if `rating` is set |
+| `serviceType` | `Service` with `Offer`, `areaServed` and the site as `provider` |
+| `bookingUrl` | the `Service` gains a `ReserveAction` with an `EntryPoint` |
+| `faq` | `FAQPage`, from the same list the page renders |
+| `form` | `ContactPage` |
+| any nested page | `BreadcrumbList`, from the same ancestry the visible trail uses |
+
+The block is `safeJS`. Without it Go's `html/template` treats the script body
+as JavaScript and quotes the whole document, so the page carries a JSON
+*string* whose value is the graph. It parses, round-trips and validates —
+which is why `check.sh` asserts the shape rather than the validity.
 
 ## The ratio
 
@@ -165,7 +193,8 @@ still tells a screen reader which day its row belongs to.
 
 ## JavaScript
 
-One script, ~4KB, inline in the footer. It runs the mission clock and lets
+One executable script, ~4KB, inline in the footer. The JSON-LD block is a
+`<script>` element that runs nothing, and the check counts accordingly. It runs the mission clock and lets
 the reader put the publication into another zone. It is an upgrade to markup
 that already renders correctly: with scripting off, the clock shows the date
 the publication last changed and the zone selector is not offered, because a
@@ -207,9 +236,14 @@ the index, the spectrum or the date archive.
 three child pages, with the aside carrying the branch on every page in it and
 the current page marked. Order comes from `weight`, not the filename.
 
-**Patterns** is one page per layout — one column, two, three, hero and landing
-— each built with the layout it documents, so the three-column page really has
-three columns.
+**Patterns** is the third shape: conversion pages. A product with an offer and
+a rating, a service, a booking with a reservable action, and a landing page
+routing to all three. Each declares what it is in front matter, and that one
+declaration builds both the page and its structured data.
+
+The layout reference lives under Docs, at `/docs/layouts/`, where each page is
+built with the layout it documents — and where the branch nests two levels
+deep, which is what the child navigation is for.
 
 Also a page-bundle gallery, a contact form built from front matter, the masthead
 menu, and a citation handle resolving at `/r/26-002/`. The plate images are

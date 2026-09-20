@@ -1,0 +1,8 @@
+{{- /* The closing ask. A conversion page that states its action once, at the
+       top, asks a reader who has just finished reading to scroll back up. */ -}}
+{{- with .page.Params.cta }}
+<div class="cta">
+  {{- with $.page.Params.ctaLine }}<p class="cta__line">{{ . }}</p>{{ end }}
+  <a class="btn" href="{{ .url | relURL }}">{{ .label }}</a>
+</div>
+{{- end }}

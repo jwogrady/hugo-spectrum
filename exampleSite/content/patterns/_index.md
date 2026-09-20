@@ -1,12 +1,13 @@
 +++
 title       = "Patterns"
-description = "The five layouts the theme ships, each on a page built with it."
+description = "Conversion pages: products, services, booking, and the landing page that routes to them."
 +++
 
-Five stock layouts. Each page below is built with the layout it describes, so
-what you are reading is also the demonstration — the three-column page really
-has three columns, the banner page really carries a banner.
+The third shape. The journal is time-series, sorted by taxonomy; docs are
+hierarchical; these are the pages that ask for something.
 
-The frame never changes. Every layout fills the same 72rem band, so the outer
-edges of the page sit in the same place whichever one you are on, and
-navigating between them moves the contents of the columns and nothing else.
+Each one declares what it is in front matter, and that declaration builds both
+the page and its structured data — a `sku` makes a Product with an Offer, a
+`serviceType` makes a Service, a `bookingUrl` makes a Service you can reserve.
+The page a reader sees and the graph a crawler reads come from one source, so
+they cannot drift apart.

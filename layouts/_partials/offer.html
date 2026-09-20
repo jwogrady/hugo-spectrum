@@ -1,0 +1,23 @@
+{{- /*
+  The offer: price, availability and the one action the page is asking for.
+
+  The same object whether a product, a service or a booking carries it —
+  which is the point. Three layouts with three price blocks is how the
+  currency ends up formatted two ways on one site.
+
+    page  the page (required)
+*/ -}}
+{{- $p := .page -}}
+{{- with $p.Params.price }}
+<div class="offer">
+  <p class="offer__price">
+    <span class="offer__amount">{{ with $p.Params.currencySymbol }}{{ . }}{{ end }}{{ . }}</span>
+    {{- with $p.Params.unit }}<span class="offer__unit">per {{ . }}</span>{{ end }}
+  </p>
+  {{- with $p.Params.availability }}<p class="offer__avail">{{ humanize (replaceRE "([a-z])([A-Z])" "$1 $2" .) }}</p>{{ end }}
+  {{- with $p.Params.cta }}
+  <a class="btn" href="{{ .url | relURL }}">{{ .label }}</a>
+  {{- end }}
+  {{- with $p.Params.offerNote }}<p class="hint">{{ . }}</p>{{ end }}
+</div>
+{{- end }}

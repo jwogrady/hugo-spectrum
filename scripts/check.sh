@@ -505,12 +505,18 @@ txt = " ".join(re.sub(r"<[^>]+>", " ", m.group(1)).split()) if m else ""
 # configurable and CST reads CDT for half the year.
 real  = bool(re.fullmatch(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} [A-Z]{2,5}", txt))
 shape = len(txt) == len("2026-09-19 14:32:07 UTC")
-n = sum(f.read_text().count("<script") for f in pathlib.Path(sys.argv[2]).rglob("*.html"))
+# Executable scripts only. A JSON-LD block is a <script> element that runs
+# nothing — counting it made the theme look like it had grown a second
+# script when what it had grown was structured data. The claim being
+# defended is "the clock is the only code that runs", so that is what is
+# counted, and a real second script still trips it.
+n = sum(len(re.findall(r'<script(?![^>]*application/ld\+json)', f.read_text()))
+        for f in pathlib.Path(sys.argv[2]).rglob("*.html"))
 print(f"{1 if real else 0} {1 if shape else 0} {n}")
 PYEOF
 )"
 if [ "${stamp:-0}" -eq 1 ] && [ "${shape:-0}" -eq 1 ] && [ "${n:-9}" -eq 1 ]
-then ok "clock degrades to a real served timestamp (1 script in the theme)"
+then ok "clock degrades to a real served timestamp (1 executable script in the theme)"
 else no "clock fallback broken (real=$stamp same-shape=$shape scripts=$n)"; fi
 
 # Dated records are grouped by day, each group headed by a sticky date that
@@ -939,6 +945,47 @@ unused="$( (cd "$THEME" && hugo --source exampleSite --themesDir ../.. \
 if [ -z "$unused" ]
 then ok "every template the theme ships is exercised by the content"
 else no "templates never reached: $(printf '%s' "$unused" | tr '\n' ' ')"; fi
+
+# Structured data. Validity is not the assertion — the interesting failure
+# parses. Go's html/template treats a <script> body as JavaScript, so jsonify
+# without safeJS ships a JSON *string* whose value is the document: it loads,
+# it round-trips, and every consumer reads a string where a graph should be.
+# So the check is on shape: an object, with a @graph of objects.
+#
+# $TMP/ut is the exampleSite build the unused-template check just made.
+read -r blocks bad kinds <<<"$(python3 - "$TMP/ut" <<'PYEOF'
+import json, re, sys, pathlib, html
+root = pathlib.Path(sys.argv[1]); blocks = 0; bad = []; kinds = set()
+for f in sorted(root.rglob("*.html")):
+    for m in re.finditer(r'<script type="application/ld\+json">(.*?)</script>',
+                         f.read_text(errors="replace"), re.S):
+        blocks += 1
+        where = f.relative_to(root).parent
+        try:
+            d = json.loads(html.unescape(m.group(1)))
+        except Exception:
+            bad.append(f"{where}:unparseable"); continue
+        if not isinstance(d, dict):
+            bad.append(f"{where}:double-encoded"); continue
+        g = d.get("@graph")
+        if not isinstance(g, list) or not g:
+            bad.append(f"{where}:no-graph"); continue
+        for node in g:
+            if not isinstance(node, dict):
+                bad.append(f"{where}:graph-node-{type(node).__name__}"); break
+            kinds.add(node.get("@type"))
+        # Every page states the publication it belongs to.
+        if not {"Organization", "WebSite"} <= {n.get("@type") for n in g if isinstance(n, dict)}:
+            bad.append(f"{where}:no-publisher")
+print(blocks, len(bad), len(kinds))
+if bad: print(" ".join(sorted(set(bad))[:4]), file=sys.stderr)
+PYEOF
+)"
+# Fails when it matches nothing: a build that stopped emitting schema entirely
+# would otherwise report zero failures and pass.
+if [ "${blocks:-0}" -gt 0 ] && [ "${bad:-1}" -eq 0 ] && [ "${kinds:-0}" -ge 6 ]
+then ok "every page carries a well-formed schema graph ($blocks blocks, $kinds types)"
+else no "schema broken ($bad bad of ${blocks:-0}, ${kinds:-0} types)"; fi
 
 echo
 printf "  %d passed, %d failed\n" "$pass" "$fail"

@@ -1,0 +1,125 @@
+{{- /*
+  Structured data: one JSON-LD graph per page.
+
+  Built as Hugo maps and handed to jsonify rather than written out as JSON in
+  the template. Hand-written JSON-LD is how a stray quote in a title silently
+  invalidates every page that has one — a title like `The "drift" problem`
+  ends the string early and the whole graph is dropped. jsonify escapes.
+
+  The graph always carries the publication and the page. Everything else is
+  keyed off what the page actually is, so a page declares its type by the
+  front matter it carries, not by a switch in here that has to know every
+  section name a site might invent.
+
+    product  sku, brand, price, currency, availability, rating
+    service  serviceType, areaServed, price
+    booking  bookingUrl, and the service fields
+    faq      [{q, a}] — becomes an FAQPage on any page that has one
+*/ -}}
+{{- $site := site -}}
+{{- $p := . -}}
+{{- $org := dict "@type" "Organization" "@id" (printf "%s#organization" $site.BaseURL)
+      "name" (or $site.Params.spectrum.owner $site.Title) "url" $site.BaseURL -}}
+{{- $web := dict "@type" "WebSite" "@id" (printf "%s#website" $site.BaseURL)
+      "url" $site.BaseURL "name" $site.Title "publisher" (dict "@id" (printf "%s#organization" $site.BaseURL)) -}}
+{{- with $site.Params.description }}{{ $web = merge $web (dict "description" .) }}{{ end -}}
+{{- $graph := slice $org $web -}}
+
+{{- /* The breadcrumb, from the same ancestry the visible trail uses, so the
+       two can never disagree about where a page sits. */ -}}
+{{- $crumbs := slice -}}
+{{- $n := 1 -}}
+{{- range $p.Ancestors.Reverse }}
+  {{- $crumbs = $crumbs | append (dict "@type" "ListItem" "position" $n "name" (or .LinkTitle .Title) "item" .Permalink) -}}
+  {{- $n = add $n 1 -}}
+{{- end -}}
+{{- if gt (len $crumbs) 1 }}
+  {{- $crumbs = $crumbs | append (dict "@type" "ListItem" "position" $n "name" (or $p.LinkTitle $p.Title) "item" $p.Permalink) -}}
+  {{- $graph = $graph | append (dict "@type" "BreadcrumbList" "@id" (printf "%s#breadcrumb" $p.Permalink) "itemListElement" $crumbs) -}}
+{{- end -}}
+
+{{- /* The page itself. A dated entry is a BlogPosting; a page in a branch is
+       a TechArticle; a list is a CollectionPage; anything else is a WebPage. */ -}}
+{{- $kind := "WebPage" -}}
+{{- /* Layout wins over position. A product page inside a branch is not a
+       technical article because of where it is filed — it was typed
+       TechArticle for exactly that reason, and a Product node sat inside a
+       page claiming to be documentation. */ -}}
+{{- if eq $p.Layout "conversion" }}{{ $kind = "ItemPage" }}
+{{- else if eq $p.Layout "landing" }}{{ $kind = "WebPage" }}
+{{- else if and $p.IsPage (not $p.Date.IsZero) (eq $p.Section "posts") }}{{ $kind = "BlogPosting" }}
+{{- else if and $p.IsPage (partial "branch-root.html" $p) }}{{ $kind = "TechArticle" }}
+{{- else if not $p.IsPage }}{{ $kind = "CollectionPage" }}{{ end -}}
+{{- if $p.Params.form }}{{ $kind = "ContactPage" }}{{ end -}}
+{{- if eq $p.Layout "plates" }}{{ $kind = "ImageGallery" }}{{ end -}}
+
+{{- $node := dict "@type" $kind "@id" (printf "%s#page" $p.Permalink)
+      "url" $p.Permalink "name" (partial "page-title.html" $p)
+      "isPartOf" (dict "@id" (printf "%s#website" $site.BaseURL)) -}}
+{{- with or $p.Description $p.Summary }}{{ $node = merge $node (dict "description" (. | plainify | truncate 200)) }}{{ end -}}
+{{- if gt (len $crumbs) 1 }}{{ $node = merge $node (dict "breadcrumb" (dict "@id" (printf "%s#breadcrumb" $p.Permalink))) }}{{ end -}}
+{{- if not $p.Date.IsZero }}
+  {{- $node = merge $node (dict "datePublished" ($p.Date.Format "2006-01-02T15:04:05Z07:00")) -}}
+  {{- if not $p.Lastmod.IsZero }}{{ $node = merge $node (dict "dateModified" ($p.Lastmod.Format "2006-01-02T15:04:05Z07:00")) }}{{ end -}}
+{{- end -}}
+{{- if eq $kind "BlogPosting" }}
+  {{- $node = merge $node (dict "headline" $p.Title "author" (dict "@id" (printf "%s#organization" $site.BaseURL))
+        "publisher" (dict "@id" (printf "%s#organization" $site.BaseURL))
+        "mainEntityOfPage" (dict "@id" (printf "%s#page" $p.Permalink))) -}}
+  {{- with $p.Params.tags }}{{ $node = merge $node (dict "keywords" (delimit . ", ")) }}{{ end -}}
+  {{- with $p.Params.resolves }}{{ $node = merge $node (dict "identifier" .) }}{{ end -}}
+{{- end -}}
+{{- with $p.Params.featured_image }}{{ with $p.Resources.Get . }}{{ $node = merge $node (dict "image" .Permalink) }}{{ end }}{{ end -}}
+{{- $graph = $graph | append $node -}}
+
+{{- /* An offer is the same object whether a product or a service carries it. */ -}}
+{{- $offer := false -}}
+{{- with $p.Params.price }}
+  {{- $offer = dict "@type" "Offer" "price" (printf "%v" .) "priceCurrency" (default "USD" $p.Params.currency)
+        "availability" (printf "https://schema.org/%s" (default "InStock" $p.Params.availability)) "url" $p.Permalink -}}
+{{- end -}}
+
+{{- with $p.Params.sku }}
+  {{- $prod := dict "@type" "Product" "@id" (printf "%s#product" $p.Permalink) "name" $p.Title "sku" . "url" $p.Permalink -}}
+  {{- with $p.Description }}{{ $prod = merge $prod (dict "description" .) }}{{ end -}}
+  {{- with $p.Params.brand }}{{ $prod = merge $prod (dict "brand" (dict "@type" "Brand" "name" .)) }}{{ end -}}
+  {{- with $offer }}{{ $prod = merge $prod (dict "offers" .) }}{{ end -}}
+  {{- with $p.Params.rating }}
+    {{- $prod = merge $prod (dict "aggregateRating" (dict "@type" "AggregateRating"
+          "ratingValue" (printf "%v" .value) "reviewCount" (printf "%v" .count))) -}}
+  {{- end -}}
+  {{- $graph = $graph | append $prod -}}
+{{- end -}}
+
+{{- with $p.Params.serviceType }}
+  {{- $svc := dict "@type" "Service" "@id" (printf "%s#service" $p.Permalink) "name" $p.Title
+        "serviceType" . "url" $p.Permalink "provider" (dict "@id" (printf "%s#organization" $site.BaseURL)) -}}
+  {{- with $p.Description }}{{ $svc = merge $svc (dict "description" .) }}{{ end -}}
+  {{- with $p.Params.areaServed }}{{ $svc = merge $svc (dict "areaServed" .) }}{{ end -}}
+  {{- with $offer }}{{ $svc = merge $svc (dict "offers" .) }}{{ end -}}
+  {{- /* A booking page is a service you can act on. The action is what makes
+         it a booking rather than a description of one. */ -}}
+  {{- with $p.Params.bookingUrl }}
+    {{- $svc = merge $svc (dict "potentialAction" (dict "@type" "ReserveAction"
+          "target" (dict "@type" "EntryPoint" "urlTemplate" . "actionPlatform"
+            (slice "https://schema.org/DesktopWebPlatform" "https://schema.org/MobileWebPlatform"))
+          "result" (dict "@type" "Reservation" "name" $p.Title))) -}}
+  {{- end -}}
+  {{- $graph = $graph | append $svc -}}
+{{- end -}}
+
+{{- with $p.Params.faq }}
+  {{- $qs := slice -}}
+  {{- range . }}
+    {{- $qs = $qs | append (dict "@type" "Question" "name" .q
+          "acceptedAnswer" (dict "@type" "Answer" "text" .a)) -}}
+  {{- end -}}
+  {{- $graph = $graph | append (dict "@type" "FAQPage" "@id" (printf "%s#faq" $p.Permalink) "mainEntity" $qs) -}}
+{{- end -}}
+
+{{- /* safeJS, or Go's html/template treats the script body as JavaScript and
+       quotes the whole document: the page then carries a JSON *string* whose
+       value happens to be JSON, and every consumer reads a string where a
+       graph should be. It parses, which is why it has to be checked for
+       shape and not merely for validity. */ -}}
+<script type="application/ld+json">{{ (dict "@context" "https://schema.org" "@graph" $graph) | jsonify | safeJS }}</script>

@@ -182,6 +182,53 @@
   color: var(--ink-faint); margin: var(--space-item) 0 0;
 }
 
+/* ── conversion · offer, features, questions, ask ─────────────────────
+   A product page, a service page and a booking page are one arrangement
+   with different front matter, so they are one set of rules. The offer and
+   the cards reuse the panel's border, radius and padding — a headed box in
+   this theme is already one object and this is not a second one. */
+.offer {
+  border: var(--rule-hair) solid var(--rule);
+  border-radius: var(--radius-panel);
+  background: var(--surface-raised);
+  padding: var(--panel-pad);
+  margin-bottom: var(--space-section);
+  display: grid; gap: var(--space-tight); justify-items: start;
+}
+.offer__price { margin: 0; display: flex; align-items: baseline; gap: var(--space-tight); }
+.offer__amount { font-size: var(--size-3xl); line-height: var(--lh-tight); }
+.offer__unit, .offer__avail {
+  font-size: var(--size-xs); line-height: var(--lh-label);
+  color: var(--ink-faint); margin: 0;
+}
+
+.features {
+  display: grid; gap: var(--space-item);
+  grid-template-columns: repeat(auto-fit, minmax(var(--col-aside), 1fr));
+  list-style: none; margin: 0 0 var(--space-section); padding: 0;
+}
+.features__item {
+  border-top: var(--rule-bold) solid var(--rule-strong);
+  padding-top: var(--space-tight);
+}
+.features__title { font-size: var(--size-base); line-height: var(--lh-title); margin: 0; }
+.features__body {
+  font-size: var(--size-sm); line-height: var(--lh-body);
+  color: var(--ink-soft); margin: var(--space-tight) 0 0;
+}
+
+.faq { margin-bottom: var(--space-section); }
+.faq__list { margin: 0; }
+.faq__q { font-weight: var(--weight-label); margin-top: var(--space-block); }
+.faq__a { margin: var(--space-tight) 0 0; color: var(--ink-soft); max-width: var(--measure); }
+
+.cta {
+  border-top: var(--rule-bold) solid var(--rule-strong);
+  padding-top: var(--space-block);
+  display: grid; gap: var(--space-tight); justify-items: start;
+}
+.cta__line { margin: 0; font-size: var(--size-lg); line-height: var(--lh-snug); }
+
 /* ── the landing · sections, not a page ───────────────────────────────
    A landing page is a set of routes, so it is built from bands rather
    than from prose: each band states one thing and points somewhere. The

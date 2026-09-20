@@ -1,6 +1,6 @@
 +++
 title      = "Hero banner"
-weight     = 40
+weight = 40
 layout     = "hero"
 standfirst = "A banner plate over a large headline, for a page whose job is to make someone stay."
 note       = "One column, always. A banner with a sidebar beside it is two claims on the same attention."

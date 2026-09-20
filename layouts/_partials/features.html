@@ -1,0 +1,13 @@
+{{- /* What the thing does, as claims a reader can check. Declared in front
+       matter so the page is data, like the contact form and the landing
+       bands.  features = [{title, body}] */ -}}
+{{- with .page.Params.features }}
+<ul class="features">
+  {{- range . }}
+  <li class="features__item">
+    <h3 class="features__title">{{ .title }}</h3>
+    {{- with .body }}<p class="features__body">{{ . }}</p>{{ end }}
+  </li>
+  {{- end }}
+</ul>
+{{- end }}

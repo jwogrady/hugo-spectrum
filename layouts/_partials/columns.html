@@ -7,7 +7,7 @@
     two   journal index and tag results  — records plus the subject field
           contact                        — the form plus its guidance
           a hierarchical page branch     — content plus child navigation
-    one   plates, single entries, flat pages, hero and landing
+    one   plates, single entries, flat pages, hero, landing, conversion
 
   Posts are flat and dated, so an entry is one column. Pages nest, so a
   page inside a branch gets the branch's navigation beside it.
@@ -28,7 +28,7 @@
 */ -}}
 {{- with .Params.columns }}{{ return . }}{{ end -}}
 {{- if eq .Layout "reference" }}{{ return "three" }}{{ end -}}
-{{- if or (eq .Layout "hero") (eq .Layout "landing") }}{{ return "one" }}{{ end -}}
+{{- if or (eq .Layout "hero") (eq .Layout "landing") (eq .Layout "conversion") }}{{ return "one" }}{{ end -}}
 {{- $two := false -}}
 {{- if or .IsHome (eq .Kind "term") (isset .Params "form") }}{{ $two = true }}{{ end -}}
 {{- with partial "branch-root.html" . }}{{ $two = true }}{{ end -}}
