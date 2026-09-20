@@ -27,3 +27,11 @@ full-bleed figure has less room than it would alone.
 Automatic: the home page, any term page, anything with a `form`, and any page
 inside a hierarchical branch. This page is in one, so it has the branch beside
 it and chose two columns without being told.
+
+A page outside a branch — an entry, a flat standing page — is one column by
+default and takes this one when `params.spectrum.entryAside` is set. It gets
+the journal's own panels rather than child navigation, because it has no
+children to navigate. See [One column]({{< ref "one-column" >}}) for when
+that is the wrong trade.
+
+Any page overrides all of it with `columns` in its own front matter.
