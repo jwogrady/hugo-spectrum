@@ -717,7 +717,24 @@
      field. Specificity carries it over the bloom above, so the current
      subject casts even when it is also the apex. */
   .tag-signal[aria-current="page"] .tag-signal__name {
-    text-shadow: var(--rule-bold) var(--rule-bold) 0 oklch(var(--_l) var(--_c) var(--_h) / 0.42);
+    /* Darker than the word it falls from, not merely more transparent. At
+       the word's own lightness it read as a flat echo — the same colour
+       twice, offset — which is a duplicate rather than a depth cue. Taking
+       the lightness down to 0.45 of the subject's own puts the cast behind
+       it in both directions.
+
+       Clamped, not merely scaled. A plain multiple of the subject's own
+       lightness works on paper and inverts on field black: the dark
+       palettes set their apex at 0.95, so 0.45 of it is 0.43 — lighter than
+       the 0.18 surface it falls on, which is a halo and not a shadow. The
+       ceiling sits under the darkest raised surface in any palette (0.18),
+       so the cast is below its ground in all six.
+
+       Chroma comes down slightly with it. A shadow at full chroma competes
+       with the subject for the same hue at the same strength, and the point
+       is that one of them is underneath. */
+    text-shadow: var(--rule-bold) var(--rule-bold) 0
+      oklch(min(calc(var(--_l) * 0.45), 0.16) calc(var(--_c) * 0.8) var(--_h) / 0.55);
   }
 }
 
