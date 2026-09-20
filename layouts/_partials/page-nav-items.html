@@ -1,0 +1,15 @@
+{{- /* One level of the branch, recursing into children. Depth is capped so a
+       cycle in the content tree cannot hang the build. */ -}}
+{{- $cur := .current -}}
+{{- $depth := .depth -}}
+<ul class="branch__list" data-depth="{{ $depth }}">
+  {{- range sort .pages "Weight" "asc" }}
+  {{- $on := eq . $cur }}
+  <li class="branch__item">
+    <a href="{{ .RelPermalink }}"{{ if $on }} aria-current="page"{{ end }}>{{ .LinkTitle }}</a>
+    {{- if and .Pages (lt $depth 4) }}
+    {{ partial "page-nav-items.html" (dict "pages" .Pages "current" $cur "depth" (add $depth 1)) }}
+    {{- end }}
+  </li>
+  {{- end }}
+</ul>

@@ -1,0 +1,9 @@
+{{- /*
+  An archive term rendered as the date it is. Terms are 2026, 2026-09 or
+  2026-09-19, and the generic term layout used to head all three "Tag —
+  2026-09", which names the wrong taxonomy and prints a machine key.
+*/ -}}
+{{- $t := .term -}}
+{{- if eq (len $t) 10 }}{{ (time.AsTime $t).Format "02 Jan 2006" | upper }}
+{{- else if eq (len $t) 7 }}{{ (time.AsTime (printf "%s-01" $t)).Format "January 2006" }}
+{{- else }}{{ $t }}{{ end -}}

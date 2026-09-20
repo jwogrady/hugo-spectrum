@@ -1,0 +1,34 @@
+{{- /* A date archive, nested year > month, the way a publication indexes its
+       back issues. Terms come from the `archives` taxonomy, which classifies
+       by when rather than by what — tags remain the only subject taxonomy. */ -}}
+{{- $terms := site.Taxonomies.archives -}}
+{{- if $terms }}
+{{- $years := slice -}}
+{{- range $t, $v := $terms }}{{ if eq (len $t) 4 }}{{ $years = $years | append $t }}{{ end }}{{ end -}}
+<section class="archive" aria-labelledby="archive-head">
+  {{ partial "heading.html" (dict "title" "Archive" "variant" "panel" "id" "archive-head") }}
+  <ol class="archive__years">
+    {{- range sort $years "value" "desc" }}
+      {{- $y := . }}
+      {{- $yt := index $terms $y }}
+      <li class="archive__year">
+        <a class="archive__ylink" href="{{ (printf "/archives/%s/" $y) | relURL }}">
+          <span>{{ $y }}</span><span class="archive__n">{{ len $yt }}</span>
+        </a>
+        <ol class="archive__months">
+          {{- range $m := seq 12 }}
+            {{- $key := printf "%s-%02d" $y $m }}
+            {{- with index $terms $key }}
+            <li>
+              <a href="{{ (printf "/archives/%s/" $key) | relURL }}">
+                <span>{{ (time (printf "%s-01T00:00:00Z" $key)).Format "January" }}</span><span class="archive__n">{{ len . }}</span>
+              </a>
+            </li>
+            {{- end }}
+          {{- end }}
+        </ol>
+      </li>
+    {{- end }}
+  </ol>
+</section>
+{{- end -}}

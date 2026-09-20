@@ -1,5 +1,40 @@
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width">
-<title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ printf "%s | %s" .Title site.Title }}{{ end }}</title>
-{{ partialCached "head/css.html" . }}
-{{ partialCached "head/js.html" . }}
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  {{- /* .Title here printed the raw taxonomy key in the tab. */ -}}
+  {{- $display := partial "page-title.html" . }}
+  {{- $title := cond .IsHome site.Title (printf "%s — %s" $display site.Title) }}
+  <title>{{ $title }}</title>
+  {{- with or .Description .Summary site.Params.description }}
+  <meta name="description" content="{{ . | plainify | truncate 160 }}">
+  {{- end }}
+  <link rel="canonical" href="{{ .Permalink }}">
+  {{- if .Params.noindex }}
+  <meta name="robots" content="noindex, nofollow">
+  {{- end }}
+  <meta name="color-scheme" content="light dark">
+
+  <meta property="og:type" content="{{ cond .IsPage "article" "website" }}">
+  <meta property="og:title" content="{{ $title }}">
+  <meta property="og:url" content="{{ .Permalink }}">
+  {{- with or .Description .Summary site.Params.description }}
+  <meta property="og:description" content="{{ . | plainify | truncate 200 }}">
+  {{- end }}
+
+  {{- /* Built once and cached: nothing in it varies by page. */ -}}
+  {{- $css := partialCached "stylesheet.html" . }}
+  <link rel="stylesheet" href="{{ $css.RelPermalink }}" integrity="{{ $css.Data.Integrity }}">
+
+  {{- range slice "fonts/source-serif-4-var.woff2" "fonts/public-sans-var.woff2" }}
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="{{ partial "fonturl.html" . }}">
+  {{- end }}
+
+  {{- /* Structured data last: it restates in machine terms what the tags
+         above state for a preview card, and it is the longest thing here. */ -}}
+  {{ partial "schema.html" . }}
+
+  {{- with .OutputFormats.Get "rss" }}
+  <link rel="alternate" type="application/rss+xml" href="{{ .RelPermalink }}" title="{{ site.Title }}">
+  {{- end }}
+</head>

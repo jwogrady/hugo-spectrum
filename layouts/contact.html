@@ -1,0 +1,63 @@
+{{ define "main" }}
+  {{ partial "page-head.html" (dict "page" .) }}
+  {{- $f := .Params.form }}
+  {{- if $f }}
+  {{- $name := default "contact" $f.name }}
+  <form class="form" method="POST"
+        name="{{ $name }}"
+        {{ with $f.action }}action="{{ . }}"{{ end }}
+        {{ if $f.netlify }}data-netlify="true" netlify-honeypot="{{ default "bot-field" $f.honeypot }}"{{ end }}
+        aria-describedby="form-note">
+
+    {{- /* Netlify needs the form name echoed as a field on the static build,
+           and the honeypot must be present but never reachable. */ -}}
+    {{- if $f.netlify }}
+    <input type="hidden" name="form-name" value="{{ $name }}">
+    <p hidden>
+      <label>Leave this empty
+        <input name="{{ default "bot-field" $f.honeypot }}" tabindex="-1" autocomplete="off">
+      </label>
+    </p>
+    {{- end }}
+
+    {{- range $i, $fl := $f.fields }}
+    {{- $id := printf "f-%s" $fl.name }}
+    <div class="field">
+      <label for="{{ $id }}">
+        {{- /* Marking every field "required" when every field is required is
+               noise on four labels. The exception carries the mark. */ -}}
+        <span>{{ $fl.label }}</span>
+        {{- if not $fl.required }} <span class="field__flag">optional</span>{{ end }}
+      </label>
+      {{- $desc := cond (ne (default "" $fl.hint) "") (printf "%s-hint" $id) "" }}
+      {{- if eq (default "text" $fl.type) "textarea" }}
+      <textarea id="{{ $id }}" name="{{ $fl.name }}" rows="{{ default 6 $fl.rows }}"
+                {{ if $fl.required }}required aria-required="true"{{ end }}
+                {{ with $desc }}aria-describedby="{{ . }}"{{ end }}
+                {{ with $fl.placeholder }}placeholder="{{ . }}"{{ end }}></textarea>
+      {{- else if eq $fl.type "select" }}
+      <select id="{{ $id }}" name="{{ $fl.name }}"
+              {{ if $fl.required }}required aria-required="true"{{ end }}
+              {{ with $desc }}aria-describedby="{{ . }}"{{ end }}>
+        {{- range $fl.options }}<option value="{{ . }}">{{ . }}</option>{{ end }}
+      </select>
+      {{- else }}
+      <input id="{{ $id }}" name="{{ $fl.name }}" type="{{ default "text" $fl.type }}"
+             {{ if $fl.required }}required aria-required="true"{{ end }}
+             {{ with $desc }}aria-describedby="{{ . }}"{{ end }}
+             {{ with $fl.autocomplete }}autocomplete="{{ . }}"{{ end }}
+             {{ with $fl.placeholder }}placeholder="{{ . }}"{{ end }}>
+      {{- end }}
+      {{- with $fl.hint }}<p class="hint" id="{{ $id }}-hint">{{ . }}</p>{{ end }}
+    </div>
+    {{- end }}
+
+    <p id="form-note" class="hint">{{ default "Required fields are marked." $f.note }}</p>
+    <button class="btn" type="submit">{{ default "Send" $f.submit }}</button>
+  </form>
+  {{- end }}
+{{ end }}
+
+{{ define "aside" }}
+  <div class="prose">{{ .Content }}</div>
+{{ end }}

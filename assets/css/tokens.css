@@ -1,0 +1,503 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   SPECTRUM — TOKENS
+   Two palettes, each with a paper (light) and field (dark) mode.
+
+     default      field black · warm manual paper · signal amber
+     ultraviolet  deep black · bone · ultraviolet as instrument light
+
+   Selection:
+     <html data-palette="ultraviolet">   pick a palette (default if absent)
+     <html data-theme="dark|light">      force a mode (else follows the OS)
+
+   Every text token below is measured against the background it actually sits
+   on and meets WCAG AA. Ratios are in the comments; they are not decoration,
+   they are the reason the value is what it is.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── type ─────────────────────────────────────────────────────────────── */
+  --font-serif: 'Source Serif 4', ui-serif, Georgia, 'Times New Roman', serif;
+  --font-sans:  'Public Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-data:  'Source Code Pro', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* ── the ratio ────────────────────────────────────────────────────────
+     One number governs the type scale, the space scale and the column
+     frame. Nothing below is chosen by eye; every value is this ratio
+     raised to an integer power, so any two steps stand in a stated
+     relationship and a new value cannot be invented on the spot.
+
+       phi       1.618034   the ratio itself
+       phi^1/2   1.272020   the space step — two steps make phi
+       phi^1/3   1.173985   the type step  — three steps make phi
+
+     Type steps finer than space steps because text needs intermediate
+     sizes and layout does not.                                          */
+
+  /* ── type · phi^(1/3) from 17px, the reading size ─────────────────────
+     The reading size is the tonic, not 16px: this is a publishing engine,
+     so the size prose is set at is the size everything else answers to.
+     Three steps apart is exactly phi — sm to lg, base to xl, lg to 2xl.   */
+  --size-2xs:  0.6567rem;  /* 10.51px — reference codes, table eyebrows   */
+  --size-xs:   0.7709rem;  /* 12.33px — meta, counts, captions            */
+  --size-sm:   0.9050rem;  /* 14.48px — table cells, nav                  */
+  --size-base: 1.0625rem;  /* 17.00px — body and prose, the tonic         */
+  --size-lg:   1.2474rem;  /* 19.96px — h3                                */
+  --size-xl:   1.4644rem;  /* 23.43px — h2                                */
+  --size-2xl:  1.7192rem;  /* 27.51px — section heads      = base x phi   */
+  --size-3xl:  2.0183rem;  /* 32.29px — h1                                */
+  --size-4xl:  2.3692rem;  /* 37.91px — top of the scale   = xl   x phi   */
+  /* The nameplate is --size-2xl, not 4xl. The comment here claimed the
+     nameplate long after the masthead stopped using it, which is how a
+     token file starts disagreeing with the stylesheet it governs.        */
+
+  /* UI body and prose were 16px and 17px — a one-pixel difference that read
+     as inconsistency rather than as distinction. They are one size now.   */
+  --size-prose: var(--size-base);
+
+  --lh-tight: 1.18;
+  --lh-title: 1.3;         /* serif titles at body scale                  */
+  --lh-label: 1.25;        /* uppercase band heads and eyebrows           */
+  --lh-snug:  1.35;
+  --lh-body:  1.65;
+  --lh-prose: 1.72;
+
+  --tracking-nameplate: -0.018em;
+  --tracking-heading:   -0.012em;
+  --tracking-eyebrow:    0.1em;   /* small caps-ish labels, table headers */
+  --tracking-title:     -0.006em; /* serif titles set at body scale       */
+  --tracking-ref:        0.02em;  /* reference codes, numerals, chip UI   */
+
+  /* ── weight · three, named by role ────────────────────────────────────
+     Every weight in the stylesheet is one of these. They were spelled as
+     literals and drifted to five values — 600, 650, 700, 800 and 400 —
+     so a band title was heavier than a table header doing the same job
+     and a button was heavier than the nav beside it.                     */
+  --weight-title: 600;   /* serif titles, nameplate, headings            */
+  --weight-label: 700;   /* uppercase labels, nav, table heads, buttons  */
+  --weight-quiet: 400;   /* counts, flags, and other secondary figures   */
+
+  /* One underline offset, everywhere. A link must not sit at a different
+     distance from its own text depending on which component it is in;
+     the theme had 0.16em in prose and 0.18em in five components.        */
+  --underline-offset: 0.18em;
+
+  /* ── space · phi^(1/2) from 16px ──────────────────────────────────────
+     The ladder is stated first, by index, so that every spacing value in
+     the stylesheet is a step on it and an off-ladder value is visible as
+     a raw number. check.sh fails the build on one.                       */
+  --s1:  0.1459rem;   /*  2.33px */
+  --s2:  0.1856rem;   /*  2.97px */
+  --s3:  0.2361rem;   /*  3.78px */
+  --s4:  0.3003rem;   /*  4.80px */
+  --s5:  0.3820rem;   /*  6.11px */
+  --s6:  0.4859rem;   /*  7.77px */
+  --s7:  0.6180rem;   /*  9.89px */
+  --s8:  0.7862rem;   /* 12.58px */
+  --s9:  1rem;        /* 16.00px   the anchor */
+  --s10: 1.2720rem;   /* 20.35px */
+  --s11: 1.6180rem;   /* 25.89px   = s9 x phi */
+  --s12: 2.0581rem;   /* 32.93px */
+  --s13: 2.6180rem;   /* 41.89px   = s9 x phi^2 */
+  --s14: 3.3302rem;   /* 53.28px */
+  --s15: 4.2361rem;   /* 67.78px   = s9 x phi^3 */
+  --s16: 5.3884rem;   /* 86.21px */
+  --s17: 6.8542rem;   /* 109.7px */
+  --s18: 8.7187rem;   /* 139.5px */
+
+  /* Breakpoints cannot be custom properties — a media query is evaluated
+     before the cascade — so they are stated here as the only literals the
+     stylesheet is allowed: 40 / 44 / 60 / 64 / 72rem.                     */
+
+  /* Roles name the steps the layout uses most. Reach for a role first; the
+     bare step is there for the cases a role would misname.               */
+  --space-hair:    var(--s6);
+  --space-tight:   var(--s7);
+  --space-row:     var(--s8);
+  --space-item:    var(--s9);
+  --space-block:   var(--s10);
+  /* Paragraph separation. Must exceed the gap between lines of the same
+     paragraph or blocks do not read as blocks: prose leading is
+     17 x 1.72 = 29.2px, and s11 sits at 0.89 of it, which separates.      */
+  --space-para:    var(--s11);
+  --space-section: var(--s13);
+  --space-major:  var(--s15);
+  /* Every bordered panel — the clock, the branch, the spectrum, the
+     archive — pads its body the same. They had three different paddings
+     for one job, so four boxes stacked in one sidebar did not line up
+     with each other. */
+  --panel-pad:    var(--space-row) var(--space-item);
+
+  /* ── the frame · derived from the page width, not chosen ──────────────
+     The aside is the page over phi cubed, which lands on 17rem exactly.
+     The main column is whatever the frame has left once the aside and the
+     gap are taken, so the two always sum to the frame and the band is the
+     same width on every page.                                            */
+  --page:      72rem;                 /* full publication width           */
+  --col-aside: 17rem;                 /* = 72 / phi^3 = 17.00             */
+  --col-gap:   var(--space-major);    /* 4.2361rem                        */
+  --col-main:  calc(var(--page) - var(--col-aside) - var(--col-gap));
+  /* Three columns take a second aside of the same width, so the frame is
+     main + gap + aside + gap + aside. Derived like the rest: the third
+     column is not a new width, it is the aside again, and the main column
+     is whatever is left. It lands at 29.53rem, which is under the 34rem
+     measure on purpose — a three-column page is for reference material
+     that is scanned, not prose that is read. */
+  --col-main-three: calc(var(--page) - (2 * var(--col-aside)) - (2 * var(--col-gap)));
+
+  /* The measure is the one width the ratio does not set. A reading column
+     is governed by character count, not by geometry: 34rem is ~64
+     characters at 17px. It is also exactly twice the aside, which is why
+     the two read as related.                                             */
+  --measure:       34rem;
+  --measure-tight: 43.25rem;          /* = 34 x phi^(1/2)                 */
+  --gutter:        var(--s10);
+  /* The masthead sticks, so everything else that sticks has to pin below
+     it. Derived from the same tokens the masthead is built from rather
+     than measured and typed in, so it cannot drift when the identity is
+     restyled: padding top and bottom, plus whichever is taller of the
+     crest and the two lines of the lockup. */
+  --masthead-lockup: calc(var(--size-2xl) * var(--lh-tight)
+                        + var(--s5)
+                        + var(--size-2xs) * var(--lh-label));
+  --masthead-h:      calc(var(--s11) * 2 + max(var(--s13), var(--masthead-lockup)));
+  /* The air between the masthead and anything pinned under it. This is the
+     only gap content can scroll through, so it is also the height of the
+     cover a pinned band has to carry. */
+  --sticky-gap:      var(--s9);
+  --sticky-top:      calc(var(--masthead-h) + var(--sticky-gap));
+  /* The time column holds five monospace glyphs, 09:00, and is a step on
+     the space ladder rather than a width measured off the glyphs — which
+     is what the reference and date columns were before they were merged,
+     7.5rem and 6.5rem apart for identical content. */
+  --col-time:      var(--s14);
+
+  /* ── rules and radii · a field manual has hairlines, not shadows ─────── */
+  --rule-hair: 1px;
+  --rule-bold: 2px;
+  --radius-chip: 2px;
+  --radius-panel: 3px;     /* deliberately near-square. Rounded cards read
+                              as SaaS; this is a publication.              */
+  --focus-width: 2px;
+  --focus-offset: 2px;
+  /* The apex glow's radius. How much of it a subject gets is per-subject,
+     from --tag-glow-max; how far it reaches is not, and was the one length
+     in the tag field spelled as a literal. */
+  --tag-glow-radius: 9px;
+
+  /* ── layering · four values, stated once ──────────────────────────────
+     Everything that overlaps something else in this theme is on this
+     list. They were bare integers scattered across two stylesheets, with
+     nothing to say whether 10 was above or below 20 on purpose.          */
+  --z-panel:    1;   /* the sticky sidebar panels                        */
+  --z-band:     2;   /* the sticky day head, above the panels            */
+  --z-masthead: 10;  /* opaque, above everything else that sticks        */
+  --z-skip:     20;  /* the skip link, above the masthead it skips       */
+
+  /* ── motion · one duration ────────────────────────────────────────── */
+  --motion-quick: 120ms;
+}
+
+/* ═══ PALETTE: default · PAPER ══════════════════════════════════════════ */
+:root {
+  --surface:        #F4F1EA;  /* warm manual paper                         */
+  --surface-raised: #FBF9F4;
+  --surface-sunken: #EDEAE1;
+  --band:           #191A17;  /* the black publication band                */
+  --band-ink:       #F4F1EA;
+
+  --ink:       #191A17;       /* 15.50:1                                   */
+  --ink-soft:  #54584C;       /*  6.47:1                                   */
+  --ink-faint: #666B5E;       /*  4.86:1                                   */
+  --ink-on-signal: #F4F1EA;
+
+  --rule:        #D5D0C4;
+  --rule-strong: #A8A294;
+
+  --signal:       #7A4A05;    /* restrained amber, ink-weight on paper     */
+  --signal-bright:#B4690E;
+  /* A filled control's hover. On paper it DARKENS, because --ink-on-signal
+     is the paper itself: hovering to --signal-bright dropped the button
+     label to 3.70:1, below AA, in the one palette that ships by default.  */
+  --signal-hover: var(--link-hover);
+
+  --link:         #7A4A05;    /*  6.63:1                                   */
+  --link-hover:   #5C3703;    /*  9.30:1                                   */
+  --link-active:  #3F2502;
+  --link-visited: #6B4A3A;
+
+  --focus:      #0B5FA5;      /* off-hue on purpose — never confusable
+                                 with the amber frequency signal           */
+
+  --disabled-ink:     #8C9083;
+  --disabled-surface: #EAE7DE;
+  --disabled-rule:    #D5D0C4;
+
+  /* frequency meter · on paper, prominence reads as density, not light.
+     Each level's text is measured against that level's own chip.          */
+  /* 4.56 */
+  /* 5.01 */
+  /* 5.41 */
+  /* 5.99 */
+  /* 7.88 */
+  /* no glow on paper. Paper doesn't glow. */
+  --freq-rule: #C9C2B0;
+
+  /* tag spectrum — signal amber apex, olive on one side, warm orange-red on the other
+     apex hue is the most-used subject; rarer subjects fan ±30° from it and
+     desaturate. Lightness runs rare→apex, so paper inverts it deliberately. */
+  --tag-apex-hue: 82;
+  /* lightness runs rare -> apex; the apex is near-white, not colored,
+     so the most-used subject reads as full illumination */
+  --tag-l-rare: 0.54;   --tag-l-apex: 0.22;
+  /* chroma is a BELL, not a climb: color emerges as a subject cools
+     away from the white apex, then recedes again as it fades out.
+     Black-body behavior — white hot, colored warm, dark cold. */
+  --tag-c-peak: 0.095;
+  --tag-glow-max: 0.0;
+}
+
+/* ═══ PALETTE: default · FIELD (dark) ══════════════════════════════════ */
+/* default · FIELD — OS dark, unless light is forced */
+@media (prefers-color-scheme: dark) {
+:root:not([data-palette="ultraviolet"]):not([data-theme="light"]) {
+  --surface:        #121410;  /* field black                               */
+  --surface-raised: #191C16;
+  --surface-sunken: #0D0F0B;
+  --band:           #0A0C08;
+  --band-ink:       #E8E4DA;
+
+  --ink:       #E8E4DA;       /* bone · 14.60:1                            */
+  --ink-soft:  #A0A596;       /*  7.34:1                                   */
+  --ink-faint: #8B9082;       /*  5.66:1 · muted olive-gray                */
+  --ink-on-signal: #121410;
+
+  --rule:        #2A2E26;
+  --rule-strong: #454B40;
+
+  --signal:       #E0A42A;    /* signal amber · 8.39:1                     */
+  --signal-bright:#F0BC55;
+  --signal-hover: var(--signal-bright);  /* on field black a fill brightens */
+
+  --link:         #E0A42A;
+  --link-hover:   #F0BC55;    /* 10.61:1                                   */
+  --link-active:  #FFD37A;
+  --link-visited: #C9A272;
+
+  --focus:      #6FB8FF;      /*  8.80:1 · off-hue                         */
+
+  --disabled-ink:     #6A6F63;
+  --disabled-surface: #191C16;
+  --disabled-rule:    #2A2E26;
+
+  /* 4.84 */
+  /* 5.59 */
+  /* 6.87 */
+  /* 8.17 */
+  /* 9.17 */
+  --freq-rule: #2F3328;
+
+  /* tag spectrum — signal amber apex on field black
+     apex hue is the most-used subject; rarer subjects fan ±42° from it and
+     desaturate. Lightness runs rare→apex, so paper inverts it deliberately. */
+  --tag-apex-hue: 82;
+  /* lightness runs rare -> apex; the apex is near-white, not colored,
+     so the most-used subject reads as full illumination */
+  --tag-l-rare: 0.64;   --tag-l-apex: 0.95;
+  /* chroma is a BELL, not a climb: color emerges as a subject cools
+     away from the white apex, then recedes again as it fades out.
+     Black-body behavior — white hot, colored warm, dark cold. */
+  --tag-c-peak: 0.155;
+  --tag-glow-max: 0.3;
+}
+}
+/* default · FIELD — explicitly forced */
+:root:not([data-palette="ultraviolet"])[data-theme="dark"] {
+  --surface:        #121410;  /* field black                               */
+  --surface-raised: #191C16;
+  --surface-sunken: #0D0F0B;
+  --band:           #0A0C08;
+  --band-ink:       #E8E4DA;
+
+  --ink:       #E8E4DA;       /* bone · 14.60:1                            */
+  --ink-soft:  #A0A596;       /*  7.34:1                                   */
+  --ink-faint: #8B9082;       /*  5.66:1 · muted olive-gray                */
+  --ink-on-signal: #121410;
+
+  --rule:        #2A2E26;
+  --rule-strong: #454B40;
+
+  --signal:       #E0A42A;    /* signal amber · 8.39:1                     */
+  --signal-bright:#F0BC55;
+  --signal-hover: var(--signal-bright);  /* on field black a fill brightens */
+
+  --link:         #E0A42A;
+  --link-hover:   #F0BC55;    /* 10.61:1                                   */
+  --link-active:  #FFD37A;
+  --link-visited: #C9A272;
+
+  --focus:      #6FB8FF;      /*  8.80:1 · off-hue                         */
+
+  --disabled-ink:     #6A6F63;
+  --disabled-surface: #191C16;
+  --disabled-rule:    #2A2E26;
+
+  /* 4.84 */
+  /* 5.59 */
+  /* 6.87 */
+  /* 8.17 */
+  /* 9.17 */
+  --freq-rule: #2F3328;
+
+  /* Tag tuning is not inherited from :root — that is the paper
+     palette, whose apex lightness is 0.22. Without these a forced
+     dark page paints its most-used subject nearly black on black. */
+  --tag-apex-hue: 82;
+  --tag-l-rare: 0.64;
+  --tag-l-apex: 0.95;
+  --tag-c-peak: 0.155;
+  --tag-glow-max: 0.3;
+}
+
+/* ═══ PALETTE: ultraviolet · DEEP (dark) ═══════════════════════════════ */
+/* ultraviolet · PAPER — the palette's light mode and its print mode */
+:root[data-palette="ultraviolet"] {
+  --surface: #F6F5F8; --surface-raised: #FCFBFD; --surface-sunken: #EEEDF2;
+  --band: #14131C; --band-ink: #F6F5F8;
+  --ink: #16151C; --ink-soft: #4E4D59; --ink-faint: #64636F;
+  --ink-on-signal: #FFFFFF;
+  --rule: #D6D4DE; --rule-strong: #A5A3B2;
+  --signal: #4A2FA8; --signal-bright: #6B4FD0;
+  --signal-hover: var(--link-hover);   /* darkens on paper — see default    */
+  --link: #4A2FA8; --link-hover: #351F80; --link-active: #24155A;
+  --link-visited: #5C4A7A;
+  --focus: #056B60; 
+  --disabled-ink: #8A8894; --disabled-surface: #EEEDF2; --disabled-rule: #D6D4DE;
+  --freq-rule: #CFCBDD;
+
+  /* tag spectrum — ultraviolet as ink weight; no glow on paper
+     apex hue is the most-used subject; rarer subjects fan ±30° from it and
+     desaturate. Lightness runs rare→apex, so paper inverts it deliberately. */
+  --tag-apex-hue: 295;
+  /* full circle: hue by angle, brightness by radius */
+  /* lightness runs rare -> apex; the apex is near-white, not colored,
+     so the most-used subject reads as full illumination */
+  --tag-l-rare: 0.54;   --tag-l-apex: 0.24;
+  /* chroma is a BELL, not a climb: color emerges as a subject cools
+     away from the white apex, then recedes again as it fades out.
+     Black-body behavior — white hot, colored warm, dark cold. */
+  --tag-c-peak: 0.105;
+  --tag-glow-max: 0.0;
+}
+
+/* ═══ PALETTE: ultraviolet · PAPER ═════════════════════════════════════
+   Ultraviolet still needs a light mode: print, forced light, and OS
+   preference. Violet becomes ink-weight rather than luminous.            */
+/* ultraviolet · DEEP — OS dark, unless light is forced */
+@media (prefers-color-scheme: dark) {
+:root[data-palette="ultraviolet"]:not([data-theme="light"]) {
+  --surface:        #0B0B0F;  /* deep black                                */
+  --surface-raised: #121219;
+  --surface-sunken: #07070A;
+  --band:           #06060A;
+  --band-ink:       #E6E3DC;
+
+  --ink:       #E6E3DC;       /* bone · 15.33:1                            */
+  --ink-soft:  #9AA093;       /*  7.32:1                                   */
+  --ink-faint: #7E8578;       /*  5.16:1 · military gray                   */
+  --ink-on-signal: #0B0B0F;
+
+  --rule:        #232431;
+  --rule-strong: #3C3E52;
+
+  --signal:       #8E6FF7;    /* ultraviolet · 5.39:1 · instrument light   */
+  --signal-bright:#B49BFF;    /*  8.49:1                                   */
+  --signal-hover: var(--signal-bright);  /* on deep black a fill brightens  */
+
+  --link:         #9A7CFF;    /*  6.27:1                                   */
+  --link-hover:   #B49BFF;
+  --link-active:  #CFC0FF;
+  --link-visited: #A08FC4;
+
+  --focus:      #66E0D0;      /* 12.29:1 · teal, deliberately nowhere near
+                                 the violet frequency ramp                 */
+
+  /* amber held in reserve   */
+
+  --disabled-ink:     #5E6358;
+  --disabled-surface: #121219;
+  --disabled-rule:    #232431;
+
+  /* gray at rest, lighting to ultraviolet as frequency rises              */
+  /* 5.13 */
+  /* 5.47 */
+  /* 5.95 */
+  /* 6.71 */
+  /* 8.24 */
+  --freq-rule: #262838;
+
+  /* tag spectrum — ultraviolet apex; blue-violet one side, red-violet the other
+     apex hue is the most-used subject; rarer subjects fan ±38° from it and
+     desaturate. Lightness runs rare→apex, so paper inverts it deliberately. */
+  --tag-apex-hue: 295;
+  /* full circle: hue by angle, brightness by radius */
+  /* lightness runs rare -> apex; the apex is near-white, not colored,
+     so the most-used subject reads as full illumination */
+  --tag-l-rare: 0.64;   --tag-l-apex: 0.95;
+  /* chroma is a BELL, not a climb: color emerges as a subject cools
+     away from the white apex, then recedes again as it fades out.
+     Black-body behavior — white hot, colored warm, dark cold. */
+  --tag-c-peak: 0.165;
+  --tag-glow-max: 0.38;
+}
+}
+/* ultraviolet · DEEP — explicitly forced */
+:root[data-palette="ultraviolet"][data-theme="dark"] {
+  --surface:        #0B0B0F;  /* deep black                                */
+  --surface-raised: #121219;
+  --surface-sunken: #07070A;
+  --band:           #06060A;
+  --band-ink:       #E6E3DC;
+
+  --ink:       #E6E3DC;       /* bone · 15.33:1                            */
+  --ink-soft:  #9AA093;       /*  7.32:1                                   */
+  --ink-faint: #7E8578;       /*  5.16:1 · military gray                   */
+  --ink-on-signal: #0B0B0F;
+
+  --rule:        #232431;
+  --rule-strong: #3C3E52;
+
+  --signal:       #8E6FF7;    /* ultraviolet · 5.39:1 · instrument light   */
+  --signal-bright:#B49BFF;    /*  8.49:1                                   */
+  --signal-hover: var(--signal-bright);  /* on deep black a fill brightens  */
+
+  --link:         #9A7CFF;    /*  6.27:1                                   */
+  --link-hover:   #B49BFF;
+  --link-active:  #CFC0FF;
+  --link-visited: #A08FC4;
+
+  --focus:      #66E0D0;      /* 12.29:1 · teal, deliberately nowhere near
+                                 the violet frequency ramp                 */
+
+  /* amber held in reserve   */
+
+  --disabled-ink:     #5E6358;
+  --disabled-surface: #121219;
+  --disabled-rule:    #232431;
+
+  /* gray at rest, lighting to ultraviolet as frequency rises              */
+  /* 5.13 */
+  /* 5.47 */
+  /* 5.95 */
+  /* 6.71 */
+  /* 8.24 */
+  --freq-rule: #262838;
+
+  /* Tag tuning is not inherited from :root — that is the paper
+     palette, whose apex lightness is 0.22. Without these a forced
+     dark page paints its most-used subject nearly black on black. */
+  --tag-apex-hue: 295;
+  --tag-l-rare: 0.64;
+  --tag-l-apex: 0.95;
+  --tag-c-peak: 0.165;
+  --tag-glow-max: 0.38;
+}

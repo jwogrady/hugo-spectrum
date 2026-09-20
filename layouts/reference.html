@@ -1,0 +1,28 @@
+{{ define "main" }}
+  {{- /*
+    The three-column layout: prose, its branch, and the subject field.
+
+    Use it for reference material that is consulted rather than read — a
+    specification, a table of parameters, a page a reader arrives at knowing
+    what they are looking for. The main column is narrower than the 34rem
+    measure here, which is the trade: two columns of apparatus cost reading
+    width, and that is only worth paying when the apparatus is the point.
+
+    Everything in both asides already exists. A third column is a third
+    place to put the theme's own panels, not a third set of them.
+  */ -}}
+  {{- /* Through page-head.html, which reserves the crumb slot. Writing the
+         trail and the headline separately skipped the slot, so this was the
+         one page whose headline sat at a different height. */ -}}
+  {{ partial "page-head.html" (dict "page" .) }}
+  <article class="prose">
+    {{ .Content }}
+    {{- with .Params.tags }}<div class="index__tags">{{ partial "tags/list.html" (dict "page" $) }}</div>{{ end }}
+  </article>
+{{ end }}
+
+{{ define "aside" }}
+  {{- with partial "branch-root.html" . }}{{ partial "page-nav.html" (dict "root" . "current" $) }}{{ end }}
+{{ end }}
+
+{{ define "aside-far" }}{{ partialCached "aside.html" (dict "current" "" "limit" 12) "" 12 }}{{ end }}

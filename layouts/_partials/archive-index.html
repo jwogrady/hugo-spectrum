@@ -1,0 +1,48 @@
+{{- /*
+  The full date index: every year, its months, and the days inside them.
+
+  /archives/ used to render the subject index — the taxonomy list template
+  called the tags partial unconditionally, so the date archive announced
+  itself as "Subject index" and showed the tag spectrum.
+
+  Days come from the taxonomy, so every entry here is a page that exists.
+*/ -}}
+{{- $terms := site.Taxonomies.archives -}}
+{{- $years := slice -}}
+{{- range $t, $v := $terms }}{{ if eq (len $t) 4 }}{{ $years = $years | append $t }}{{ end }}{{ end -}}
+{{- if $years }}
+<div class="dateindex">
+  {{- range sort $years "value" "desc" }}
+  {{- $y := . }}
+  <section>
+    {{ partial "heading.html" (dict "title" $y "variant" "panel" "level" 2) }}
+    <div class="dateindex__months">
+      {{- range $m := seq 12 }}
+      {{- $mk := printf "%s-%02d" $y $m }}
+      {{- with index $terms $mk }}
+      <div class="dateindex__month">
+        <a class="dateindex__mlink" href="{{ (printf "/archives/%s/" $mk) | relURL }}">
+          {{ partial "archive-title.html" (dict "term" $mk) }}
+          <span class="dateindex__n">{{ len . }}</span>
+        </a>
+        <ul class="dateindex__days">
+          {{- range $d := seq 31 }}
+          {{- $dk := printf "%s-%02d" $mk $d }}
+          {{- with index $terms $dk }}
+          <li>
+            <a href="{{ (printf "/archives/%s/" $dk) | relURL }}">
+              <time datetime="{{ $dk }}">{{ printf "%02d" $d }}</time>
+              <span class="dateindex__n">{{ len . }}</span>
+            </a>
+          </li>
+          {{- end }}
+          {{- end }}
+        </ul>
+      </div>
+      {{- end }}
+      {{- end }}
+    </div>
+  </section>
+  {{- end }}
+</div>
+{{- end }}

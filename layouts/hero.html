@@ -1,0 +1,26 @@
+{{ define "main" }}
+  {{- /*
+    The banner layout. A tall opening band, then the page.
+
+    Use it for a page that has to announce itself before it explains itself:
+    an about page, a manifesto, the top of a documentation set. One column,
+    always — a banner with a sidebar beside it is two claims on the same
+    attention.
+
+    The band is a banner plate over a large headline. The plate comes from
+    the pool named by spectrum.banners, picked from a hash of the page's path
+    so a build stays reproducible. The headline sits under the plate, never
+    over it — contrast against a photograph cannot be guaranteed.
+  */ -}}
+  {{- /* These layouts are one column, which removed the branch nav, and
+         none of them drew a trail — so a page three levels deep had no way
+         up at all while emitting a four-item BreadcrumbList to crawlers. */ -}}
+  {{ partial "breadcrumb.html" . }}
+  <div class="hero">
+    {{ partial "banner.html" (dict "page" .) }}
+    {{ partial "heading.html" (dict "title" .Title "level" 1 "variant" "hero") }}
+    {{- with .Params.standfirst }}<p class="hero__standfirst">{{ . }}</p>{{ end }}
+    {{- with .Params.note }}<p class="hero__note">{{ . }}</p>{{ end }}
+  </div>
+  <article class="prose">{{ .Content }}</article>
+{{ end }}

@@ -1,0 +1,1016 @@
+/* ═══ SPECTRUM — COMPONENTS ════════════════════════════════════════════ */
+
+/* ── masthead · one row, no bar ───────────────────────────────────────
+   Identity left, sections right, and nothing under it. The rule that used
+   to close the masthead was the last heavy horizontal in the theme: it
+   framed a header the space beneath already separates, and on a page whose
+   only other rules mark a change of date it read as one more of those.
+
+   Everything is namespaced. .identity, .nameplate and .crest were global
+   names for things that exist in one place.
+
+   Centre, not baseline. Flex baseline alignment takes this row's baseline
+   from the identity's first flex item — the crest, an SVG, which has no
+   baseline, so the browser synthesises one from its bottom edge and drops
+   whatever is aligned to it by ~19px. It cannot be used here, which is why
+   adjusting it repeatedly changed nothing. */
+/* The masthead sticks, so the mark, the name and the tagline stay on
+   screen the way the sidebar panels do — one fixed anchor on each side
+   rather than one. Opaque, and above everything else that sticks, so
+   content passes beneath it rather than through it. */
+.masthead {
+  position: sticky; top: 0; z-index: var(--z-masthead);
+  background: var(--surface);
+}
+.masthead__inner {
+  display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: space-between; gap: var(--s8) var(--s13);
+  padding-block: var(--s11);
+}
+
+.masthead__identity {
+  display: flex; align-items: center; gap: var(--s8);
+  text-decoration: none; color: inherit;
+}
+.masthead__identity:hover { color: inherit; }
+/* 2px on hover, like every other link in the theme. The nameplate was the
+   one that underlined at 1px, which read as a different kind of link. */
+.masthead__identity:hover .masthead__name {
+  text-decoration: underline; text-decoration-thickness: var(--rule-bold);
+  text-underline-offset: var(--underline-offset);
+}
+.masthead__lockup { display: block; }
+.masthead__name {
+  display: block;
+  font-family: var(--font-serif); font-weight: var(--weight-title);
+  font-size: var(--size-2xl); line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-nameplate); color: var(--ink);
+}
+.masthead__tagline {
+  display: block;
+  font-family: var(--font-sans); font-size: var(--size-2xs); font-weight: var(--weight-label);
+  letter-spacing: var(--tracking-eyebrow); text-transform: uppercase;
+  line-height: var(--lh-label); color: var(--ink-faint);
+  margin-top: var(--s5);
+}
+/* Sized to the name's line box, so the mark and the lockup are one block
+   rather than a mark beside two lines of text. */
+.crest { flex: none; width: var(--s13); height: var(--s13); display: block; color: var(--ink); }
+
+.masthead__sections {
+  display: flex; flex-wrap: wrap; justify-content: flex-end;
+  gap: var(--s7) var(--s11);
+  list-style: none; margin: 0; padding: 0;
+}
+.masthead__sections a {
+  display: block;
+  font-size: var(--size-xs); font-weight: var(--weight-label); line-height: var(--lh-label);
+  letter-spacing: var(--tracking-eyebrow); text-transform: uppercase;
+  color: var(--ink-soft); text-decoration: none;
+  padding-bottom: var(--s3);
+  border-bottom: var(--rule-bold) solid transparent;
+}
+.masthead__sections a:hover { color: var(--ink); border-bottom-color: var(--rule-strong); }
+.masthead__sections a[aria-current] { color: var(--ink); border-bottom-color: var(--signal); }
+
+/* ── the page head · a headline, not a caption ────────────────────────── */
+/* ── the entry head · date, price, coverage, provenance ───────────────
+   Field-driven: present fields render, absent ones do not, and none of
+   them switched on section. They also had no rules at all, so an entry's
+   whole meta line rendered as an unstyled paragraph — the classes were in
+   the markup and never in the stylesheet. */
+.meta {
+  display: flex; flex-wrap: wrap; gap: var(--s7) var(--s11);
+  font-family: var(--font-data); font-size: var(--size-2xs);
+  font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1;
+  letter-spacing: var(--tracking-eyebrow); text-transform: uppercase;
+  color: var(--ink-faint); line-height: var(--lh-label);
+  margin: 0 0 var(--space-para);
+}
+.meta .price { color: var(--ink-soft); }
+.meta .areas, .meta .resolves, .meta .source { color: var(--ink-faint); }
+
+/* The entry's own claim: the one sentence it is accountable for, so it is
+   set apart from the prose that argues it. */
+.claim.standout {
+  font-family: var(--font-serif); font-size: var(--size-lg);
+  line-height: var(--lh-snug); color: var(--ink);
+  max-width: var(--measure-tight);
+  margin: 0 0 var(--space-para);
+  padding-left: var(--s9);
+  border-left: var(--rule-bold) solid var(--signal);
+}
+
+/* ── breadcrumbs · pages only, never posts ────────────────────────────── */
+/* The slot, not the trail, owns the space — so it is the same height with
+   a breadcrumb in it or without one. */
+.page-head__crumb {
+  min-height: calc(var(--size-xs) * var(--lh-label));
+  margin-bottom: var(--space-block);
+}
+.breadcrumb { font-size: var(--size-xs); line-height: var(--lh-label); color: var(--ink-faint); }
+.breadcrumb ol { display: flex; flex-wrap: wrap; gap: var(--s5); list-style: none; margin: 0; padding: 0; }
+.breadcrumb li:not(:last-child)::after { content: "›"; margin-left: var(--s5); color: var(--rule-strong); }
+.breadcrumb a { color: var(--ink-soft); }
+.breadcrumb [aria-current="page"] { color: var(--ink); }
+
+/* ── journal · index beside meter on wide screens ─────────────────────── */
+/* The two-column spread: a main region and an aside, together filling the
+   frame. It was called .journal, named after the one page that used it, so
+   every other page was "the journal minus a sidebar". */
+.spread { display: grid; gap: var(--space-section); }
+/* One gap between every panel in the aside. The archive used to carry a
+   margin-top and the others none, so the sidebar had one gap and two
+   joins. */
+/* The aside stretches to the main column's height, not its content's, so
+   the sticky block inside it has the whole page to travel. */
+.spread__aside { display: grid; gap: var(--s5); align-content: start; }
+/* The slot above the panels is reserved whether or not a page has
+   anything to put in it, so the second column starts at the same height
+   everywhere — the journal has the zone selector here and no other page
+   does, which was moving every panel down by its height on one page only. */
+.aside__top { min-height: calc(var(--size-2xs) * var(--lh-label)); }
+
+/* The panels stick as one block; whatever is in the slot above them does
+   not. Sticky travels the height of its containing block, which is why
+   this is a child of the stretched aside rather than the aside itself —
+   sticking the aside would pin the slot along with everything else. */
+.aside__panels {
+  position: sticky; top: var(--sticky-top); z-index: var(--z-panel);
+  display: grid; gap: var(--space-block); align-content: start;
+}
+/* A grid item's default min-width is its content, so a long code block or
+   a wide table would push the column past its track instead of scrolling. */
+.spread__main { min-width: 0; }
+@media (min-width: 60rem) {
+  .spread { grid-template-columns: minmax(0, var(--col-main)) var(--col-aside); gap: var(--col-gap); }
+}
+
+/* ── three columns · the aside, twice ─────────────────────────────────
+   A third column is not a new width. It is the aside again, so the frame
+   reads main + gap + aside + gap + aside and the outer edges sit exactly
+   where they do on every other page. Below the breakpoint all three stack
+   in source order, which puts the main column first — a reader on a phone
+   gets the substance, not the apparatus.
+
+   The main column lands under the 34rem measure, which is the point: three
+   columns are for material that is scanned, not prose that is read.
+
+   72rem, not the 60rem the two-column spread uses. Two asides and two gaps
+   cost 42.47rem before the main column gets anything, so at a 60rem viewport
+   main resolved to 14.98rem — narrower than either 17rem aside beside it,
+   which inverts the hierarchy the layout exists to state. At this breakpoint
+   it is 26.98rem, and it reaches its full 29.53rem once the frame does. */
+@media (min-width: 72rem) {
+  .spread--three {
+    grid-template-columns: minmax(0, var(--col-main-three)) var(--col-aside) var(--col-aside);
+  }
+}
+
+/* ── the hero · a banner built from type ──────────────────────────────
+   Spectrum's argument is that nobody is tempted into reading by a hero
+   image, so this is a hero in structure and nothing else: a tall opening
+   band that sets a page apart, made of size, space and one rule. It keeps
+   the frame — a band that breaks to the viewport edge would make this the
+   only page whose outer edges move. */
+.hero {
+  border-bottom: var(--rule-bold) solid var(--rule-strong);
+  padding-bottom: var(--space-section);
+  margin-bottom: var(--space-major);
+}
+.hero__standfirst {
+  font-size: var(--size-lg); line-height: var(--lh-snug);
+  color: var(--ink-soft); max-width: var(--measure);
+  margin: var(--space-block) 0 0;
+}
+.hero__note {
+  font-size: var(--size-xs); line-height: var(--lh-label);
+  color: var(--ink-faint); margin: var(--space-item) 0 0;
+}
+
+/* ── conversion · offer, features, questions, ask ─────────────────────
+   A product page, a service page and a booking page are one arrangement
+   with different front matter, so they are one set of rules. The offer and
+   the cards reuse the panel's border, radius and padding — a headed box in
+   this theme is already one object and this is not a second one. */
+.offer {
+  border: var(--rule-hair) solid var(--rule);
+  border-radius: var(--radius-panel);
+  background: var(--surface-raised);
+  padding: var(--panel-pad);
+  margin-bottom: var(--space-section);
+  display: grid; gap: var(--space-tight); justify-items: start;
+}
+.offer__price { margin: 0; display: flex; align-items: baseline; gap: var(--space-tight); }
+.offer__amount { font-size: var(--size-3xl); line-height: var(--lh-tight); }
+.offer__unit, .offer__avail {
+  font-size: var(--size-xs); line-height: var(--lh-label);
+  color: var(--ink-faint); margin: 0;
+}
+
+.features {
+  display: grid; gap: var(--space-item);
+  grid-template-columns: repeat(auto-fit, minmax(var(--col-aside), 1fr));
+  list-style: none; margin: 0 0 var(--space-section); padding: 0;
+}
+.features__item {
+  border-top: var(--rule-bold) solid var(--rule-strong);
+  padding-top: var(--space-tight);
+}
+.features__title { font-size: var(--size-base); line-height: var(--lh-title); margin: 0; }
+.features__body {
+  font-size: var(--size-sm); line-height: var(--lh-body);
+  color: var(--ink-soft); margin: var(--space-tight) 0 0;
+}
+
+.faq { margin-bottom: var(--space-section); }
+.faq__list { margin: 0; }
+.faq__q { font-weight: var(--weight-label); margin-top: var(--space-block); }
+.faq__a { margin: var(--space-tight) 0 0; color: var(--ink-soft); max-width: var(--measure); }
+
+.cta {
+  border-top: var(--rule-bold) solid var(--rule-strong);
+  padding-top: var(--space-block);
+  display: grid; gap: var(--space-tight); justify-items: start;
+}
+.cta__line { margin: 0; font-size: var(--size-lg); line-height: var(--lh-snug); }
+
+/* ── the landing · sections, not a page ───────────────────────────────
+   A landing page is a set of routes, so it is built from bands rather
+   than from prose: each band states one thing and points somewhere. The
+   cells reuse the panel's border, radius and padding, because a headed
+   box in this theme is already one object. */
+.landing { display: grid; gap: var(--space-major); }
+.landing__section { display: grid; gap: var(--space-block); }
+.landing__grid {
+  display: grid; gap: var(--space-item);
+  grid-template-columns: repeat(auto-fit, minmax(var(--col-aside), 1fr));
+  list-style: none; margin: 0; padding: 0;
+}
+.landing__cell {
+  border: var(--rule-hair) solid var(--rule);
+  border-radius: var(--radius-panel);
+  background: var(--surface-raised);
+  padding: var(--panel-pad);
+}
+.landing__title { font-size: var(--size-lg); line-height: var(--lh-title); margin: 0; }
+.landing__title a { color: var(--ink); }
+.landing__blurb {
+  font-size: var(--size-sm); line-height: var(--lh-body);
+  color: var(--ink-soft); margin: var(--space-tight) 0 0;
+}
+
+/* ── the panel · one box, four uses ───────────────────────────────────
+   The clock, the branch navigation, the spectrum and the archive are the
+   same object: a headed box in the sidebar. The border, the radius and the
+   raised surface were written out four times, and the body padding had
+   drifted to three different values across them — so four boxes stacked in
+   one column did not share an inside edge. One rule, one padding token. */
+.branch, .clock, .signal-field, .archive {
+  border: var(--rule-hair) solid var(--rule);
+  border-radius: var(--radius-panel);
+  background: var(--surface-raised);
+}
+
+/* ── the head · one arrangement, two dresses ─────────────────────────
+   This was written out four times: .band twice, .page-head, and
+   .signal-field__head / .archive__head, which were byte-for-byte identical
+   to each other.
+
+   It used to carry a count on the right. "14 entries", "3 items",
+   "6 plates" — a number nobody acts on, taking the widest line on the
+   page. The archive still counts, because there the number is the point:
+   it shows how the year is distributed.
+
+   A page head is a headline. A panel head is a black bar, because it
+   labels a panel the way a field manual labels a table — and that black is
+   why it must never wrap a page title, which is what it was doing. */
+.hd { display: flex; flex-wrap: wrap; gap: var(--s7) var(--s9); align-items: baseline; }
+.hd__title { margin: 0; }
+/* The same gap the h1 rule states. A headline inside this slot and a
+   headline in an entry's own prose were s11 and s10 apart — one heading,
+   two different spaces beneath it depending on the template. */
+.hd--page { margin-bottom: var(--s10); }
+/* A head inside a page, set exactly like the page's own but distinguishable
+   from it: hd--page is how the checks find a page headline, and once faq and
+   landing used it for their sections every conversion page looked like a
+   headline with no breadcrumb slot above it. */
+.hd--section { margin-bottom: var(--s10); }
+/* The banner headline. It is the same head object as every other, set
+   large — a hero that hand-rolled its own <h1> would be the fifth
+   implementation of the thing this partial exists to hold. */
+/* The banner plate: a band across the frame, above the headline. Text is not
+   set over it — the palettes guarantee their contrast against a surface
+   token, and nothing can guarantee it against a photograph. */
+.hero__plate {
+  display: block; width: 100%; height: auto;
+  border-radius: var(--radius-panel);
+  margin-bottom: var(--space-section);
+}
+.hd--hero .hd__title { font-size: var(--size-4xl); line-height: var(--lh-tight); }
+.hd--panel {
+  background: var(--band); color: var(--band-ink);
+  padding: var(--space-tight) var(--space-item);
+}
+.hd--panel .hd__title {
+  font-family: var(--font-sans); font-size: var(--size-2xs); font-weight: var(--weight-label);
+  letter-spacing: var(--tracking-eyebrow); text-transform: uppercase;
+  line-height: var(--lh-label); color: var(--band-ink); max-width: none;
+}
+
+/* ── the branch · child navigation for a page section ────────────────
+   Posts are flat, so the journal indexes them. Pages nest, so a page
+   section is a branch and every page in it carries the same tree. */
+.branch__body { padding: var(--panel-pad); }
+.branch__list { list-style: none; margin: 0; padding: 0; }
+.branch__list .branch__list { margin-left: var(--space-row); border-left: var(--rule-hair) solid var(--rule); padding-left: var(--space-row); }
+.branch__item + .branch__item { margin-top: var(--s5); }
+.branch a {
+  display: block; text-decoration: none; color: var(--ink-soft);
+  font-size: var(--size-sm); line-height: var(--lh-snug);
+  padding: var(--s4) 0; border-left: var(--rule-bold) solid transparent; padding-left: var(--space-tight);
+}
+.branch a:hover { color: var(--ink); border-left-color: var(--rule-strong); }
+.branch a[aria-current] { color: var(--ink); font-weight: var(--weight-title); border-left-color: var(--signal); }
+
+/* ── the date index · every year, month and day that has entries ──────
+   The counterpart to the subject index: one is what a publication is
+   about, the other is when it happened. Both are reached from the panel
+   that summarises them in the sidebar. */
+.dateindex { display: grid; gap: var(--space-section); }
+.dateindex__months { display: grid; gap: var(--space-block); margin-top: var(--space-block); }
+@media (min-width: 44rem) {
+  .dateindex__months { grid-template-columns: repeat(auto-fill, minmax(var(--col-aside), 1fr)); }
+}
+/* A grid item's default min-width is its content, so a long month name
+   would push its track wider than the one it was given. */
+.dateindex__month { min-width: 0; }
+.dateindex__mlink {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: var(--s9);
+  font-family: var(--font-sans); font-size: var(--size-sm); font-weight: var(--weight-title);
+  line-height: var(--lh-label); color: var(--ink); text-decoration: none;
+  padding-bottom: var(--s5);
+  border-bottom: var(--rule-hair) solid var(--rule);
+}
+.dateindex__mlink:hover { color: var(--link-hover); border-bottom-color: var(--rule-strong); }
+/* Days are a strip of numbers, the way a calendar reads — the month is the
+   heading and the day is a position under it. */
+.dateindex__days {
+  display: flex; flex-wrap: wrap; gap: var(--s5) var(--s8);
+  list-style: none; margin: var(--s7) 0 0; padding: 0;
+}
+.dateindex__days a {
+  display: inline-flex; align-items: baseline; gap: var(--s5);
+  font-family: var(--font-data); font-size: var(--size-2xs);
+  font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1;
+  line-height: var(--lh-label); color: var(--ink-soft); text-decoration: none;
+}
+.dateindex__days a:hover { color: var(--link-hover); text-decoration: underline; text-underline-offset: var(--underline-offset); }
+.dateindex__n {
+  font-family: var(--font-data); font-size: var(--size-2xs); font-weight: var(--weight-quiet);
+  line-height: var(--lh-label); color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── day navigation · previous and next, on an archive day ────────────
+   Older on the left, newer on the right, matching the journal's own order:
+   newest first, so moving right moves forward in time. Both sides are
+   always laid out even when one is empty, so the remaining link stays on
+   its own edge instead of sliding to the middle. */
+.daynav {
+  display: flex; justify-content: space-between; gap: var(--s9);
+  margin-bottom: var(--space-block);
+  font-family: var(--font-data); font-size: var(--size-2xs);
+  letter-spacing: var(--tracking-eyebrow); line-height: var(--lh-label);
+}
+.daynav__side { flex: 1 1 0; }
+.daynav__side--next { text-align: right; }
+.daynav a { color: var(--ink-faint); text-decoration: none; border-bottom: var(--rule-hair) solid var(--rule); }
+.daynav a:hover { color: var(--ink); border-bottom-color: var(--rule-strong); }
+
+/* ── the index table ──────────────────────────────────────────────────── */
+/* separate, not collapse. With border-collapse:collapse a sticky cell does
+   not paint above the cells scrolling under it — the day head stayed put
+   but entry titles showed through it. Nothing in this table draws a
+   collapsed border anyway: the only rule is the head's own shadow. */
+.index { width: 100%; border-collapse: separate; border-spacing: 0; }
+/* Lines mark time, and nothing else. The only rule in this table is the one
+   under each day's head, so a horizontal line always means the date
+   changed. Rows inside a day are separated by their own space.
+
+   Everything here used to be ruled — every row, plus the column heads —
+   which made the table a grid of boxes and left the day heads with no more
+   weight than the rows they were organising. */
+.index th, .index td { border-bottom: 0; }
+/* The column heads carry .u-sr — see index-table.html for why. Narrow
+   screens used to hide them with their own copy of that declaration
+   block; one implementation now, in base.css. */
+/* With the rules gone, space does the separating — so rows need more of it
+   than they did when a line was doing the work. */
+.index td { padding-block: var(--space-item); }
+.index .col-time { width: var(--col-time); }
+/* Tabular figures so the digits stack down the column instead of drifting. */
+.index__time {
+  font-family: var(--font-data); font-size: var(--size-2xs);
+  font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1;
+  color: var(--ink-faint); white-space: nowrap; line-height: var(--lh-label);
+}
+
+/* The day head. It sticks while you scroll that day's entries, so whatever
+   you are reading, the date it belongs to is still on screen — which is
+   what makes a list of times read as a log. */
+/* Date at one edge, weekday at the other. The span carries the flex
+   because display:flex on the th would take the cell out of the table's
+   formatting context. */
+.index__dayline {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: var(--s9);
+}
+/* Dimmed by the palette's own colour, not by opacity. Opacity scales a
+   measured contrast ratio down with it — ink-faint is 4.86:1 at its worst
+   and 0.8 of it is 3.4:1, under AA — and the clock panel already rejects
+   opacity for exactly this reason. */
+.index__weekday { color: var(--ink-faint); }
+/* The date is a link to its own day. Underlined only on hover, because a
+   permanent rule under every date would put a second horizontal line in a
+   table whose one rule marks the change of day. */
+.index__daylink { color: inherit; text-decoration: none; }
+.index__daylink:hover { color: var(--ink); text-decoration: underline; text-underline-offset: var(--underline-offset); }
+.index__day th {
+  /* The same offset the sidebar panels pin to, so everything that sticks
+     stops on one line rather than two, with air above it.
+
+     A sticky element pinned below the viewport edge leaves a gap that
+     content scrolls through in plain sight. The band carries its own
+     cover for that gap — see ::before — so the offset is air rather than
+     a window. */
+  position: sticky; top: var(--sticky-top); z-index: var(--z-band);
+  /* Opaque, or rows would scroll through it — but the page's own surface,
+     not the black band. Most days hold one entry, so a solid bar above
+     every row doubled the weight of the table and buried the entries it
+     was meant to organise. A date is a label, not a headline. */
+  background: var(--surface); color: var(--ink-faint); text-align: left;
+  font-family: var(--font-data); font-size: var(--size-2xs);
+  font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1;
+  letter-spacing: var(--tracking-eyebrow); line-height: var(--lh-label);
+  font-weight: var(--weight-quiet);
+  /* Compact. Padding on a sticky element travels with it, so a generous
+     gap above the date made the pinned band 70px tall and occluded the
+     entry under it. The gap between days lives on the previous day's last
+     row instead, where it scrolls away like everything else. */
+  padding: var(--s5) 0 var(--s4);
+  border-bottom: 0;
+  /* border-collapse: collapse leaves a sticky cell's own border behind as
+     it moves. A shadow travels with it. */
+  box-shadow: inset 0 calc(-1 * var(--rule-hair)) 0 var(--rule-strong);
+}
+/* The cover. Exactly the height of the gap between the masthead and the
+   band — the only strip content can scroll through, since the masthead
+   itself hides everything above that. Painted in the page's own surface
+   and travelling with the band. */
+.index__day th::before {
+  content: ""; position: absolute;
+  left: 0; right: 0; bottom: 100%;
+  height: var(--sticky-gap);
+  background: var(--surface);
+}
+/* The break between days: below the day that is ending, not above the
+   one beginning, so it is not carried up the page by the sticky head. */
+.index__group:not(:last-child) > tr:last-child > td { padding-bottom: var(--s13); }
+/* The head keeps its rule: it is sticky, so rows have to visibly pass
+   beneath it rather than merge into it. */
+
+:where(.index__title) a { color: var(--ink); text-decoration: none; }
+:where(.index__title) a:hover { color: var(--link-hover); text-decoration: underline; text-decoration-thickness: var(--rule-bold); }
+.index__title { max-width: var(--measure-tight); }
+.index__claim {
+  font-family: var(--font-serif); font-size: var(--size-sm); color: var(--ink-soft);
+  margin: var(--s4) 0 0; max-width: var(--measure); line-height: var(--lh-body); text-wrap: pretty;
+}
+.index__tags { margin-top: var(--space-tight); display: flex; flex-wrap: wrap; gap: var(--s5); }
+
+@media (max-width: 44rem) {
+  .index, .index tbody, .index tr, .index td, .index__day th { display: block; width: 100%; }
+  /* No rule between entries, the same as the table layout: .index th,
+     .index td zero the borders there and the table's one horizontal line is
+     the one under the day head. Giving every reflowed row a border put a
+     rule under every entry on a phone and under nothing anywhere else, so
+     the narrow view read as a bordered list and the wide view as an index.
+     Separation is the same spacing token the table uses on its cells, and
+     the gap between days still comes from the last row of the group. */
+  .index tr { padding-block: var(--space-item); }
+  .index td { border: 0; padding: 0; }
+  .index td + td { margin-top: var(--space-hair); }
+  /* The day head has to keep sticking here, and the block reflow above is
+     what stops it: every tr becomes its own containing block, and a sticky
+     element cannot travel outside the one it is in. The head is the only
+     thing in its row, so it has no distance to move and silently pins
+     nowhere. On the table layout its containing block is the tbody, which
+     spans the whole day group — which is why desktop and tablet are fine.
+
+     So pin the row, which is still inside the day's tbody. The th rides
+     along and keeps the fill, the rule and the cover strip.
+
+     Its padding is dropped for the same reason the desktop head keeps its
+     own compact padding: padding travels with a pinned element, and a
+     generous gap above the date makes the pinned band tall enough to
+     occlude the entry beneath it. */
+  .index__day {
+    position: sticky; top: var(--sticky-top); z-index: var(--z-band);
+    padding-block: 0;
+  }
+  .index__day th { position: static; }
+}
+
+/* The apex hue must be a registered property to be animatable and to
+   interpolate rather than jump. Everything downstream is plain calc(). */
+@property --tag-apex-hue {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 295;
+}
+/* Rotation is its own registered property animated between two literal
+   numbers. A var() inside @keyframes cannot be validated against a
+   registered syntax at parse time, so the animation silently does nothing. */
+@property --tag-rotation {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+/* ═══ TAG SIGNAL FIELD ════════════════════════════════════════════════
+   Frequency is luminance and spectral distance from an apex hue. It is
+   never type size and never type weight. Each anchor carries three plain
+   numbers; the color is computed here, so the markup stays semantic and
+   the palette stays swappable.
+
+     --tag-signal     0..1  Gaussian intensity, floored for legibility
+     --tag-distance   0..1  normalized distance from the most-used subject
+     --tag-direction  -1|1  which side of the apex hue this subject sits on
+
+   Interaction state is deliberately structural — underline, border,
+   outline — so it can never be mistaken for a change in frequency.       */
+
+/* ── the mission clock · a sidebar panel above the spectrum ───────────
+   An instrument readout: tabular figures so a ticking second never shifts
+   the digits beside it, and the date dimmed so the live part carries the
+   signal colour. Not opacity for the dim half — that would scale the
+   amber's contrast down with it. Both colours are the palette's own and
+   measured AA across all six palette and mode combinations, 5.39:1 at
+   worst. */
+/* ── panel edge · controls and exits that hang off a panel ────────────
+   The zones above the clock and the subject index below the spectrum are
+   the same object: something small attached to a panel's edge, set against
+   the right. They had two treatments and two gaps — one uppercase mono at
+   s10 above its box, one sentence case at s5 below its own — which made
+   two instances of one idea read as two ideas.
+
+   One class now, and the gap that attaches them is s5 in both directions.
+   Panels are separated by s10; things attached to a panel are not. */
+.panel-edge {
+  display: flex; justify-content: flex-end; align-items: baseline;
+  gap: var(--s8); margin: 0; padding: 0;
+  font-family: var(--font-data); font-size: var(--size-2xs);
+  letter-spacing: var(--tracking-eyebrow); text-transform: uppercase;
+  line-height: var(--lh-label); color: var(--ink-faint);
+}
+.panel-edge a {
+  color: var(--ink-faint); text-decoration: none;
+  border-bottom: var(--rule-hair) solid var(--rule);
+}
+.panel-edge a:hover { color: var(--ink); border-bottom-color: var(--rule-strong); }
+
+/* Centred: the readout is the panel's whole content and a single fixed-width
+   line, so left-aligning it left a ragged margin against a box that has
+   nothing else in it. Safe to centre because the figures are tabular — the
+   string is the same width every second, so the line cannot shift as it
+   ticks. */
+.clock__body { padding: var(--panel-pad); text-align: center; }
+.clock__readout {
+  display: block;
+  font-family: var(--font-data); font-size: var(--size-sm);
+  font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1;
+  line-height: var(--lh-label); color: var(--ink-faint);
+  letter-spacing: var(--tracking-ref); white-space: nowrap; margin: 0;
+}
+.clock__time { color: var(--signal); }
+/* Text and nothing else: no box, no rule, no fill. One bright, the others
+   dim, which is the whole of the state. */
+/* On top of the box: they set what the panel reads. */
+.clock__zones { gap: var(--s9); }
+.clock__zone {
+  appearance: none; background: none; border: 0; padding: 0; cursor: pointer;
+  font-family: var(--font-data); font-size: var(--size-2xs);
+  letter-spacing: var(--tracking-eyebrow); line-height: var(--lh-label);
+  color: var(--ink-faint);
+}
+.clock__zone:hover { color: var(--ink); }
+.clock__zone[aria-pressed="true"] { color: var(--signal); }
+/* No focus rule here. base.css states the one focus treatment for every
+   button; restating it at higher specificity dropped the radius off this
+   one and gave the theme two focus rings that were nearly the same. */
+
+
+/* The compact field is a ranked instrument, not a bell. Center-out
+   arrangement needs width to read as an arc; in a narrow column it wraps into
+   ragged lines and the rarest subject ends up sitting at the top looking like
+   a heading. Brightest first, top to bottom, counts visible. The bell lives
+   on the full-width subject index, where it has room to be one. */
+.signal-field__body {
+  padding: var(--panel-pad); display: flex; flex-wrap: wrap;
+  justify-content: flex-start; gap: var(--s5) var(--s6); min-width: 0;
+}
+.signal-field__body .tag-signal { flex: none; }
+/* The panel and its way out are one unit, so the aside's gap falls outside
+   them. Mirrors .clock-unit, which does the same for the zones. */
+.signal-unit { display: block; }
+.signal-field__more { margin-top: var(--s5); }
+
+/* ── the field · the bell laid out in space ───────────────────────────
+   Apex at the centre, frequency falling away to both edges. Type size and
+   weight are constant across the whole field: the moment a common subject
+   is set larger this becomes a word cloud and stops being an instrument,
+   so only luminance and hue move.
+
+   Centred rather than packed from the left — a wrapped arc has to stay
+   symmetrical about its middle or the apex stops reading as the peak. */
+.signal-bell {
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline;
+  gap: var(--s5) var(--s6);
+  padding: var(--space-item) 0 var(--space-block);
+  border-bottom: var(--rule-hair) solid var(--rule);
+}
+.signal-bell .tag-signal { flex: none; }
+
+/* The subject index is a ranked climb, not a field: one subject per row,
+   ascending, so the brightness ramp reads top to bottom and the apex lands
+   last. Counts are right-aligned against a rule so the numbers line up. */
+.signal-index {
+  padding: var(--space-item) 0 var(--space-block);
+  border-bottom: var(--rule-hair) solid var(--rule);
+}
+.signal-index .tag-signal {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: var(--space-item);
+  padding: var(--s4) 0; border-bottom: var(--rule-hair) solid var(--rule);
+  border-radius: 0;
+}
+.signal-index .tag-signal:last-child { border-bottom: 0; }
+.signal-index .tag-signal__name { font-size: var(--size-sm); line-height: var(--lh-label);
+}
+.signal-index .tag-signal__count {
+  font-size: var(--size-xs); opacity: 1; font-variant-numeric: tabular-nums;
+  min-width: 2ch; text-align: right; line-height: var(--lh-label);
+}
+.signal-index .tag-signal:hover { background: var(--surface-raised); }
+
+.tag-signal {
+  --_i:   var(--tag-signal, 0.3);
+  /* angle carries identity, distance carries brightness only.
+     Hugo emits the final offset, so there is no division here. */
+  --_h: calc(var(--tag-apex-hue) + var(--tag-hue, 0) + var(--tag-rotation));
+  --_l: calc(var(--tag-l-rare) + (var(--tag-l-apex) - var(--tag-l-rare)) * var(--_i));
+  /* Chroma multiplier is computed at build time (calc has no reliable
+     pow). Flat across the range, collapsing only at the apex, so exactly
+     the most-used subject reads white and everything else keeps color. */
+  --_c: calc(var(--tag-c-peak) * var(--tag-chroma, 1));
+  /* glow only in the top fifth of the range, so it reads as an apex signal
+     rather than general bloom */
+  --_glow: calc(var(--tag-glow-max) * max(0, (var(--_i) - 0.8) * 5));
+
+  display: inline-flex; align-items: baseline; gap: var(--s5);
+  font-family: var(--font-sans);
+  font-size: var(--size-xs);     /* identical at every frequency */
+  font-weight: var(--weight-title);  /* identical at every frequency */
+  line-height: var(--lh-label);
+  padding: var(--s1) var(--s6);
+  border: var(--rule-hair) solid transparent;
+  border-radius: var(--radius-chip);
+  text-decoration: none;
+  max-width: 100%;               /* a 42-character subject must not push the
+                                    layout sideways on a phone */
+  overflow-wrap: anywhere;
+}
+
+/* The color is carried by the inner span, never by the anchor.
+   Browsers resolve :visited through a separate restricted pass, and custom
+   properties set in an inline style attribute do not reach it — so a clicked
+   anchor loses its per-tag --tag-hue, falls back to 0, and paints at the
+   palette's apex hue. Every visited tag comes out the same color and the
+   frequency signal is destroyed.
+
+   :visited restrictions apply to the link element, not to its descendants.
+   Coloring the span sidesteps the visited pass entirely, so a tag looks
+   identical before and after it is clicked. Visited is marked on the anchor
+   by its border alone, which is a property the restricted pass does allow. */
+.tag-signal { color: inherit; }
+.tag-signal__name, .tag-signal__count {
+  --_i: var(--tag-signal, 0.3);
+  --_h: calc(var(--tag-apex-hue) + var(--tag-hue, 0) + var(--tag-rotation));
+  --_l: calc(var(--tag-l-rare) + (var(--tag-l-apex) - var(--tag-l-rare)) * var(--_i));
+  --_c: calc(var(--tag-c-peak) * var(--tag-chroma, 1));
+  --_glow: calc(var(--tag-glow-max) * max(0, (var(--_i) - 0.8) * 5));
+  color: var(--ink-soft);
+}
+
+@supports (color: oklch(0.7 0.1 300)) {
+  .tag-signal__name, .tag-signal__count {
+    color: oklch(var(--_l) var(--_c) var(--_h));
+  }
+  .tag-signal__name {
+    text-shadow: 0 0 calc(var(--tag-glow-radius) * var(--_i)) oklch(var(--_l) var(--_c) var(--_h) / var(--_glow));
+  }
+  /* The current subject casts, rather than glows. Offset and hard-edged: the
+     apex bloom is centred with no offset and means "most used", so a shadow
+     that falls in a direction cannot be read as that. In the tag's own hue,
+     because a grey shadow under a coloured word is the only grey in the
+     field. Specificity carries it over the bloom above, so the current
+     subject casts even when it is also the apex. */
+  .tag-signal[aria-current="page"] .tag-signal__name {
+    /* Darker than the word it falls from, not merely more transparent. At
+       the word's own lightness it read as a flat echo — the same colour
+       twice, offset — which is a duplicate rather than a depth cue. Taking
+       the lightness down to 0.45 of the subject's own puts the cast behind
+       it in both directions.
+
+       Clamped, not merely scaled. A plain multiple of the subject's own
+       lightness works on paper and inverts on field black: the dark
+       palettes set their apex at 0.95, so 0.45 of it is 0.43 — lighter than
+       the 0.18 surface it falls on, which is a halo and not a shadow. The
+       ceiling sits under the darkest raised surface in any palette (0.18),
+       so the cast is below its ground in all six.
+
+       Chroma comes down slightly with it. A shadow at full chroma competes
+       with the subject for the same hue at the same strength, and the point
+       is that one of them is underneath. */
+    /* Two layers: a soft bloom in the subject's own hue, and the hard cast
+       under it. The bloom is the subject's own colour at 0.7 of the apex
+       radius — slight, and unmistakably that tag's hue rather than a
+       neutral halo.
+
+       Its alpha is fixed rather than taken from --tag-glow-max, which the
+       paper palettes set to 0.0 because a bloom on white is haze. That is a
+       rule about frequency: on paper, frequency is carried by darkness and
+       a glow would add nothing. This bloom marks one subject, not a range,
+       so it is lit in all six palettes.
+
+       The cost, stated plainly: a lit subject now reads a little like the
+       apex, which is the one thing the bloom used to mean on its own. What
+       separates them is that the current subject is also a step larger and
+       also casts — three markers agreeing, where the apex has one. */
+    text-shadow:
+      0 0 calc(var(--tag-glow-radius) * 0.7) oklch(var(--_l) var(--_c) var(--_h) / 0.5),
+      var(--rule-bold) var(--rule-bold) 0
+        oklch(min(calc(var(--_l) * 0.45), 0.16) calc(var(--_c) * 0.8) var(--_h) / 0.55);
+  }
+}
+
+.tag-signal__count {
+  font-family: var(--font-data); font-size: var(--size-2xs); font-weight: var(--weight-quiet);
+  opacity: 0.78; font-variant-numeric: tabular-nums; line-height: var(--lh-label);
+}
+
+/* state — structural, never luminous.
+
+   No box. Hover used to bring up a full border in --ink-faint, which drew
+   a grey rectangle around a word whose whole job is to be a colour.
+
+   The underline goes on the span, not the anchor. The anchor is
+   `color: inherit` — it has to be, so the :visited pass cannot reach the
+   frequency colour — so an underline drawn there took the surrounding ink
+   instead of the tag's own. On the span it is currentColor, which is the
+   tag. */
+.tag-signal:hover .tag-signal__name {
+  text-decoration: underline;
+  text-decoration-thickness: var(--rule-bold);
+  text-underline-offset: var(--underline-offset);
+}
+/* Visited: a structural marker that leaves hue and brightness untouched.
+   Literal first, custom property second — if the var does not survive the
+   restricted :visited pass, the literal still marks the state. */
+.tag-signal:visited {
+  border-bottom-color: #9a8fa8;
+  border-bottom-color: var(--link-visited);
+}
+/* The outline itself is base.css's one focus treatment; only the underline
+   suppression belongs here. */
+.tag-signal:focus-visible { text-decoration: none; }
+/* The current subject, marked in its own colour.
+
+   It used to take --ink for its border and the signal amber for an inset
+   bar: a white box and a second hue drawn around one word, in a field whose
+   entire job is that the words are colours. Two subjects then differed by
+   frequency, and one differed by having a container — which reads louder
+   than any of the encoding.
+
+   Brackets instead, the way an index marks the entry you are standing on.
+   They are emitted inside the span, so they take currentColor and are
+   exactly the tag's own hue; the anchor could never do this, because it is
+   `color: inherit` so the restricted :visited pass cannot reach the
+   frequency colour.
+
+   Not a glow, though a glow was the obvious idea: a centred bloom already
+   means apex frequency on this element, so lighting up the current subject
+   would say "most used" in the one vocabulary the field reserves for that.
+   State stays structural, and structural here can at last be coloured. */
+.tag-signal[aria-current="page"] {
+  border-color: transparent;
+  box-shadow: none;
+}
+/* One step up the type scale — phi^(1/3), the same step every other size on
+   this site moves by, so "noticeably bigger" is still the ratio talking.
+
+   The rule the field keeps is that *frequency* is never size: the moment a
+   common subject is set larger the thing becomes a word cloud and stops
+   being an instrument. State is a different axis and cannot form a ramp,
+   because exactly one subject is ever current — a single larger word reads
+   as "you are here" where a graded set of sizes would read as "more".
+
+   Baseline alignment on the anchor keeps the enlarged word sitting on the
+   same line as its neighbours instead of pushing the row. */
+.tag-signal[aria-current="page"] .tag-signal__name {
+  font-size: var(--size-sm);
+  line-height: var(--lh-label);
+}
+.tag-signal { transition: border-color var(--motion-quick) linear; }
+@media (prefers-reduced-motion: reduce) { .tag-signal { transition: none; } }
+
+/* ── optional rotation ────────────────────────────────────────────────
+   Frequency is carried by brightness; hue only carries relative position
+   around the apex. Rotating the apex therefore shifts every subject
+   together and leaves the encoding intact — measured across a full circle,
+   the dimmest subject never drops below 5.06:1.
+
+   Off by default: the community theme should not animate at rest. Enable
+   with spectrum.tagRotate, and it still yields to reduced-motion.        */
+@keyframes spectrum-rotate { from { --tag-rotation: 0; } to { --tag-rotation: 360; } }
+
+:root[data-tag-rotate="on"] .tag-signal__name,
+:root[data-tag-rotate="on"] .tag-signal__count,
+:root[data-tag-rotate="on"] .signal-legend__step {
+  animation: spectrum-rotate var(--tag-rotate-duration, 240s) linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-tag-rotate="on"] .tag-signal__name,
+  :root[data-tag-rotate="on"] .tag-signal__count,
+  :root[data-tag-rotate="on"] .signal-legend__step { animation: none; }
+}
+
+/* legend */
+.signal-legend { padding-block: var(--space-block); max-width: var(--measure); }
+.signal-legend p { font-size: var(--size-sm); color: var(--ink-soft); line-height: var(--lh-body);
+}
+.signal-legend__scale { display: flex; gap: var(--s1); margin: var(--space-tight) 0; }
+.signal-legend__step {
+  --_i: var(--tag-signal, 0.3);
+  /* angle carries identity, distance carries brightness only.
+     Hugo emits the final offset, so there is no division here. */
+  --_h: calc(var(--tag-apex-hue) + var(--tag-hue, 0) + var(--tag-rotation));
+  --_l: calc(var(--tag-l-rare) + (var(--tag-l-apex) - var(--tag-l-rare)) * var(--_i));
+  --_c: calc(var(--tag-c-peak) * var(--tag-chroma, 1));
+  width: var(--s11); height: var(--s7); border: var(--rule-hair) solid var(--freq-rule);
+  background: var(--ink-faint);
+}
+@supports (color: oklch(0.7 0.1 300)) {
+  .signal-legend__step { background: oklch(var(--_l) var(--_c) var(--_h)); }
+}
+
+/* ── pager ───────────────────────────────────────────────────────────
+   Ruled and numbered, stating the range rather than only the page. Disabled
+   steps stay in place so the control does not shift as you move through. */
+.pager {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  justify-content: space-between; gap: var(--space-tight) var(--space-item);
+  border-top: var(--rule-bold) solid var(--ink);
+  margin-top: var(--space-block); padding-top: var(--space-row);
+}
+.pager__range {
+  margin: 0; font-family: var(--font-data); font-size: var(--size-2xs);
+  line-height: var(--lh-label);
+  color: var(--ink-faint); font-variant-numeric: tabular-nums;
+}
+.pager__list { display: flex; flex-wrap: wrap; gap: var(--s4); list-style: none; margin: 0; padding: 0; }
+.pager__n, .pager__step {
+  display: inline-block; font-family: var(--font-sans); font-size: var(--size-xs);
+  font-weight: var(--weight-label); letter-spacing: var(--tracking-ref); text-decoration: none;
+  padding: var(--s3) var(--s7); border: var(--rule-hair) solid var(--rule);
+  border-radius: var(--radius-chip); color: var(--link);
+  font-variant-numeric: tabular-nums; line-height: var(--lh-label);
+}
+.pager__n:hover, .pager__step:hover { border-color: var(--ink-faint); color: var(--link-hover); }
+.pager__n[aria-current="page"] {
+  background: var(--band); color: var(--band-ink); border-color: var(--ink);
+}
+.pager__step[aria-disabled="true"] {
+  color: var(--disabled-ink); border-color: var(--disabled-rule); cursor: default;
+}
+
+/* ── spectral headline ───────────────────────────────────────────────
+   A headline painted with its own subjects' colors, so the title reads as
+   a summary of what the entry is about.
+
+   Ink is set first and unconditionally. background-clip: text only takes
+   effect inside @supports, so if it is unavailable — or if the gradient
+   fails to resolve — the text stays legible rather than transparent.      */
+
+h1.spectral, a.spectral, .spectral { color: var(--ink); }
+
+@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+  h1.spectral, a.spectral, .spectral {
+    background-image: var(--title-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+  /* Forced-colors and print must never inherit a transparent foreground. */
+  @media (forced-colors: active) {
+    .spectral { background-image: none; color: CanvasText; }
+  }
+}
+
+a.spectral:hover { text-decoration: underline; text-decoration-thickness: var(--rule-bold); }
+
+/* ── archive ────────────────────────────────────────────────────────
+   Back issues, year over month, counts right-aligned on tabular figures
+   so the column reads as a column. */
+.archive__years, .archive__months { list-style: none; margin: 0; padding: 0; }
+.archive__years { padding: var(--panel-pad); }
+.archive__year + .archive__year { margin-top: var(--space-row); }
+.archive a {
+  display: flex; justify-content: space-between; gap: var(--space-item);
+  text-decoration: none; padding: var(--s2) 0;
+}
+.archive a:hover { text-decoration: underline; text-decoration-thickness: var(--rule-bold); }
+.archive__ylink {
+  font-family: var(--font-data); font-size: var(--size-sm);
+  color: var(--ink); border-bottom: var(--rule-hair) solid var(--rule);
+  padding-bottom: var(--s3); margin-bottom: var(--s3); line-height: var(--lh-label);
+}
+.archive__months a { font-size: var(--size-xs); color: var(--ink-soft); padding-left: var(--space-row); line-height: var(--lh-label);
+}
+.archive__months a:hover { color: var(--link-hover); }
+.archive__n { font-family: var(--font-data); font-size: var(--size-2xs); font-weight: var(--weight-quiet);
+  color: var(--ink-faint); font-variant-numeric: tabular-nums; line-height: var(--lh-label); }
+
+/* ── form ───────────────────────────────────────────────────────────
+   Block-form discipline: one field per row, label above and uppercase,
+   hint below. No floating labels, no placeholder-as-label. */
+.form { max-width: var(--measure); margin-top: var(--space-block); }
+.form .field { margin-bottom: var(--space-block); }
+/* Label left, flag right, shared baseline — the same arrangement as .hd,
+   because it is the same job. The flag was amber on every one of four
+   labels, which made a short form shout. */
+.form label {
+  display: flex; flex-wrap: wrap; gap: var(--space-tight);
+  align-items: baseline; justify-content: space-between;
+}
+.field__flag {
+  font-family: var(--font-data); font-size: var(--size-2xs); font-weight: var(--weight-quiet);
+  letter-spacing: var(--tracking-eyebrow); text-transform: uppercase;
+  color: var(--ink-faint); line-height: var(--lh-label);
+}
+.form textarea { resize: vertical; min-height: var(--s18); font-family: var(--font-serif); }
+.form .btn { margin-top: var(--space-tight); }
+
+/* ── plates ─────────────────────────────────────────────────────────
+   A plate index, not a lightbox. Each cell carries a reference number,
+   a title, provenance and the source dimensions, because a plate in a
+   manual is catalogued rather than merely displayed. */
+.plates {
+  list-style: none; margin: var(--space-block) 0 0; padding: 0;
+  display: grid; gap: var(--space-block);
+  grid-template-columns: 1fr;
+}
+@media (min-width: 40rem) { .plates { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 64rem) { .plates { grid-template-columns: repeat(3, 1fr); } }
+
+.plates__cell figure { margin: 0; }
+.plates__cell img {
+  display: block; width: 100%; height: auto;
+  border: var(--rule-hair) solid var(--rule);
+  background: var(--surface-sunken);
+}
+.plates__cell a:focus-visible img { outline: var(--focus-width) solid var(--focus); outline-offset: var(--focus-offset); }
+.plates__cell figcaption {
+  display: grid; gap: var(--s1);
+  padding-top: var(--space-tight);
+  border-top: var(--rule-hair) solid var(--rule);
+  margin-top: var(--space-tight);
+  font-size: var(--size-xs); line-height: var(--lh-body);
+}
+.plates__ref {
+  font-family: var(--font-data); font-size: var(--size-2xs);
+  letter-spacing: var(--tracking-ref); color: var(--ink-faint); line-height: var(--lh-label);
+}
+.plates__title { color: var(--ink); }
+.plates__caption { color: var(--ink-soft); }
+.plates__dims { font-family: var(--font-data); font-size: var(--size-2xs); font-weight: var(--weight-quiet);
+  color: var(--ink-faint); line-height: var(--lh-label); }
+
+
+/* The catalog used to have its own row grammar (.labs) — a flex list with
+   an 8rem date column — so a catalog entry and a journal entry looked like
+   records from two different systems. Both render through .index now. */
+.index__trail { margin: var(--s4) 0 0; }

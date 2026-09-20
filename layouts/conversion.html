@@ -1,0 +1,35 @@
+{{ define "main" }}
+  {{- /*
+    The conversion layout: product, service and booking pages.
+
+    One layout, because they are one arrangement — banner, claim, offer,
+    what it does, the prose, the questions, the ask. What makes a page a
+    product rather than a service is the front matter it carries, which is
+    also what schema.html keys off, so the page a reader sees and the graph
+    a crawler reads are built from the same declaration and cannot drift.
+
+      sku          -> Product + Offer
+      serviceType  -> Service + Offer
+      bookingUrl   -> Service + ReserveAction
+      faq          -> FAQPage
+
+    One column. A conversion page competing with a sidebar is a conversion
+    page competing with itself.
+  */ -}}
+  {{- /* These layouts are one column, which removed the branch nav, and
+         none of them drew a trail — so a page three levels deep had no way
+         up at all while emitting a four-item BreadcrumbList to crawlers. */ -}}
+  {{ partial "breadcrumb.html" . }}
+  <div class="hero">
+    {{ partial "banner.html" (dict "page" .) }}
+    {{ partial "heading.html" (dict "title" .Title "level" 1 "variant" "hero") }}
+    {{- with .Params.standfirst }}<p class="hero__standfirst">{{ . }}</p>{{ end }}
+  </div>
+
+  {{- with .Params.claim }}<p class="claim standout">{{ . }}</p>{{ end }}
+  {{ partial "offer.html" (dict "page" .) }}
+  {{ partial "features.html" (dict "page" .) }}
+  <article class="prose">{{ .Content }}</article>
+  {{ partial "faq.html" (dict "page" .) }}
+  {{ partial "cta.html" (dict "page" .) }}
+{{ end }}

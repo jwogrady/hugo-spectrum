@@ -1,0 +1,16 @@
+{{- /*
+  The zone selector, above the sticky panels and outside them, so it scrolls
+  away once you have used it. Setting the zone is a thing you do once; the
+  time is a thing you keep needing.
+
+  Rendered hidden and revealed by the script — without scripting the buttons
+  do nothing, so offering them would be a lie.
+
+  The buttons name zones; the clock prints whatever abbreviation is actually
+  in force, so CST reads CDT in summer. That is the truth, not a mismatch.
+*/ -}}
+<div class="panel-edge clock__zones" hidden>
+  {{- range site.Params.spectrum.zones }}
+  <button type="button" class="clock__zone" data-tz="{{ .tz }}" aria-pressed="false">{{ .label }}</button>
+  {{- end }}
+</div>

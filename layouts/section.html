@@ -1,10 +1,17 @@
 {{ define "main" }}
-  <h1>{{ .Title }}</h1>
-  {{ .Content }}
-  {{ range .Pages }}
-    <section>
-      <h2><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></h2>
-      {{ .Summary }}
-    </section>
-  {{ end }}
+  {{ partial "page-head.html" (dict "page" .) }}
+  <div class="prose">{{ .Content }}</div>
+  {{- if .Pages }}
+  {{- /* Dated pages sort newest-first; standing pages sort by title. The
+         table groups by day, so ordering a dated section alphabetically made
+         one date head two groups and put the heads out of order — visible on
+         /posts/ and on nothing the consuming site happened to have. */ -}}
+  {{- $dated := false }}{{ range .Pages }}{{ if not .Date.IsZero }}{{ $dated = true }}{{ end }}{{ end }}
+  {{- $ordered := cond $dated (sort .Pages "Date" "desc") (sort .Pages "Title") }}
+  {{ partial "index-table.html" (dict "pages" $ordered "trail" "price_from") }}
+  {{- else }}<p class="hint">Nothing here yet.</p>{{ end }}
+{{ end }}
+
+{{ define "aside" }}
+  {{- with partial "branch-root.html" . }}{{ partial "page-nav.html" (dict "root" . "current" $) }}{{ end }}
 {{ end }}

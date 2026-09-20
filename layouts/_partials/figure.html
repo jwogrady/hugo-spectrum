@@ -1,0 +1,16 @@
+{{/* An attachment with its provenance. Original photography from a real job is
+     the signal a stock library cannot forge — so the credit renders. */}}
+{{- with .resource }}
+{{- $img := . }}
+{{- if ge .Width 1400 }}{{ $img = .Resize "1400x webp q82" }}{{ end }}
+<figure>
+  <img src="{{ $img.RelPermalink }}" width="{{ $img.Width }}" height="{{ $img.Height }}"
+       alt="{{ or .Params.alt .Title }}" loading="lazy" decoding="async">
+  {{- if or .Params.caption .Params.credit }}
+  <figcaption>
+    {{- with .Params.caption }}{{ . }}{{ end }}
+    {{- with .Params.credit }}<span class="credit">{{ . }}{{ with $.resource.Params.shot_where }}, {{ . }}{{ end }}{{ with $.resource.Params.shot_on }} · {{ . }}{{ end }}</span>{{ end }}
+  </figcaption>
+  {{- end }}
+</figure>
+{{- end }}

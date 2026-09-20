@@ -1,0 +1,108 @@
+{{- /*
+  The record table. Every list of entries on this site renders through here,
+  so a journal entry, a tag result and a catalog offering are the same record
+  in the same columns — which is the only reason the site reads as one
+  publication rather than as four pages that happen to share a stylesheet.
+
+  Dated records are grouped by day. Each day is a row group headed by its
+  own date, and that head sticks to the top of the viewport while you scroll
+  through the day's entries — so whatever you are reading, the date it
+  belongs to is on screen. Newest first, so the latest is always at the top.
+
+  Standing pages carry no date. A table of them gets neither the day heads
+  nor the time column, and must never print Go's zero time: About was
+  rendering 0001-01-01. Columns appear when the data has them.
+
+    pages  the records (required)
+    tags   show tag chips (default true)
+    trail  a page param rendered at the end of the subject cell, e.g.
+           "price_from" for the catalog
+*/ -}}
+{{- $pages := .pages -}}
+{{- $tags  := ne .tags false -}}
+{{- $trail := .trail -}}
+{{- /* The publication's zone, mirrored from site timeZone. Not .Local: that
+       is the build machine's zone, so the same commit grouped entries one way
+       on a laptop in Chicago and another in a UTC runner. */ -}}
+{{- $tz    := or site.Params.spectrum.timezone "UTC" -}}
+{{- $dated := false -}}
+{{- range $pages }}{{ if not .Date.IsZero }}{{ $dated = true }}{{ end }}{{ end -}}
+
+{{- /* Grouped by hand rather than with GroupByDate, which re-sorts: the
+       caller's order is the publication order and must survive. */ -}}
+{{- $groups := slice -}}
+{{- $cur := slice -}}
+{{- $curDay := "" -}}
+{{- $curDate := false -}}
+{{- range $pages -}}
+  {{- /* Keyed on the publication's date, not the stored one. An entry filed at
+         01:00 UTC belongs to the previous day in Chicago, and grouping on
+         one zone while printing another files records under a day they are
+         not shown to be on. */ -}}
+  {{- $d := cond .Date.IsZero "" ((time.In $tz .Date).Format "2006-01-02") -}}
+  {{- if and (ne $d $curDay) (gt (len $cur) 0) -}}
+    {{- $groups = $groups | append (dict "day" $curDay "date" $curDate "pages" $cur) -}}
+    {{- $cur = slice -}}
+  {{- end -}}
+  {{- if ne $d $curDay }}{{ $curDate = time.In $tz .Date }}{{ end -}}
+  {{- $curDay = $d -}}
+  {{- $cur = $cur | append . -}}
+{{- end -}}
+{{- if gt (len $cur) 0 }}{{ $groups = $groups | append (dict "day" $curDay "date" $curDate "pages" $cur) }}{{ end -}}
+
+<table class="index">
+  {{- /* The column heads read "Time" over a column of times and "Subject"
+         over a column of titles: two words that tell a sighted reader
+         nothing the column has not already told them. They stay in the
+         markup because a screen reader announcing "Time, 18:38" is how a
+         data table is meant to work — they just stop taking a row on
+         screen. */ -}}
+  <thead class="u-sr">
+    <tr>
+      {{- if $dated }}<th scope="col" class="col-time">Time</th>{{ end }}
+      <th scope="col">Subject</th>
+    </tr>
+  </thead>
+  {{- $cols := cond $dated 2 1 }}
+  {{- range $groups }}
+  {{- $g := . }}
+  <tbody class="index__group">
+    {{- with $g.day }}
+    {{- /* 09 JUL 2026 — the form the mission clock is in, and unambiguous
+           between conventions — with the weekday set against the far edge.
+           The machine-readable value stays ISO.
+
+           display:flex on a th would take the cell out of the table's
+           formatting context, so the flex row is a span inside it. */ -}}
+    <tr class="index__day"><th scope="rowgroup" colspan="{{ $cols }}">
+      <span class="index__dayline">
+        <a class="index__daylink" href="{{ (printf "/archives/%s/" .) | relURL }}">
+          <time datetime="{{ . }}">{{ $g.date.Format "02 Jan 2006" | upper }}</time></a>
+        <span class="index__weekday">{{ $g.date.Format "Monday" | upper }}</span>
+      </span>
+    </th></tr>
+    {{- end }}
+    {{- range $g.pages }}
+    {{- $entry := . }}
+    <tr>
+      {{- if $dated }}
+      {{- if .Date.IsZero }}<td class="index__time">&mdash;</td>
+      {{- else }}<td class="index__time"><time datetime="{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}">{{ (time.In $tz .Date).Format "15:04" }}</time></td>{{ end }}
+      {{- end }}
+      <td>
+        {{- /* The gradient is the same object in both views: an entry's
+               headline carries its own subjects here and on its own page, so
+               a title a reader recognises in the index is the title they
+               meet when they arrive. */ -}}
+        {{- $grad := partial "tags/title-gradient.html" (dict "page" .) }}
+        <div class="index__title"><a href="{{ .RelPermalink }}"
+          {{- with $grad }} class="spectral" style="--title-gradient:{{ . | safeCSS }}"{{ end }}>{{ .Title }}</a></div>
+        {{- with or .Params.claim .Params.excerpt }}<p class="index__claim">{{ . }}</p>{{ end }}
+        {{- if $tags }}{{ partial "tags/list.html" (dict "page" .) }}{{ end }}
+        {{- with $trail }}{{ with (index $entry.Params .) }}<p class="index__trail"><span class="ref">from {{ . }}</span></p>{{ end }}{{ end }}
+      </td>
+    </tr>
+    {{- end }}
+  </tbody>
+  {{- end }}
+</table>

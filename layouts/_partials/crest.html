@@ -1,0 +1,11 @@
+{{- with resources.Get "brand/crest.svg" }}
+  {{- .Content | safeHTML -}}
+{{- else -}}
+<svg class="crest" viewBox="0 0 48 48" role="img" aria-hidden="true" focusable="false">
+  <path d="M6 6h36v22c0 8-7.5 12.5-18 16C13.5 40.5 6 36 6 28V6Z"
+        fill="none" stroke="currentColor" stroke-width="2.5"/>
+  <path d="M12 21l12-8 12 8" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linejoin="miter"/>
+  <path d="M13 27h22M15 32h18" stroke="currentColor" stroke-width="2" stroke-linecap="butt"/>
+</svg>
+{{- end -}}

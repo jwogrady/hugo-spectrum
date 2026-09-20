@@ -1,0 +1,24 @@
+{{- /* One tag signal.
+
+   The numeric channels are emitted on the SPAN, not on the anchor, and the
+   span is also where the color is computed and where the rotation animates.
+   Everything the color depends on therefore lives on a single element.
+
+   Two reasons it has to be this way:
+     - :visited is resolved in a separate restricted pass that inline custom
+       properties do not reach, so coloring the anchor collapses every
+       clicked tag to the apex hue.
+     - inheriting an animated custom property from an ancestor loses the
+       element's own --tag-hue, collapsing the whole field the same way. */ -}}
+{{- $t := .tag -}}
+{{- $current := .current | default false -}}
+{{- $showCount := .showCount | default false -}}
+{{- $n := $t.count -}}
+{{- $chan := printf "--tag-signal:%.4f;--tag-hue:%.2f;--tag-chroma:%.4f;" $t.intensity $t.angle $t.chroma -}}
+<a class="tag-signal" href="{{ $t.url }}" data-count="{{ $n }}"
+   {{- if $current }} aria-current="page"{{ end }}
+   title="{{ $n }} {{ cond (eq $n 1) "entry" "entries" }}"
+   aria-label="{{ $t.name }} &mdash; {{ $n }} {{ cond (eq $n 1) "entry" "entries" }}">
+  <span class="tag-signal__name" style="{{ $chan | safeCSS }}">{{ $t.name }}</span>
+  {{- if $showCount }}<span class="tag-signal__count" style="{{ $chan | safeCSS }}">{{ $n }}</span>{{ end -}}
+</a>

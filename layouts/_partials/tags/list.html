@@ -1,0 +1,13 @@
+{{- $page := .page -}}
+{{- with $page.Params.tags -}}
+{{- $all := partialCached "tags/collect.html" $page -}}
+{{- $byName := dict -}}
+{{- range $all }}{{ $byName = merge $byName (dict (lower .name) .) }}{{ end -}}
+<span class="index__tags">
+  {{- range . -}}
+    {{- with index $byName (lower .) -}}
+      {{- partial "tags/signal.html" (dict "tag" .) -}}
+    {{- end -}}
+  {{- end }}
+</span>
+{{- end -}}

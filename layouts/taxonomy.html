@@ -1,7 +1,14 @@
 {{ define "main" }}
-  <h1>{{ .Title }}</h1>
-  {{ .Content }}
-  {{ range .Pages }}
-    <h2><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></h2>
-  {{ end }}
+  {{- /* Two taxonomies, two indexes. This called the tags partial for both,
+         so /archives/ headed itself "Subject index" and printed the tag
+         spectrum over a set of dates.
+
+         The head is the same call either way — page-title.html already knows
+         which index this is, and so does the browser tab. */ -}}
+  {{ partial "page-head.html" (dict "page" . "crumb" false "title" (partial "page-title.html" .)) }}
+  {{- if eq .Data.Singular "archive" }}
+  {{ partial "archive-index.html" . }}
+  {{- else }}
+  {{ partial "tags/index.html" . }}
+  {{- end }}
 {{ end }}

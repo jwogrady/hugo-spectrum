@@ -1,9 +1,15 @@
 {{ define "main" }}
-  {{ .Content }}
-  {{ range site.RegularPages }}
-    <section>
-      <h2><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></h2>
-      {{ .Summary }}
-    </section>
-  {{ end }}
+{{- $posts := where site.RegularPages "Section" "posts" -}}
+{{ partial "page-head.html" (dict "page" . "crumb" false
+     "title" "Journal") }}
+{{- if $posts }}
+{{- $paged := .Paginate (sort $posts "Date" "desc") }}
+{{ partial "index-table.html" (dict "pages" $paged.Pages) }}
+{{ partial "pager.html" . }}
+{{- else }}
+<p class="hint">No entries yet.</p>
+{{- end }}
 {{ end }}
+
+{{ define "aside-top" }}{{ partialCached "clock-zones.html" . }}{{ end }}
+{{ define "aside" }}{{ partialCached "aside.html" (dict "current" "" "limit" 24) "" 24 }}{{ end }}

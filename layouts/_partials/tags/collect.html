@@ -1,0 +1,56 @@
+{{- /*
+  Collect every tag and place it on the spectrum by frequency band.
+
+  Distinct counts are sorted ascending and each becomes one band. A band
+  fixes both hue and lightness, so two subjects used equally often render
+  identically — they are identical.
+
+    hue        evenly spaced around the wheel by band index
+    lightness  climbs linearly across the bands
+    chroma     full for every band except the apex, which goes white
+
+  Banding by distinct count is itself outlier compression: a subject at 200
+  uses is simply the next band above one at 19, so a single dominant subject
+  cannot crush the rest. That is what the earlier log-and-Gaussian pass was
+  for, and it is no longer needed — this is both simpler and flatter against
+  outliers.
+
+  Returns a slice ordered count-descending, name-ascending.
+*/ -}}
+{{- $span := float (default 180 site.Params.spectrum.tagHueSpan) -}}
+{{- $topShare := float (default 0.68 site.Params.spectrum.tagBandCeiling) -}}
+
+{{- $counts := slice -}}
+{{- range site.Taxonomies.tags.Alphabetical -}}
+  {{- if not (in $counts .Count) }}{{ $counts = $counts | append .Count }}{{ end -}}
+{{- end -}}
+{{- $counts = sort $counts -}}
+{{- $bands := len $counts -}}
+{{- $maxCount := 0 -}}
+{{- if $counts }}{{ $maxCount = index $counts (sub $bands 1) }}{{ end -}}
+
+{{- $out := slice -}}
+{{- range site.Taxonomies.tags.Alphabetical -}}
+  {{- $c := .Count -}}
+  {{- $b := 0 -}}
+  {{- range $k, $v := $counts }}{{ if eq $v $c }}{{ $b = $k }}{{ end }}{{ end -}}
+  {{- $isApex := eq $c $maxCount -}}
+  {{- $denom := cond (gt $bands 1) (float (sub $bands 1)) 1.0 -}}
+  {{- /* Non-apex bands occupy the lower part of the lightness ramp so the
+         apex has somewhere brighter to sit. */ -}}
+  {{- $t := cond $isApex 1.0 (mul $topShare (div (float $b) $denom)) -}}
+  {{- $hue := div (mul (mul 2.0 $span) (float $b)) (float $bands) -}}
+  {{- $out = $out | append (dict
+        "name"      .Term
+        "count"     $c
+        "url"       .Page.RelPermalink
+        "band"      $b
+        "bands"     $bands
+        "intensity" $t
+        "angle"     $hue
+        "chroma"    (cond $isApex 0.0 1.0)
+        "distance"  (sub 1.0 (div (float $b) $denom))
+        "direction" (cond (eq (mod $b 2) 0) -1 1)
+        "key"       (printf "%09d|%s" (sub 999999999 $c) (lower .Term))) -}}
+{{- end -}}
+{{- return (sort $out "key") -}}

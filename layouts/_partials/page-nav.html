@@ -1,0 +1,25 @@
+{{- /*
+  Child navigation for a hierarchical page section.
+
+  Posts are flat and dated — the journal indexes them. Pages nest, so a
+  page section is a branch, and a branch needs navigation: the index lists
+  its children, and every page in the branch carries the same tree with
+  itself marked. Without it a child page's only way back is the breadcrumb.
+
+    root     the section page the branch hangs off (required)
+    current  the page being viewed (required)
+*/ -}}
+{{- $root := .root -}}
+{{- if $root.Pages }}
+<nav class="branch" aria-labelledby="branch-head">
+  {{- /* No count: the page head already states it, and "3 items" beside
+         "3 pages" is the same fact twice in two vocabularies. No section
+         title either — on the index page that is the h1 verbatim, one
+         column over. The breadcrumb says where you are; this says what
+         else is here. */ -}}
+  {{ partial "heading.html" (dict "title" "In this section" "variant" "panel" "id" "branch-head") }}
+  <div class="branch__body">
+    {{ partial "page-nav-items.html" (dict "pages" $root.Pages "current" .current "depth" 0) }}
+  </div>
+</nav>
+{{- end }}

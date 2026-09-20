@@ -1,0 +1,35 @@
+{{- /*
+  A gradient built from a page's own subjects: the headline reads as a
+  summary of what it is about.
+
+  Each stop carries that subject's intensity and hue, while lightness,
+  chroma and the apex come from the palette tokens — so the gradient
+  re-keys with the theme instead of being baked in.
+
+  Returns an empty string when a page has no tags, so the caller can fall
+  back to plain ink. A single tag yields a flat two-stop gradient rather
+  than an invalid one-stop one.
+*/ -}}
+{{- $page := .page -}}
+{{- $out := "" -}}
+{{- with $page.Params.tags -}}
+  {{- $all := partialCached "tags/collect.html" $page -}}
+  {{- $byName := dict -}}
+  {{- range $all }}{{ $byName = merge $byName (dict (lower .name) .) }}{{ end -}}
+  {{- $stops := slice -}}
+  {{- range . -}}
+    {{- with index $byName (lower .) -}}
+      {{- $i := printf "%.4f" .intensity -}}
+      {{- $h := printf "%.2f" .angle -}}
+      {{- $cm := printf "%.4f" .chroma -}}
+      {{- $stops = $stops | append (printf
+          "oklch(calc(var(--tag-l-rare) + (var(--tag-l-apex) - var(--tag-l-rare)) * %s) calc(var(--tag-c-peak) * %s) calc(var(--tag-apex-hue) + %s))"
+          $i $cm $h) -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if eq (len $stops) 1 }}{{ $stops = $stops | append (index $stops 0) }}{{ end -}}
+  {{- if $stops -}}
+    {{- $out = printf "linear-gradient(100deg, %s)" (delimit $stops ", ") -}}
+  {{- end -}}
+{{- end -}}
+{{- return $out -}}

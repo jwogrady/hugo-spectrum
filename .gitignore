@@ -1,0 +1,7 @@
+# Hugo build output and caches — never belongs in the theme.
+# Matched at any depth: the example site builds into its own directory too.
+# (A pattern with a slash in the middle would anchor to the repo root and
+# miss exampleSite/, which is exactly how resources/_gen slipped in once.)
+public/
+**/resources/_gen/
+.hugo_build.lock

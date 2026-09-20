@@ -1,17 +1,46 @@
-<!DOCTYPE html>
-<html lang="{{ site.Language.Locale }}" dir="{{ or site.Language.Direction `ltr` }}">
-<head>
-  {{ partial "head.html" . }}
-</head>
+<!doctype html>
+<html lang="{{ or site.Language.Locale "en" }}"
+      {{- with site.Params.spectrum.palette }} data-palette="{{ . }}"{{ end }}
+      {{- with site.Params.spectrum.theme }} data-theme="{{ . }}"{{ end }}
+      {{- if site.Params.spectrum.tagRotate }} data-tag-rotate="on" style="--tag-rotate-duration:{{ default 240 site.Params.spectrum.tagRotateSeconds }}s"{{ end }}>
+{{ partial "head.html" . }}
 <body>
-  <header>
-    {{ partial "header.html" . }}
-  </header>
-  <main>
+  <a class="skip" href="#main">Skip to content</a>
+  {{- /* Cached on what actually varies: which menu entry is current.
+         Pages in a section share one masthead; root-level pages do not —
+         Contact and Plates both have an empty .Section, so keying on the
+         section alone collided them and each got the other's nav state. */ -}}
+  {{ partialCached "masthead.html" . .IsHome (or .Section .RelPermalink) }}
+  {{- $cols := partial "columns.html" . }}
+  <main id="main" class="page page--{{ $cols }}">
+    {{- /* Two and three share the spread; three adds a second aside beside
+           the first. A layout still only declares what goes in a column —
+           baseof owns the frame, so no layout states its own geometry. */}}
+    {{- if or (eq $cols "two") (eq $cols "three") }}
+    {{- /* baseof owns the spread so no layout states its own frame. A
+           layout defines "main", and "aside" if it has one. */}}
+    <div class="spread{{ if eq $cols "three" }} spread--three{{ end }}">
+      <div class="spread__main">{{ block "main" . }}{{ end }}</div>
+      {{- /* baseof owns the aside too, and its reserved top slot, so every
+             page's second column starts at the same height whatever is in
+             it. Five layouts used to write this element themselves. */}}
+      <aside class="spread__aside">
+        <div class="aside__top">{{ block "aside-top" . }}{{ end }}</div>
+        <div class="aside__panels">{{ block "aside" . }}{{ end }}</div>
+      </aside>
+      {{- if eq $cols "three" }}
+      {{- /* The far column reserves the same top slot as the near one, so
+             all three columns start their content at one height. */}}
+      <aside class="spread__aside">
+        <div class="aside__top">{{ block "aside-far-top" . }}{{ end }}</div>
+        <div class="aside__panels">{{ block "aside-far" . }}{{ end }}</div>
+      </aside>
+      {{- end }}
+    </div>
+    {{- else }}
     {{ block "main" . }}{{ end }}
+    {{- end }}
   </main>
-  <footer>
-    {{ partial "footer.html" . }}
-  </footer>
+  {{ partial "footer.html" . }}
 </body>
 </html>

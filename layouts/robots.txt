@@ -1,0 +1,7 @@
+User-agent: *
+{{- range site.Params.spectrum.disallow }}
+Disallow: {{ . }}
+{{- end }}
+Allow: /
+
+Sitemap: {{ "sitemap.xml" | absURL }}

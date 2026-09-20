@@ -1,0 +1,84 @@
+# Spectrum — example site.
+#
+# This is the demo and review harness for the theme: it supplies the content
+# types, taxonomy and URLs that the theme deliberately does not carry, and it
+# exercises every template the theme ships.
+#
+#   hugo server --source exampleSite --themesDir ../..
+
+baseURL              = 'https://example.org/'
+locale               = 'en-US'
+title                = 'Spectrum'
+theme                = 'hugo-spectrum'
+capitalizeListTitles = false
+enableRobotsTXT      = true   # the theme ships layouts/robots.txt
+
+# Not optional in practice. Unset, Hugo uses the build machine's zone and the
+# same commit renders different times on a laptop and in CI.
+timeZone = 'America/Chicago'
+
+# Dates come from front matter and from nowhere else.
+#
+# Hugo will otherwise fall back through publishdate, lastmod and modified, and
+# what those resolve to depends on the checkout — a CI runner produced a
+# journal day for the day it ran, linking to an archive page no entry belongs
+# to. The theme already fails a build with no timeZone for the same reason:
+# a date that depends on the machine is not a date.
+[frontmatter]
+  date = ['date']
+
+[pagination]
+  pagerSize = 10
+
+# The journal is flat and dated; days come from the archive taxonomy, so every
+# date the index links to is a page that exists.
+[taxonomies]
+  tag     = 'tags'
+  archive = 'archives'
+
+# The masthead nav. Labels must match their own slug — check.sh fails a menu
+# that says "Documentation" and points at /docs/. The journal is the root, so
+# it carries no slug to match.
+[menus]
+  [[menus.main]]
+    name     = 'Journal'
+    pageRef  = '/'
+    weight   = 10
+  [[menus.main]]
+    name     = 'Docs'
+    pageRef  = '/docs'
+    weight   = 20
+  [[menus.main]]
+    name     = 'Patterns'
+    pageRef  = '/patterns'
+    weight   = 25
+  [[menus.main]]
+    name     = 'Plates'
+    pageRef  = '/plates'
+    weight   = 30
+  [[menus.main]]
+    name     = 'Contact'
+    pageRef  = '/contact'
+    weight   = 40
+
+[params]
+  description = 'A field manual for work that has to be read, not skimmed.'
+
+[params.spectrum]
+  owner      = 'Spectrum'
+  standfirst = 'Instrument log, calibration record, and standing pages'
+  palette    = ''                    # '' default, 'ultraviolet' for the preset
+  timezone   = 'America/Chicago'     # must equal timeZone above
+  copyright  = 'Status26, Inc.'                    # the entity, where owner is the masthead name
+  banners    = '/plates'            # the pool the hero and landing banners draw from
+  disallow   = ['/r/']              # citation handles resolve, but are not indexed
+
+  [[params.spectrum.zones]]          # the clock's selector; first is default
+    label = 'CST'
+    tz    = 'America/Chicago'
+  [[params.spectrum.zones]]
+    label = 'UTC'
+    tz    = 'UTC'
+  [[params.spectrum.zones]]
+    label = 'CET'
+    tz    = 'Europe/Berlin'

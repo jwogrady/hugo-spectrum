@@ -1,10 +1,20 @@
 {{ define "main" }}
-  <h1>{{ .Title }}</h1>
+  {{ partial "breadcrumb.html" . }}
+  <article class="prose">
+    {{- /* No eyebrow. "Journal entry" told a reader what the masthead, the
+           breadcrumb and the URL had already told them, and the reference
+           is a citation handle rather than something to read: it lives in
+           front matter and resolves at /r/<code>/. */ -}}
+    {{- $grad := partial "tags/title-gradient.html" (dict "page" .) }}
+    <h1{{ with $grad }} class="spectral" style="--title-gradient:{{ . | safeCSS }}"{{ end }}>{{ .Title }}</h1>
+    {{ partial "entry-meta.html" . }}
+    {{- with .Params.claim }}<p class="claim standout">{{ . }}</p>{{ end }}
+    {{- with .Params.featured_image }}{{ with $.Resources.Get . }}{{ partial "figure.html" (dict "resource" .) }}{{ end }}{{ end }}
+    {{ .Content }}
+    {{- with .Params.tags }}<div class="index__tags">{{ partial "tags/list.html" (dict "page" $) }}</div>{{ end }}
+  </article>
+{{ end }}
 
-  {{ $dateMachine := .Date | time.Format "2006-01-02T15:04:05-07:00" }}
-  {{ $dateHuman := .Date | time.Format ":date_long" }}
-  <time datetime="{{ $dateMachine }}">{{ $dateHuman }}</time>
-
-  {{ .Content }}
-  {{ partial "terms.html" (dict "taxonomy" "tags" "page" .) }}
+{{ define "aside" }}
+  {{- with partial "branch-root.html" . }}{{ partial "page-nav.html" (dict "root" . "current" $) }}{{ end }}
 {{ end }}
