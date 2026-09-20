@@ -59,6 +59,7 @@ timeZone = 'America/Chicago'
   standfirst = 'Instrument log, calibration record, and standing pages'
   palette    = ''                    # '' default, 'ultraviolet' for the preset
   timezone   = 'America/Chicago'     # must equal timeZone above
+  copyright  = 'Spectrum Instruments Ltd.'   # the entity, where owner is the masthead name
   footerNote = 'Set in Source Serif 4 and Public Sans. Demo content.'
   banners    = '/plates'            # the pool the hero and landing banners draw from
   disallow   = ['/r/']              # citation handles resolve, but are not indexed

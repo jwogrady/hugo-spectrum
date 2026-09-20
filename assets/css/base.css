@@ -235,4 +235,7 @@ figcaption { margin-top: var(--space-tight); font-size: var(--size-xs); color: v
    border and nothing on screen, so the last line of the publication sat
    flush against the bottom of the document. */
 .site-foot { padding-bottom: var(--space-section); }
+/* The theme's notice sits under the site's, not beside it: one is the
+   publication speaking and the other is not. */
+.site-foot__credit { margin-top: var(--space-tight); }
 

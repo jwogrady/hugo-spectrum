@@ -41,6 +41,8 @@ timeZone = 'America/Chicago'   # the publication's zone; see below
   owner      = 'Your Name'
   standfirst = 'A short line under the nameplate'
   palette    = ''              # '' for the default, 'ultraviolet' for the preset
+  copyright  = ''              # the legal entity, when it is not `owner`
+  themeCredit = true           # false removes the theme's line from the foot
   timezone   = 'America/Chicago'  # must equal timeZone above
 
   [[params.spectrum.zones]]     # the clock's zone selector; first is the default
