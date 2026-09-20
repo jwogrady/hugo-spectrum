@@ -235,7 +235,28 @@ figcaption { margin-top: var(--space-tight); font-size: var(--size-xs); color: v
    border and nothing on screen, so the last line of the publication sat
    flush against the bottom of the document. */
 .site-foot { padding-bottom: var(--space-section); }
-/* The theme's notice sits under the site's, not beside it: one is the
-   publication speaking and the other is not. */
-.site-foot__credit { margin-top: var(--space-tight); }
+/* The foot carries its own rule, so the gap above it is this padding and
+   not an <hr>'s margin meeting it. */
+.site-foot__grid {
+  border-top: var(--rule-hair) solid var(--rule);
+  padding-top: var(--space-block);
+  display: grid; gap: var(--space-block);
+}
+/* The site's notice, a step up from the colophon beneath it in colour only:
+   same size, same leading, so the foot reads as one block set quietly. */
+.site-foot__notice {
+  font-size: var(--size-xs); line-height: var(--lh-label);
+  color: var(--ink-soft); margin: 0;
+}
+.site-foot__credit { margin-top: 0; }
+@media (min-width: 60rem) {
+  /* The page's own columns. The foot's outer edges land where every other
+     block's do, and the right half of the frame stops being empty. */
+  .site-foot__grid {
+    grid-template-columns: minmax(0, var(--col-main)) var(--col-aside);
+    gap: var(--col-gap);
+  }
+  /* Ranged right against the frame's edge, the way the masthead's nav is. */
+  .site-foot__credit { text-align: right; }
+}
 

@@ -47,7 +47,6 @@
      box printed over the row above it. */
   .masthead, .aside__panels, .index__day th { position: static; }
   .index__day th::before { content: none; }
-  .site-foot hr { display: none; }   /* the foot rules itself below */
 
   /* Masthead becomes a publication header rule. */
   .masthead { border-bottom: 1.5pt solid #000; padding-bottom: 6pt; margin-bottom: 12pt; }
