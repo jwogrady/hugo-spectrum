@@ -157,6 +157,22 @@ happens after parsing, so `var(--rule-hair)solid` becomes `1pxsolid` and the
 declaration is dropped. It silently broke every border, the focus ring and
 twelve padding shorthands. Gzip recovers most of the difference.
 
+## Example site
+
+`exampleSite/` is the demo and review harness. It supplies the content types,
+taxonomy and URLs the theme deliberately does not carry, and it exercises every
+template the theme ships — so `--printUnusedTemplates` reports nothing.
+
+```
+hugo server --source exampleSite --themesDir ../..
+```
+
+Twelve journal entries across four days, with a tag distribution chosen to put
+six distinct bands on the field and only one subject at the apex. Also a
+catalog section, a page-bundle gallery, a contact form built from front matter,
+and a citation handle resolving at `/r/26-002/`. The plate images are generated
+rather than photographed, so the demo carries no licensing questions.
+
 ## Checks
 
 ```

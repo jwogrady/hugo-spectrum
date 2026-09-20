@@ -1,0 +1,48 @@
+# Spectrum — example site.
+#
+# This is the demo and review harness for the theme: it supplies the content
+# types, taxonomy and URLs that the theme deliberately does not carry, and it
+# exercises every template the theme ships.
+#
+#   hugo server --source exampleSite --themesDir ../..
+
+baseURL              = 'https://example.org/'
+locale               = 'en-US'
+title                = 'Spectrum'
+theme                = 'hugo-pulse-spectrum'
+capitalizeListTitles = false
+enableRobotsTXT      = true   # the theme ships layouts/robots.txt
+
+# Not optional in practice. Unset, Hugo uses the build machine's zone and the
+# same commit renders different times on a laptop and in CI.
+timeZone = 'America/Chicago'
+
+[pagination]
+  pagerSize = 10
+
+# The journal is flat and dated; days come from the archive taxonomy, so every
+# date the index links to is a page that exists.
+[taxonomies]
+  tag     = 'tags'
+  archive = 'archives'
+
+[params]
+  description = 'A field manual for work that has to be read, not skimmed.'
+
+[params.spectrum]
+  owner      = 'Spectrum'
+  standfirst = 'Instrument log, calibration record, and standing pages'
+  palette    = ''                    # '' default, 'ultraviolet' for the preset
+  timezone   = 'America/Chicago'     # must equal timeZone above
+  footerNote = 'Set in Source Serif 4 and Public Sans. Demo content.'
+  disallow   = ['/r/']              # citation handles resolve, but are not indexed
+
+  [[params.spectrum.zones]]          # the clock's selector; first is default
+    label = 'CST'
+    tz    = 'America/Chicago'
+  [[params.spectrum.zones]]
+    label = 'UTC'
+    tz    = 'UTC'
+  [[params.spectrum.zones]]
+    label = 'CET'
+    tz    = 'Europe/Berlin'
