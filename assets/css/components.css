@@ -146,6 +146,67 @@
   .spread { grid-template-columns: minmax(0, var(--col-main)) var(--col-aside); gap: var(--col-gap); }
 }
 
+/* ── three columns · the aside, twice ─────────────────────────────────
+   A third column is not a new width. It is the aside again, so the frame
+   reads main + gap + aside + gap + aside and the outer edges sit exactly
+   where they do on every other page. Below the breakpoint all three stack
+   in source order, which puts the main column first — a reader on a phone
+   gets the substance, not the apparatus.
+
+   The main column lands under the 34rem measure here, which is the point:
+   three columns are for material that is scanned, not prose that is read. */
+@media (min-width: 60rem) {
+  .spread--three {
+    grid-template-columns: minmax(0, var(--col-main-three)) var(--col-aside) var(--col-aside);
+  }
+}
+
+/* ── the hero · a banner built from type ──────────────────────────────
+   Spectrum's argument is that nobody is tempted into reading by a hero
+   image, so this is a hero in structure and nothing else: a tall opening
+   band that sets a page apart, made of size, space and one rule. It keeps
+   the frame — a band that breaks to the viewport edge would make this the
+   only page whose outer edges move. */
+.hero {
+  border-bottom: var(--rule-bold) solid var(--rule-strong);
+  padding-bottom: var(--space-section);
+  margin-bottom: var(--space-major);
+}
+.hero__standfirst {
+  font-size: var(--size-lg); line-height: var(--lh-snug);
+  color: var(--ink-soft); max-width: var(--measure);
+  margin: var(--space-block) 0 0;
+}
+.hero__note {
+  font-size: var(--size-xs); line-height: var(--lh-label);
+  color: var(--ink-faint); margin: var(--space-item) 0 0;
+}
+
+/* ── the landing · sections, not a page ───────────────────────────────
+   A landing page is a set of routes, so it is built from bands rather
+   than from prose: each band states one thing and points somewhere. The
+   cells reuse the panel's border, radius and padding, because a headed
+   box in this theme is already one object. */
+.landing { display: grid; gap: var(--space-major); }
+.landing__section { display: grid; gap: var(--space-block); }
+.landing__grid {
+  display: grid; gap: var(--space-item);
+  grid-template-columns: repeat(auto-fit, minmax(var(--col-aside), 1fr));
+  list-style: none; margin: 0; padding: 0;
+}
+.landing__cell {
+  border: var(--rule-hair) solid var(--rule);
+  border-radius: var(--radius-panel);
+  background: var(--surface-raised);
+  padding: var(--panel-pad);
+}
+.landing__title { font-size: var(--size-lg); line-height: var(--lh-title); margin: 0; }
+.landing__title a { color: var(--ink); }
+.landing__blurb {
+  font-size: var(--size-sm); line-height: var(--lh-body);
+  color: var(--ink-soft); margin: var(--space-tight) 0 0;
+}
+
 /* ── the panel · one box, four uses ───────────────────────────────────
    The clock, the branch navigation, the spectrum and the archive are the
    same object: a headed box in the sidebar. The border, the radius and the
@@ -177,6 +238,10 @@
    headline in an entry's own prose were s11 and s10 apart — one heading,
    two different spaces beneath it depending on the template. */
 .hd--page { margin-bottom: var(--s10); }
+/* The banner headline. It is the same head object as every other, set
+   large — a hero that hand-rolled its own <h1> would be the fifth
+   implementation of the thing this partial exists to hold. */
+.hd--hero .hd__title { font-size: var(--size-4xl); line-height: var(--lh-tight); }
 .hd--panel {
   background: var(--band); color: var(--band-ink);
   padding: var(--space-tight) var(--space-item);

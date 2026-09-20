@@ -450,15 +450,20 @@ for f in pathlib.Path(sys.argv[1]).rglob("index.html"):
     h = f.read_text()
     m = re.search(r'class="page page--(\w+)"', h)
     if not m: continue
-    two = m.group(1) == "two"
-    aside = 'class="spread__aside' in h
-    if two != aside:
-        bad.append(f"{f.parent.name or '/'}:{'two-col, empty aside' if two else 'aside without a spread'}")
+    # Exact count, not presence: three columns means two asides, and a
+    # three-column page that rendered one would have a 17rem hole the
+    # presence test could not see.
+    want = {"one": 0, "two": 1, "three": 2}.get(m.group(1))
+    got = h.count('class="spread__aside')
+    if want is None:
+        bad.append(f"{f.parent.name or '/'}:unknown column mode {m.group(1)}")
+    elif want != got:
+        bad.append(f"{f.parent.name or '/'}:{m.group(1)} wants {want} aside(s), has {got}")
 print(" ".join(sorted(set(bad))[:6]))
 PYEOF
 )"
 if [ -z "$empty" ]
-then ok "every two-column page has an aside, and no other page does"
+then ok "every page has exactly the asides its column count implies"
 else no "column/aside mismatch: $empty"; fi
 
 # A menu that says Catalog pointing at /services/ is a section with two
@@ -922,7 +927,14 @@ else no "palette tuning wrong: $pal"; fi
 # Every template the theme ships is reached by the demo content. A partial
 # nothing exercises is a feature documented but never rendered — figure.html
 # sat unused while the README promised entries take a featured image.
-unused="$( (cd "$SITE" && hugo --printUnusedTemplates --destination "$TMP/ut" 2>&1) \
+#
+# Built against exampleSite, not the consuming site. This read $SITE until the
+# theme grew layouts that site had no page for, and reported three templates
+# unused when the fault was the fixture: a consuming site is free to use only
+# part of a theme, and the theme's own demo is the thing that must use all of
+# it. It is also why the check now works in a clone with no Pulse beside it.
+unused="$( (cd "$THEME" && hugo --source exampleSite --themesDir ../.. \
+              --printUnusedTemplates --destination "$TMP/ut" 2>&1) \
            | grep -o 'Template [^ ]* is unused' | sed 's/Template //;s/ is unused//' | head -5 )"
 if [ -z "$unused" ]
 then ok "every template the theme ships is exercised by the content"

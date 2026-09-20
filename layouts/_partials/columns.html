@@ -3,10 +3,11 @@
   "two". baseof.html reads it and owns the spread, so no layout states its
   own frame.
 
+    three reference pages — prose, its branch, and the subject field
     two   journal index and tag results  — records plus the subject field
           contact                        — the form plus its guidance
           a hierarchical page branch     — content plus child navigation
-    one   plates, single entries, flat pages
+    one   plates, single entries, flat pages, hero and landing
 
   Posts are flat and dated, so an entry is one column. Pages nest, so a
   page inside a branch gets the branch's navigation beside it.
@@ -19,8 +20,15 @@
   against nil made every post claim a branch it did not have.
 
   A page can override with `columns = "one"` in front matter.
+
+  Layouts that own their whole width say so here rather than in each page's
+  front matter, so the frame stays one decision. hero and landing are one
+  column even inside a branch — without this they inherited the branch's
+  second column and rendered a 17rem hole beside a banner.
 */ -}}
 {{- with .Params.columns }}{{ return . }}{{ end -}}
+{{- if eq .Layout "reference" }}{{ return "three" }}{{ end -}}
+{{- if or (eq .Layout "hero") (eq .Layout "landing") }}{{ return "one" }}{{ end -}}
 {{- $two := false -}}
 {{- if or .IsHome (eq .Kind "term") (isset .Params "form") }}{{ $two = true }}{{ end -}}
 {{- with partial "branch-root.html" . }}{{ $two = true }}{{ end -}}

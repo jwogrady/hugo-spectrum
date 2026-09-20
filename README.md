@@ -92,9 +92,29 @@ their dates.
 
 ## Layout
 
-One frame, 72rem, on every page. A one-column page is one column the full
-width of it; a two-column page splits the same width into main plus aside.
-The outer edges sit in the same place everywhere.
+One frame, 72rem, on every page. Five layouts divide it; none of them
+changes it, so the outer edges sit in the same place everywhere.
+
+| layout | frame | use it for |
+|---|---|---|
+| one column | 72rem | entries, plates, flat pages — anything whose apparatus would be noise |
+| two columns | 50.76 + 17 | the journal, tag results, a page in a branch — a reader still choosing |
+| three columns | 29.53 + 17 + 17 | reference material that is consulted, not read |
+| hero | 72rem | a page that must announce itself before it explains itself |
+| landing | 72rem | a front door: a set of routes, not a document |
+
+The third column is the aside again rather than a new width, so the frame
+still sums to 72rem. It costs reading width — 29.53rem is under the 34rem
+measure — which is the trade: two columns of apparatus are only worth it when
+the apparatus is the point.
+
+The hero is a banner made of type, rule and space. There is no image slot and
+it does not break the frame; see the first paragraph of this README for why.
+A landing page carries its bands in front matter rather than markup, like the
+contact form, because a landing page is data.
+
+`exampleSite/patterns/` has one page per layout, each built with the layout it
+describes.
 
 Both columns reserve their first slot — the breadcrumb on the left, the
 clock's zone selector on the right — so a headline does not drop by the
@@ -177,6 +197,10 @@ the index, the spectrum or the date archive.
 **Docs** is a branch — hierarchical, weighted, navigated. An introduction and
 three child pages, with the aside carrying the branch on every page in it and
 the current page marked. Order comes from `weight`, not the filename.
+
+**Patterns** is one page per layout — one column, two, three, hero and landing
+— each built with the layout it documents, so the three-column page really has
+three columns.
 
 Also a page-bundle gallery, a contact form built from front matter, the masthead
 menu, and a citation handle resolving at `/r/26-002/`. The plate images are

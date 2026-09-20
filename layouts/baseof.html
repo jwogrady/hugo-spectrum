@@ -13,10 +13,13 @@
   {{ partialCached "masthead.html" . .IsHome (or .Section .RelPermalink) }}
   {{- $cols := partial "columns.html" . }}
   <main id="main" class="page page--{{ $cols }}">
-    {{- if eq $cols "two" }}
+    {{- /* Two and three share the spread; three adds a second aside beside
+           the first. A layout still only declares what goes in a column —
+           baseof owns the frame, so no layout states its own geometry. */}}
+    {{- if or (eq $cols "two") (eq $cols "three") }}
     {{- /* baseof owns the spread so no layout states its own frame. A
            layout defines "main", and "aside" if it has one. */}}
-    <div class="spread">
+    <div class="spread{{ if eq $cols "three" }} spread--three{{ end }}">
       <div class="spread__main">{{ block "main" . }}{{ end }}</div>
       {{- /* baseof owns the aside too, and its reserved top slot, so every
              page's second column starts at the same height whatever is in
@@ -25,6 +28,14 @@
         <div class="aside__top">{{ block "aside-top" . }}{{ end }}</div>
         <div class="aside__panels">{{ block "aside" . }}{{ end }}</div>
       </aside>
+      {{- if eq $cols "three" }}
+      {{- /* The far column reserves the same top slot as the near one, so
+             all three columns start their content at one height. */}}
+      <aside class="spread__aside">
+        <div class="aside__top">{{ block "aside-far-top" . }}{{ end }}</div>
+        <div class="aside__panels">{{ block "aside-far" . }}{{ end }}</div>
+      </aside>
+      {{- end }}
     </div>
     {{- else }}
     {{ block "main" . }}{{ end }}

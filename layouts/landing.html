@@ -1,0 +1,42 @@
+{{ define "main" }}
+  {{- /*
+    The landing layout. A banner, then bands of routes.
+
+    Use it for a page whose job is to send the reader somewhere else: a site
+    front door, a section hub, an index of indexes. It carries almost no
+    prose of its own by design — a landing page that has to be read has
+    stopped being one.
+
+    The bands come from front matter, like the contact form, so the page is
+    data rather than markup:
+
+      [[params.sections]]
+        title = "..."
+        blurb = "..."
+        [[params.sections.items]]
+          title = "..."  url = "/..."  blurb = "..."
+  */ -}}
+  <div class="hero">
+    {{ partial "heading.html" (dict "title" .Title "level" 1 "variant" "hero") }}
+    {{- with .Params.standfirst }}<p class="hero__standfirst">{{ . }}</p>{{ end }}
+  </div>
+  <div class="landing">
+    {{- range .Params.sections }}
+    <section class="landing__section">
+      {{ partial "heading.html" (dict "title" .title "level" 2) }}
+      {{- with .blurb }}<p class="landing__blurb">{{ . }}</p>{{ end }}
+      {{- with .items }}
+      <ul class="landing__grid">
+        {{- range . }}
+        <li class="landing__cell">
+          <h3 class="landing__title"><a href="{{ .url | relURL }}">{{ .title }}</a></h3>
+          {{- with .blurb }}<p class="landing__blurb">{{ . }}</p>{{ end }}
+        </li>
+        {{- end }}
+      </ul>
+      {{- end }}
+    </section>
+    {{- end }}
+  </div>
+  {{- with .Content }}<article class="prose">{{ . }}</article>{{ end }}
+{{ end }}

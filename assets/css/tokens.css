@@ -136,6 +136,13 @@
   --col-aside: 17rem;                 /* = 72 / phi^3 = 17.00             */
   --col-gap:   var(--space-major);    /* 4.2361rem                        */
   --col-main:  calc(var(--page) - var(--col-aside) - var(--col-gap));
+  /* Three columns take a second aside of the same width, so the frame is
+     main + gap + aside + gap + aside. Derived like the rest: the third
+     column is not a new width, it is the aside again, and the main column
+     is whatever is left. It lands at 29.53rem, which is under the 34rem
+     measure on purpose — a three-column page is for reference material
+     that is scanned, not prose that is read. */
+  --col-main-three: calc(var(--page) - (2 * var(--col-aside)) - (2 * var(--col-gap)));
 
   /* The measure is the one width the ratio does not set. A reading column
      is governed by character count, not by geometry: 34rem is ~64

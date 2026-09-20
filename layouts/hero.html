@@ -1,0 +1,19 @@
+{{ define "main" }}
+  {{- /*
+    The banner layout. A tall opening band, then the page.
+
+    Use it for a page that has to announce itself before it explains itself:
+    an about page, a manifesto, the top of a documentation set. One column,
+    always — a banner with a sidebar beside it is two claims on the same
+    attention.
+
+    The band is type, rule and space. Spectrum's argument is that nobody is
+    tempted into reading by a photograph, so there is no image slot here.
+  */ -}}
+  <div class="hero">
+    {{ partial "heading.html" (dict "title" .Title "level" 1 "variant" "hero") }}
+    {{- with .Params.standfirst }}<p class="hero__standfirst">{{ . }}</p>{{ end }}
+    {{- with .Params.note }}<p class="hero__note">{{ . }}</p>{{ end }}
+  </div>
+  <article class="prose">{{ .Content }}</article>
+{{ end }}
