@@ -37,6 +37,7 @@
      The reading size is the tonic, not 16px: this is a publishing engine,
      so the size prose is set at is the size everything else answers to.
      Three steps apart is exactly phi — sm to lg, base to xl, lg to 2xl.   */
+  --size-3xs:  0.5594rem;  /*  8.95px — dense control rows, the floor    */
   --size-2xs:  0.6567rem;  /* 10.51px — reference codes, table eyebrows   */
   --size-xs:   0.7709rem;  /* 12.33px — meta, counts, captions            */
   --size-sm:   0.9050rem;  /* 14.48px — table cells, nav                  */
