@@ -10,14 +10,14 @@
                was two registers in three lines. */ -}}
         <p class="site-foot__notice">&copy; {{ now.Year }} {{ or site.Params.spectrum.copyright site.Params.spectrum.owner site.Title }}</p>
         {{- with site.Params.spectrum.footerNote }}<p class="hint">{{ . }}</p>{{ end }}
-        {{- /* The credit sits under the notice because it is the same kind
-               of statement — who made this — and a different claim from the
-               site's copyright, which is why it is its own line and never
-               merged into one. Status26's copyright covers the code, never
-               what a site publishes with it. */ -}}
+        {{- /* Authorship, under the copyright it belongs beside. It used to
+               restate the theme's own copyright here, which on any site
+               owned by Status26 printed the same notice twice in one column
+               — and on every other site said what the column opposite and
+               the LICENSE both already say. What is left is the part only
+               this line carries: who made it. */ -}}
         {{- if ne site.Params.spectrum.themeCredit false }}
-        <p class="hint site-foot__credit">Built with <a href="https://github.com/jwogrady/hugo-pulse-spectrum">Spectrum</a>,
-          a Hugo theme by <a href="https://github.com/jwogrady">jwogrady</a> &mdash; &copy; 2026 Status26, Inc.</p>
+        <p class="hint site-foot__credit">Created by <a href="https://github.com/jwogrady">jwogrady</a></p>
         {{- end }}
       </div>
       {{- /* What the theme is, rather than who owns it. The column opposite
