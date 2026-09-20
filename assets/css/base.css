@@ -244,8 +244,12 @@ figcaption { margin-top: var(--space-tight); font-size: var(--size-xs); color: v
 }
 /* The site's notice, a step up from the colophon beneath it in colour only:
    same size, same leading, so the foot reads as one block set quietly. */
+/* Same size and the same leading as the colophon and the claim opposite.
+   It was --lh-label against their --lh-body: one foot, one size, three
+   rhythms, and the two columns' first baselines landing at different
+   heights because the left line was set tighter than the right. */
 .site-foot__notice {
-  font-size: var(--size-xs); line-height: var(--lh-label);
+  font-size: var(--size-xs); line-height: var(--lh-body);
   color: var(--ink-soft); margin: 0;
 }
 /* One pair of lines, set as a pair: the hair step, not the tight one. */
