@@ -167,11 +167,20 @@ template the theme ships — so `--printUnusedTemplates` reports nothing.
 hugo server --source exampleSite --themesDir ../..
 ```
 
-Twelve journal entries across four days, with a tag distribution chosen to put
-six distinct bands on the field and only one subject at the apex. Also a
-catalog section, a page-bundle gallery, a contact form built from front matter,
-and a citation handle resolving at `/r/26-002/`. The plate images are generated
-rather than photographed, so the demo carries no licensing questions.
+The two shapes a Spectrum site has, side by side:
+
+**The journal** is `posts` — flat, dated, tagged, never navigated. Twelve
+entries across four days, with a tag distribution chosen to put six distinct
+bands on the field and only one subject at the apex. You reach an entry through
+the index, the spectrum or the date archive.
+
+**Docs** is a branch — hierarchical, weighted, navigated. An introduction and
+three child pages, with the aside carrying the branch on every page in it and
+the current page marked. Order comes from `weight`, not the filename.
+
+Also a page-bundle gallery, a contact form built from front matter, the masthead
+menu, and a citation handle resolving at `/r/26-002/`. The plate images are
+generated rather than photographed, so the demo carries no licensing questions.
 
 ## Checks
 

@@ -26,6 +26,27 @@ timeZone = 'America/Chicago'
   tag     = 'tags'
   archive = 'archives'
 
+# The masthead nav. Labels must match their own slug — check.sh fails a menu
+# that says "Documentation" and points at /docs/. The journal is the root, so
+# it carries no slug to match.
+[menus]
+  [[menus.main]]
+    name     = 'Journal'
+    pageRef  = '/'
+    weight   = 10
+  [[menus.main]]
+    name     = 'Docs'
+    pageRef  = '/docs'
+    weight   = 20
+  [[menus.main]]
+    name     = 'Plates'
+    pageRef  = '/plates'
+    weight   = 30
+  [[menus.main]]
+    name     = 'Contact'
+    pageRef  = '/contact'
+    weight   = 40
+
 [params]
   description = 'A field manual for work that has to be read, not skimmed.'
 
