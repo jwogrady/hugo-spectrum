@@ -3,7 +3,7 @@
   "packages": {
     ".": {
       "release-type": "simple",
-      "package-name": "hugo-pulse-spectrum",
+      "package-name": "hugo-spectrum",
       "changelog-path": "CHANGELOG.md",
       "initial-version": "0.1.0",
       "bump-minor-pre-major": true,

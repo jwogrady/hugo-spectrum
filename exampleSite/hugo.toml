@@ -9,7 +9,7 @@
 baseURL              = 'https://example.org/'
 locale               = 'en-US'
 title                = 'Spectrum'
-theme                = 'hugo-pulse-spectrum'
+theme                = 'hugo-spectrum'
 capitalizeListTitles = false
 enableRobotsTXT      = true   # the theme ships layouts/robots.txt
 

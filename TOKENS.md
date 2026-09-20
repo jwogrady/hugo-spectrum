@@ -152,7 +152,7 @@ fallback is used if the file is absent.
 ## Checks
 
 ```bash
-themes/hugo-pulse-spectrum/scripts/check.sh
+themes/hugo-spectrum/scripts/check.sh
 ```
 
 Builds fixture sites covering no tags, one tag, equal counts, an extreme

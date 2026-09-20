@@ -28,13 +28,13 @@ no taxonomy and no URL structure; those belong to the site.
 ## Install
 
 ```
-git submodule add https://github.com/jwogrady/hugo-pulse-spectrum \
-  themes/hugo-pulse-spectrum
+git submodule add https://github.com/jwogrady/hugo-spectrum \
+  themes/hugo-spectrum
 ```
 
 ```toml
 # hugo.toml
-theme    = 'hugo-pulse-spectrum'
+theme    = 'hugo-spectrum'
 timeZone = 'America/Chicago'   # the publication's zone; see below
 
 [params.spectrum]
