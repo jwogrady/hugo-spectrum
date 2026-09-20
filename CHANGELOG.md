@@ -6,7 +6,6 @@
 ### Features
 
 * the demo deploys to Netlify ([5a03a18](https://github.com/jwogrady/hugo-spectrum/commit/5a03a18df56f588d4e6407c05a002f1d9774090b))
-* the demo is deployed ([5a03a18](https://github.com/jwogrady/hugo-spectrum/commit/5a03a18df56f588d4e6407c05a002f1d9774090b))
 * the deploy sets cache and security headers ([5a03a18](https://github.com/jwogrady/hugo-spectrum/commit/5a03a18df56f588d4e6407c05a002f1d9774090b))
 
 ## [0.2.1](https://github.com/jwogrady/hugo-spectrum/compare/v0.2.0...v0.2.1) (2026-09-20)
