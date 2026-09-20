@@ -552,7 +552,7 @@
    Interaction state is deliberately structural — underline, border,
    outline — so it can never be mistaken for a change in frequency.       */
 
-/* ── the mission clock · a sidebar panel above the spectrum ───────────
+/* ── the mission time · a sidebar panel above the spectrum ───────────
    An instrument readout: tabular figures so a ticking second never shifts
    the digits beside it, and the date dimmed so the live part carries the
    signal colour. Not opacity for the dim half — that would scale the

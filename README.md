@@ -92,7 +92,7 @@ reaches white. Ties cannot drift apart, because they are the same band.
 Counts appear in the accessible name and on hover, so colour is never the
 only channel. Type size and weight are identical at every frequency.
 
-The sidebar carries the whole field, the date archive, and a mission clock
+The sidebar carries the whole field, the date archive, and a mission time
 whose zone the reader can change — switching it re-renders the journal,
 regrouping days in the new zone rather than moving times out from under
 their dates.
@@ -209,7 +209,7 @@ still tells a screen reader which day its row belongs to.
 ## JavaScript
 
 One executable script, ~4KB, inline in the footer. The JSON-LD block is a
-`<script>` element that runs nothing, and the check counts accordingly. It runs the mission clock and lets
+`<script>` element that runs nothing, and the check counts accordingly. It drives the mission time and lets
 the reader put the publication into another zone. It is an upgrade to markup
 that already renders correctly: with scripting off, the clock shows the date
 the publication last changed and the zone selector is not offered, because a
