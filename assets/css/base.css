@@ -248,9 +248,33 @@ figcaption { margin-top: var(--space-tight); font-size: var(--size-xs); color: v
   font-size: var(--size-xs); line-height: var(--lh-label);
   color: var(--ink-soft); margin: 0;
 }
-/* Set off from the colophon above it: the same voice, a separate claim. */
-.site-foot__credit { margin-top: var(--space-tight); }
-.site-foot__about { margin-top: 0; }
+/* One pair of lines, set as a pair: the hair step, not the tight one. */
+.site-foot__credit { margin-top: var(--space-hair); }
+/* Balanced, so the two lines come out close to even instead of breaking
+   after "MIT-licensed" and leaving "Hugo" to start the second line alone.
+   Ragged-left only reads as deliberate when the rag is shallow. */
+.site-foot__about { margin-top: 0; text-wrap: balance; }
+
+/* The foot speaks quietly, and its links speak in its voice.
+   Three amber links in one sentence made the right column louder than the
+   publication's own copyright on the left, and read as a row of buttons
+   rather than a line of prose that happens to cite its sources. They keep
+   the underline — the distinction cannot be colour alone — and take the
+   foot's own ink, brightening only on hover.
+
+   The underline is currentColor, not a dimmed rule. Once the link stops
+   being amber it is the only thing left distinguishing it from the text
+   beside it, and --rule-strong sits at 2.06:1 on this surface — visible,
+   but not carrying a distinction on its own. At currentColor it inherits
+   the text's own 7.34:1.
+
+   Pinned on :link and :visited. `a:visited` is 0,1,1 and would otherwise
+   tie with `.site-foot a` and win on order, which is the same specificity
+   trap that made the buy button unreadable. */
+.site-foot a,
+.site-foot a:link,
+.site-foot a:visited { color: var(--ink-soft); text-decoration-color: currentColor; }
+.site-foot a:hover { color: var(--link-hover); text-decoration-thickness: var(--rule-bold); }
 @media (min-width: 60rem) {
   /* The page's own columns. The foot's outer edges land where every other
      block's do, and the right half of the frame stops being empty. */
