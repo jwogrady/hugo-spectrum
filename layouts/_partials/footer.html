@@ -57,14 +57,66 @@
 
   var ZONES = {{ $zones | jsonify | safeJS }};
   var KEY = 'spectrum.tz';
-  var tz = ZONES[0].tz;
+
+  /* 'local' is a sentinel, not a zone: it stands for whichever zone the
+     reader's own machine is in, and only resolves here. It stays the
+     sentinel in tz and in storage, so a reader already in the publication's
+     zone does not light two buttons at once, and so the choice reads as
+     "my machine" rather than as the zone that machine happened to be in. */
+  var LOCAL = 'UTC';
+  try { LOCAL = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch (e) {}
+  function zoneOf(t) { return t === 'local' ? LOCAL : t; }
+
+  /* Two zones are the same zone here when they keep the same wall clock in
+     both January and July — the same standard offset *and* the same DST rule,
+     which a single instant cannot tell apart. America/Winnipeg is CT by this
+     test; America/Phoenix, which observes no DST, is none of the four, and is
+     not filed under MT half the year and PT the other half.
+
+     It answers both questions the selector asks. Where does a reader land
+     before choosing: the first listed zone that keeps their machine's clock,
+     or UTC, the zone an instrument log has in common with everyone. And which
+     buttons are lit: every one showing the time now on screen, so a reader in
+     Chicago sees CT and Local both pressed, because both are true. */
+  var PROBES = ['2026-01-15T12:00:00Z', '2026-07-15T12:00:00Z'];
+  var wcache = {};
+  function wall(z, iso) {
+    if (!wcache[z]) wcache[z] = new Intl.DateTimeFormat('en-CA', { timeZone: z,
+      hour12: false, year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit' });
+    return wcache[z].format(new Date(iso));
+  }
+  function sameWall(a, b) {
+    if (a === b) return true;
+    try {
+      return PROBES.every(function (p) { return wall(a, p) === wall(b, p); });
+    } catch (e) { return false; }
+  }
+  function has(t) { return ZONES.some(function (z) { return z.tz === t; }); }
+  function landing() {
+    var match = null;
+    for (var i = 0; i < ZONES.length && !match; i++) {
+      var t = ZONES[i].tz;
+      if (t !== 'local' && sameWall(t, LOCAL)) match = t;
+    }
+    /* A reader the publication already covers lands on Local, not on the
+       named zone that happens to agree with it: the two read identically and
+       both light, but Local is the one that stays right if they move. A
+       reader it does not cover lands on UTC rather than on their own zone —
+       an instrument log is not local to them, and pretending otherwise files
+       its days under a calendar the archive pages do not have. */
+    if (!match) return has('UTC') ? 'UTC' : ZONES[0].tz;
+    return has('local') ? 'local' : match;
+  }
+
+  var tz = landing();
   try { var v = localStorage.getItem(KEY);
         if (v && ZONES.some(function (z) { return z.tz === v; })) tz = v; } catch (e) {}
 
   var cache = {};
   function parts(d, opts, key) {
     var k = tz + '|' + key;
-    if (!cache[k]) cache[k] = new Intl.DateTimeFormat('en-CA', opts(tz));
+    if (!cache[k]) cache[k] = new Intl.DateTimeFormat('en-CA', opts(zoneOf(tz)));
     return cache[k].formatToParts(d).reduce(function (o, p) { o[p.type] = p.value; return o; }, {});
   }
   var O = {

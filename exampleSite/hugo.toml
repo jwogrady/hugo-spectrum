@@ -73,12 +73,27 @@ timeZone = 'America/Chicago'
   banners    = '/plates'            # the pool the hero and landing banners draw from
   disallow   = ['/r/']              # citation handles resolve, but are not indexed
 
-  [[params.spectrum.zones]]          # the clock's selector; first is default
-    label = 'CST'
+  # The clock's selector, in geographic order: east to west, then the two
+  # that are not places. The publication's own zone has to be somewhere in
+  # this list or a reader can never get back to the one the archive pages are
+  # built in — it no longer has to be first, because nothing is served from
+  # this list. ET/CT/MT/PT name the zone rather than the offset in force, so
+  # the button never contradicts the readout — CST would read CDT all summer.
+  [[params.spectrum.zones]]
+    label = 'ET'
+    tz    = 'America/New_York'
+  [[params.spectrum.zones]]
+    label = 'CT'
     tz    = 'America/Chicago'
   [[params.spectrum.zones]]
+    label = 'MT'
+    tz    = 'America/Denver'
+  [[params.spectrum.zones]]
+    label = 'PT'
+    tz    = 'America/Los_Angeles'
+  [[params.spectrum.zones]]           # the instrument zone; no DST, ever
     label = 'UTC'
     tz    = 'UTC'
-  [[params.spectrum.zones]]
-    label = 'CET'
-    tz    = 'Europe/Berlin'
+  [[params.spectrum.zones]]           # whatever zone the reader's machine is in
+    label = 'Local'
+    tz    = 'local'
