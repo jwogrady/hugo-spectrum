@@ -602,10 +602,18 @@ else no "column heads wrong: $hd"; fi
 
 # The zone selector. It is inert without scripting, so it ships hidden and
 # the script reveals it — offering a control that cannot work is worse than
-# not offering it. Its first entry is the default and has to be the
-# publication's own zone, or the clock disagrees with the dates beneath it
-# on first paint.
-read -r n hid first cfg <<<"$(python3 - "$SITE" "$PUB" <<'PYEOF'
+# not offering it.
+#
+# The publication's own zone has to be somewhere in the list, or a reader who
+# switches away can never get back to the zone the archive pages are built in
+# — the one the dates beneath the clock are filed under.
+#
+# It used to have to be *first*, because first was the reader's default. It is
+# not either of those things now: the served paint comes from
+# params.spectrum.timezone, and the script lands a reader on whichever listed
+# zone keeps their machine's own wall clock, falling to UTC when none does. So
+# the order is free, and this asserts membership rather than position.
+read -r n hid zlist cfg <<<"$(python3 - "$SITE" "$PUB" <<'PYEOF'
 import re, sys, pathlib, json, subprocess
 root, pub = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
 h = (pub / "index.html").read_text()
@@ -613,18 +621,20 @@ h = (pub / "index.html").read_text()
 # more than one class, and an exact-attribute match silently stops finding
 # them the moment a second is added.
 pick = re.search(r'<div\b([^>]*\bclass="[^"]*\bclock__zones\b[^"]*"[^>]*)>(.*?)</div>', h, re.S)
-n = len(re.findall(r'data-tz="([^"]+)"', pick.group(2))) if pick else 0
+tzs = re.findall(r'data-tz="([^"]+)"', pick.group(2)) if pick else []
+n = len(tzs)
 hid = 1 if pick and "hidden" in pick.group(1) else 0
-first = re.search(r'data-tz="([^"]+)"', pick.group(2)).group(1) if n else ""
 cfg = ""
 m = re.search(r"^timeZone = '([^']+)'", (root / "hugo.toml").read_text(), re.M)
 if m: cfg = m.group(1)
-print(f"{n} {hid} {first or '-'} {cfg or '-'}")
+print(f"{n} {hid} {','.join(tzs) or '-'} {cfg or '-'}")
 PYEOF
 )"
-if [ "${n:-0}" -ge 2 ] && [ "${hid:-0}" -eq 1 ] && [ "$first" = "$cfg" ]
-then ok "zone selector ships hidden, defaults to the build zone ($cfg)"
-else no "zone selector wrong (buttons=$n hidden=$hid first=$first timeZone=$cfg)"; fi
+offered=0
+case ",$zlist," in *",$cfg,"*) offered=1 ;; esac
+if [ "${n:-0}" -ge 2 ] && [ "${hid:-0}" -eq 1 ] && [ -n "$cfg" ] && [ "$offered" -eq 1 ]
+then ok "zone selector ships hidden and offers the publication's zone ($cfg)"
+else no "zone selector wrong (buttons=$n hidden=$hid zones=$zlist timeZone=$cfg)"; fi
 
 # An unset timeZone means Hugo uses the build machine's zone, so the same
 # commit renders different times on a laptop and in CI. The mirror the

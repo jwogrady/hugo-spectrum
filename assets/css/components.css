@@ -552,7 +552,7 @@
    Interaction state is deliberately structural — underline, border,
    outline — so it can never be mistaken for a change in frequency.       */
 
-/* ── the mission clock · a sidebar panel above the spectrum ───────────
+/* ── the mission time · a sidebar panel above the spectrum ───────────
    An instrument readout: tabular figures so a ticking second never shifts
    the digits beside it, and the date dimmed so the live part carries the
    signal colour. Not opacity for the dim half — that would scale the
@@ -598,10 +598,12 @@
 /* Text and nothing else: no box, no rule, no fill. One bright, the others
    dim, which is the whole of the state. */
 /* On top of the box: they set what the panel reads. */
-.clock__zones { gap: var(--s9); }
+/* Six zones where there were three. At --s9 the row ran past the panel and
+   the labels read as six separate things rather than one control. */
+.clock__zones { gap: var(--s7); }
 .clock__zone {
   appearance: none; background: none; border: 0; padding: 0; cursor: pointer;
-  font-family: var(--font-data); font-size: var(--size-2xs);
+  font-family: var(--font-data); font-size: var(--size-3xs);
   letter-spacing: var(--tracking-eyebrow); line-height: var(--lh-label);
   color: var(--ink-faint);
 }

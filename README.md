@@ -45,13 +45,35 @@ timeZone = 'America/Chicago'   # the publication's zone; see below
   themeCredit = true           # false removes the theme's line from the foot
   timezone   = 'America/Chicago'  # must equal timeZone above
 
-  [[params.spectrum.zones]]     # the clock's zone selector; first is the default
-    label = 'CST'
+  [[params.spectrum.zones]]     # the clock's zone selector; any order
+    label = 'CT'
     tz    = 'America/Chicago'
   [[params.spectrum.zones]]
     label = 'UTC'
     tz    = 'UTC'
+  [[params.spectrum.zones]]     # 'local' is the reader's own machine zone
+    label = 'Local'
+    tz    = 'local'
 ```
+
+`tz` is an IANA zone name, or the sentinel `local` for whatever zone the
+reader's machine is in. Order them however you like — geographically, in the
+example site. The one rule is that `timezone` above must appear somewhere in
+the list, or a reader who switches away can never get back to the zone the
+archive pages are built in.
+
+Readers do not land on the first entry. If any listed zone keeps their
+machine's own wall clock — matched on January *and* July, so it follows the
+DST rule and not just the current offset — they land on `local`, and both
+buttons light, because both are true. If none does, they land on `UTC`: an
+instrument log is not local to a reader it does not cover, and pretending
+otherwise files its days under a calendar the archive pages do not have. List
+`UTC` if you want that fallback; without it the first entry is used instead.
+The page is always *served* in `timezone`, whatever the reader later picks.
+
+Prefer a `label` that names the zone (`CT`) over one that names an offset
+(`CST`): the clock prints the abbreviation actually in force, so a `CST` button
+reads `CDT` for two thirds of the year.
 
 Requires **Hugo 0.146+ extended** — built against 0.166.0. No Node, no npm,
 no build step.
@@ -92,7 +114,7 @@ reaches white. Ties cannot drift apart, because they are the same band.
 Counts appear in the accessible name and on hover, so colour is never the
 only channel. Type size and weight are identical at every frequency.
 
-The sidebar carries the whole field, the date archive, and a mission clock
+The sidebar carries the whole field, the date archive, and a mission time
 whose zone the reader can change — switching it re-renders the journal,
 regrouping days in the new zone rather than moving times out from under
 their dates.
@@ -209,7 +231,7 @@ still tells a screen reader which day its row belongs to.
 ## JavaScript
 
 One executable script, ~4KB, inline in the footer. The JSON-LD block is a
-`<script>` element that runs nothing, and the check counts accordingly. It runs the mission clock and lets
+`<script>` element that runs nothing, and the check counts accordingly. It drives the mission time and lets
 the reader put the publication into another zone. It is an upgrade to markup
 that already renders correctly: with scripting off, the clock shows the date
 the publication last changed and the zone selector is not offered, because a

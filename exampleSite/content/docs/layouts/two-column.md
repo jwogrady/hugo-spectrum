@@ -13,7 +13,7 @@ page inside a branch. The main column answers what they asked; the aside says
 what else is here.
 
 **Anything with standing apparatus.** The subject field, the date archive, the
-mission clock, child navigation. These are not decoration — the spectrum is
+mission time, child navigation. These are not decoration — the spectrum is
 how a table of fifty entries becomes legible before a word is read.
 
 ## What it costs

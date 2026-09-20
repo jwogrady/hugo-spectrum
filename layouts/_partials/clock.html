@@ -1,5 +1,5 @@
 {{- /*
-  The mission clock: a sidebar panel above the spectrum. The zone
+  Mission time: a sidebar panel above the spectrum. The zone
   selector is clock-zones.html, which sits outside the sticky panels.
 
   Served as site.Lastmod in the publication's own zone — the date it last
@@ -17,7 +17,7 @@
 */ -}}
 {{- $z := time.In (or site.Params.spectrum.timezone "UTC") site.Lastmod }}
 <section class="clock" aria-labelledby="clock-head">
-  {{ partial "heading.html" (dict "title" "Mission clock" "variant" "panel" "id" "clock-head") }}
+  {{ partial "heading.html" (dict "title" "Mission time" "variant" "panel" "id" "clock-head") }}
   <div class="clock__body">
     <time class="clock__readout" data-clock
           datetime="{{ site.Lastmod.Format "2006-01-02T15:04:05Z07:00" }}">{{ $z.Format "2006-01-02" }} <span class="clock__time">{{ $z.Format "15:04:05 MST" }}</span></time>
