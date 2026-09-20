@@ -1,3 +1,10 @@
+{{- /* A preview is not the publication. Anything built outside the production
+       environment — a Netlify deploy preview, a branch deploy, a staging
+       host — serves the same pages under a different hostname, and asking to
+       have both indexed is asking for the copy to outrank the original.
+       `hugo` builds production unless told otherwise, so this costs the real
+       site nothing. */ -}}
+{{ if hugo.IsProduction -}}
 User-agent: *
 {{- range site.Params.spectrum.disallow }}
 Disallow: {{ . }}
@@ -5,3 +12,7 @@ Disallow: {{ . }}
 Allow: /
 
 Sitemap: {{ "sitemap.xml" | absURL }}
+{{ else -}}
+User-agent: *
+Disallow: /
+{{ end -}}
