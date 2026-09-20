@@ -733,8 +733,25 @@
        Chroma comes down slightly with it. A shadow at full chroma competes
        with the subject for the same hue at the same strength, and the point
        is that one of them is underneath. */
-    text-shadow: var(--rule-bold) var(--rule-bold) 0
-      oklch(min(calc(var(--_l) * 0.45), 0.16) calc(var(--_c) * 0.8) var(--_h) / 0.55);
+    /* Two layers: a soft bloom in the subject's own hue, and the hard cast
+       under it. The bloom is the subject's own colour at 0.7 of the apex
+       radius — slight, and unmistakably that tag's hue rather than a
+       neutral halo.
+
+       Its alpha is fixed rather than taken from --tag-glow-max, which the
+       paper palettes set to 0.0 because a bloom on white is haze. That is a
+       rule about frequency: on paper, frequency is carried by darkness and
+       a glow would add nothing. This bloom marks one subject, not a range,
+       so it is lit in all six palettes.
+
+       The cost, stated plainly: a lit subject now reads a little like the
+       apex, which is the one thing the bloom used to mean on its own. What
+       separates them is that the current subject is also a step larger and
+       also casts — three markers agreeing, where the apex has one. */
+    text-shadow:
+      0 0 calc(var(--tag-glow-radius) * 0.7) oklch(var(--_l) var(--_c) var(--_h) / 0.5),
+      var(--rule-bold) var(--rule-bold) 0
+        oklch(min(calc(var(--_l) * 0.45), 0.16) calc(var(--_c) * 0.8) var(--_h) / 0.55);
   }
 }
 
