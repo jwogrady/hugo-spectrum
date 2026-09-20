@@ -1,0 +1,48 @@
+# Netlify — the demo deploy.
+#
+# What ships is exampleSite, the same fixture scripts/check.sh builds. It is
+# the only thing in this repository that is a site; the theme itself is not
+# one, and deploying it would publish a directory of layouts.
+#
+# The awkward part is the theme path. exampleSite asks for a theme named
+# hugo-spectrum, and Hugo looks for it under themesDir by that name — but
+# Netlify checks the repository out at /opt/build/repo, so the directory is
+# called "repo" and the lookup misses. check.sh has the same problem and
+# solves it the same way: build a themes directory somewhere else holding a
+# symlink under the name the site asks for. Putting that symlink inside the
+# repository would point a directory at its own ancestor, so it goes in a
+# temporary directory instead.
+#
+# No TZ is set here on purpose. Every rendered date goes through
+# params.spectrum.timezone rather than the build machine's zone, so this
+# builds identically on a laptop in Chicago and on a runner in UTC. If a date
+# on the deploy ever disagrees with one in CI, that has regressed.
+
+[build]
+  publish = "public"
+  command = """
+    set -euo pipefail
+    case "${CONTEXT:-production}" in
+      production) base="$URL";             env=production ;;
+      *)          base="$DEPLOY_PRIME_URL"; env=preview    ;;
+    esac
+    themes="$(mktemp -d)"
+    ln -s "$PWD" "$themes/hugo-spectrum"
+    hugo --source exampleSite \
+         --themesDir "$themes" \
+         --destination "$PWD/public" \
+         --baseURL "$base" \
+         --environment "$env" \
+         --gc --panicOnWarning
+  """
+
+[build.environment]
+  # The version CI builds against. The theme declares 0.146.0 as its floor in
+  # theme.toml; this pins the one it is actually tested on. Extended is not
+  # required — the stylesheet is plain CSS through Pipes, not Sass.
+  HUGO_VERSION = "0.166.0"
+
+# A preview is not the publication, and the environment is passed on the
+# command line above rather than set here as HUGO_ENV: layouts/robots.txt is
+# what reads it, and a variable the templates do not consult would look like
+# configuration while doing nothing.

@@ -286,6 +286,30 @@ Also a page-bundle gallery, a contact form built from front matter, the masthead
 menu, and a citation handle resolving at `/r/26-002/`. The plate images are
 generated rather than photographed, so the demo carries no licensing questions.
 
+### Deploying the demo
+
+`netlify.toml` builds `exampleSite/` and publishes `public/`. The one awkward
+part is the theme path: the site asks for a theme named `hugo-spectrum`, and
+Netlify checks the repository out at `/opt/build/repo`, so the lookup misses.
+The build makes a themes directory elsewhere holding a symlink under the name
+the site asks for — the same move `check.sh` makes, and for the same reason.
+It goes outside the repository so nothing points a directory at its own
+ancestor.
+
+`baseURL` comes from the deploy context: `$URL` in production,
+`$DEPLOY_PRIME_URL` for previews and branch deploys. The context also decides
+the Hugo environment, and `layouts/robots.txt` is what reads it — a production
+build invites indexing, anything else refuses it, so a preview cannot compete
+with the site it is a copy of. Both directions are checked.
+
+Hugo **extended is not required**: the stylesheet is plain CSS through Pipes,
+not Sass. `HUGO_VERSION` pins the version CI builds against rather than the
+floor in `theme.toml`.
+
+No `TZ` is set. Every rendered date goes through `params.spectrum.timezone`
+rather than the build machine's zone, so the deploy and CI agree by
+construction.
+
 ## Checks
 
 ```

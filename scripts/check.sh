@@ -1115,6 +1115,27 @@ if [ "${pages:-0}" -gt 0 ] && [ "${skips:-1}" -eq 0 ]
 then ok "no page skips a heading level ($pages pages)"
 else no "heading levels skipped on ${skips:-?} of ${pages:-0} pages, first $first"; fi
 
+# A preview is not the publication. The robots template is the only thing that
+# reads the build environment, so it is the only thing that can tell a deploy
+# preview apart from the real site — and a preview that serves the production
+# robots.txt asks to be indexed under a hostname that duplicates it.
+#
+# Asserted in both directions. A template that disallowed everything would
+# pass a preview-only check while quietly delisting the real site.
+prev="$TMP/preview"
+if (hugo --source "$SITE" --themesDir "$TMP/themes" --destination "$prev" \
+         --environment preview -D --quiet --panicOnWarning) 2>/dev/null; then
+  prod_ok=0; prev_ok=0
+  grep -q '^Allow: /$' "$PUB/robots.txt" 2>/dev/null && prod_ok=1
+  grep -q '^Disallow: /$' "$prev/robots.txt" 2>/dev/null \
+    && ! grep -q '^Allow: /$' "$prev/robots.txt" && prev_ok=1
+  if [ "$prod_ok" -eq 1 ] && [ "$prev_ok" -eq 1 ]
+  then ok "production invites indexing, a preview build refuses it"
+  else no "robots wrong (production allows=$prod_ok preview disallows=$prev_ok)"; fi
+else
+  no "preview build failed"
+fi
+
 echo
 printf "  %d passed, %d failed\n" "$pass" "$fail"
 [ "$fail" -eq 0 ]
