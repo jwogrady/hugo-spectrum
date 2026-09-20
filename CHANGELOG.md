@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/jwogrady/hugo-spectrum/compare/v0.2.0...v0.2.1) (2026-09-20)
+
+
+### Fixes
+
+* every button showing the time on screen is lit ([cf7fe68](https://github.com/jwogrady/hugo-spectrum/commit/cf7fe681c7adb220612863ade7b5dc08dd4a2e9c))
+
 ## [0.2.0](https://github.com/jwogrady/hugo-spectrum/compare/v0.1.0...v0.2.0) (2026-09-20)
 
 
