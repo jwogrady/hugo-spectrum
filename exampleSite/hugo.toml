@@ -17,6 +17,16 @@ enableRobotsTXT      = true   # the theme ships layouts/robots.txt
 # same commit renders different times on a laptop and in CI.
 timeZone = 'America/Chicago'
 
+# Dates come from front matter and from nowhere else.
+#
+# Hugo will otherwise fall back through publishdate, lastmod and modified, and
+# what those resolve to depends on the checkout — a CI runner produced a
+# journal day for the day it ran, linking to an archive page no entry belongs
+# to. The theme already fails a build with no timeZone for the same reason:
+# a date that depends on the machine is not a date.
+[frontmatter]
+  date = ['date']
+
 [pagination]
   pagerSize = 10
 
