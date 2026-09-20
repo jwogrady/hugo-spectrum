@@ -1136,6 +1136,49 @@ else
   no "preview build failed"
 fi
 
+# entryAside, asserted in both directions against the same content.
+#
+# The feature is two templates agreeing: columns.html has to grant the second
+# column and page.html has to fill it. Either one alone is silent — a column
+# with no panels is a 17rem hole, and panels with no column are never
+# rendered — so a one-directional check would pass on half an implementation.
+#
+# The off case is the one that protects existing publications. exampleSite
+# opts in, so $PUB above is the on case and the off case is built here with
+# the parameter overridden back to false.
+# Overridden by environment rather than by a second fixture directory, so
+# the two builds are provably the same content and differ only in the one
+# parameter under test.
+off="$TMP/entryaside-off"
+if (HUGO_PARAMS_SPECTRUM_ENTRYASIDE=false hugo --source "$SITE" \
+         --themesDir "$TMP/themes" --destination "$off" \
+         -D --quiet --panicOnWarning) 2>/dev/null; then
+
+  entry_on="$PUB/posts/morning-pass/index.html"
+  entry_off="$off/posts/morning-pass/index.html"
+  branch_on="$PUB/docs/procedure/index.html"
+
+  on_clock=0;  grep -q 'class="clock"' "$entry_on"  2>/dev/null && on_clock=1
+  off_clock=0; grep -q 'class="clock"' "$entry_off" 2>/dev/null && off_clock=1
+  on_col=0;    grep -q 'page--two'     "$entry_on"  2>/dev/null && on_col=1
+  off_col=0;   grep -q 'page--one'     "$entry_off" 2>/dev/null && off_col=1
+
+  if [ "$on_clock" -eq 1 ] && [ "$on_col" -eq 1 ] \
+     && [ "$off_clock" -eq 0 ] && [ "$off_col" -eq 1 ]
+  then ok "entryAside: an entry gains the panels when set, and neither when not"
+  else no "entryAside (on: clock=$on_clock two-col=$on_col / off: clock=$off_clock one-col=$off_col)"; fi
+
+  # A branch page has its own navigation and must not be handed the journal's
+  # panels instead, whichever way the parameter is set.
+  b_nav=0;   grep -q 'class="branch"' "$branch_on" 2>/dev/null && b_nav=1
+  b_clock=0; grep -q 'class="clock"'  "$branch_on" 2>/dev/null && b_clock=1
+  if [ "$b_nav" -eq 1 ] && [ "$b_clock" -eq 0 ]
+  then ok "entryAside: a branch page keeps its own navigation"
+  else no "entryAside branch page (nav=$b_nav clock=$b_clock)"; fi
+else
+  no "entryAside: the off-case build failed"
+fi
+
 echo
 printf "  %d passed, %d failed\n" "$pass" "$fail"
 [ "$fail" -eq 0 ]

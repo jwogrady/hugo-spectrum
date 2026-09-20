@@ -68,6 +68,7 @@ timeZone = 'America/Chicago'
   owner      = 'Spectrum'
   standfirst = 'Instrument log, calibration record, and standing pages'
   palette    = ''                    # '' default, 'ultraviolet' for the preset
+  entryAside = true                  # entries keep the clock and the spectrum
   timezone   = 'America/Chicago'     # must equal timeZone above
   copyright  = 'Status26, Inc.'                    # the entity, where owner is the masthead name
   banners    = '/plates'            # the pool the hero and landing banners draw from

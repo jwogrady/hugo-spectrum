@@ -43,6 +43,7 @@ timeZone = 'America/Chicago'   # the publication's zone; see below
   palette    = ''              # '' for the default, 'ultraviolet' for the preset
   copyright  = ''              # the legal entity, when it is not `owner`
   themeCredit = true           # false removes the theme's line from the foot
+  entryAside  = false          # true gives a branchless page the journal's panels
   timezone   = 'America/Chicago'  # must equal timeZone above
 
   [[params.spectrum.zones]]     # the clock's zone selector; any order
@@ -74,6 +75,25 @@ The page is always *served* in `timezone`, whatever the reader later picks.
 Prefer a `label` that names the zone (`CT`) over one that names an offset
 (`CST`): the clock prints the abbreviation actually in force, so a `CST` button
 reads `CDT` for two thirds of the year.
+
+## The second column
+
+A page that is part of a branch gets the branch's navigation beside it. A
+page that is not — a journal entry, a standing page — gets one column, and
+the clock and the subject field stay behind on the index.
+
+That is the default because an entry is flat and the apparatus belongs to the
+index. Where a reader is expected to arrive on an entry directly, from a
+citation handle or a search result, `entryAside` gives those pages the
+journal's own panels instead:
+
+```toml
+[params.spectrum]
+  entryAside = true
+```
+
+A branch page is unaffected — it keeps its navigation either way. Any single
+page can still opt out with `columns = "one"` in its own front matter.
 
 Requires **Hugo 0.146+ extended** — built against 0.166.0. No Node, no npm,
 no build step.

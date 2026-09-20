@@ -21,6 +21,11 @@
 
   A page can override with `columns = "one"` in front matter.
 
+  params.spectrum.entryAside opts a publication into giving a page that is
+  not part of a branch the journal's own panels instead of nothing. Off by
+  default: an entry is flat and the index is where the apparatus belongs, so
+  the second column stays a choice rather than a thing that appeared.
+
   Layouts that own their whole width say so here rather than in each page's
   front matter, so the frame stays one decision. hero and landing are one
   column even inside a branch — without this they inherited the branch's
@@ -32,4 +37,8 @@
 {{- $two := false -}}
 {{- if or .IsHome (eq .Kind "term") (isset .Params "form") }}{{ $two = true }}{{ end -}}
 {{- with partial "branch-root.html" . }}{{ $two = true }}{{ end -}}
+{{- /* A branchless page has no nav to put beside it, so upstream of this it
+       had no second column at all — which is also how it lost the clock and
+       the spectrum the moment a reader left the index. */ -}}
+{{- if and (eq .Kind "page") site.Params.spectrum.entryAside }}{{ $two = true }}{{ end -}}
 {{- return cond $two "two" "one" -}}
