@@ -118,8 +118,21 @@ echo "── main site ──"
 # Reference codes are the publication conceit; a malformed one is invisible
 # in the markup and obvious on the page. GroupByDate returns a slice, and
 # ranging it with two variables silently yields the index instead of the year.
-SITE="$THEME/../.."
-if (cd "$SITE" && hugo --quiet --destination "$TMP/refs" -D --panicOnWarning) 2>/dev/null; then
+#
+# The fixture is the theme's own exampleSite, built into TMP. This used to be
+# the consuming Pulse site two directories up, which meant the theme's checks
+# only ran inside someone else's checkout: in a clone of this repository alone
+# eleven of them failed outright and the unused-template one passed vacuously,
+# because a build that never happened reports no unused templates.
+#
+# The theme is symlinked under the name exampleSite asks for, so the fixture
+# does not depend on what the checkout directory happens to be called.
+SITE="$THEME/exampleSite"
+PUB="$TMP/refs"
+THEME_NAME="$(sed -n "s/^theme[[:space:]]*=[[:space:]]*'\([^']*\)'.*/\1/p" "$SITE/hugo.toml" | head -1)"
+mkdir -p "$TMP/themes" && ln -s "$THEME" "$TMP/themes/${THEME_NAME:-theme}"
+if (hugo --source "$SITE" --themesDir "$TMP/themes" --destination "$PUB" \
+         -D --quiet --panicOnWarning) 2>/dev/null; then
   # Checked in front matter and at the URL, not in the rendered page. It
   # scanned the journal index until the reference left that table, then the
   # entry page until the eyebrow was dropped — twice it went to 0/0 and
@@ -130,8 +143,10 @@ if (cd "$SITE" && hugo --quiet --destination "$TMP/refs" -D --panicOnWarning) 2>
 import re, sys, pathlib
 root, out = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
 total = good = aliased = 0
-for f in sorted((root / "content" / "posts").glob("*/index.md")):
-    m = re.search(r'^ref\s*=\s*"([^"]+)"', f.read_text(), re.M)
+posts = sorted(list((root / "content" / "posts").glob("*.md"))
+             + list((root / "content" / "posts").glob("*/index.md")))
+for f in posts:
+    m = re.search(r'^resolves\s*=\s*"([^"]+)"', f.read_text(), re.M)
     if not m: continue
     total += 1
     ref = m.group(1)
@@ -195,7 +210,8 @@ PYEOF
   else no "tab title diverges from the headline ($bad of ${seen:-0}) $first"; fi
 fi
 
-if (cd "$THEME/../.." && hugo --gc -D --panicOnWarning --printPathWarnings --quiet) 2>/dev/null
+if (hugo --source "$SITE" --themesDir "$TMP/themes" --destination "$TMP/strict" \
+         --gc -D --panicOnWarning --printPathWarnings --quiet) 2>/dev/null
 then ok "strict build clean (warnings fatal)"; else no "strict build"; fi
 
 
@@ -443,7 +459,7 @@ else no "markup written outside the components (bands=$bands rows=$rows)"; fi
 # site. That version is wrong but self-consistent, so the column and the
 # aside still agree and this check is silent. Knowing which defects a check
 # cannot see is part of the check.
-empty="$(python3 - "$SITE/public" <<'PYEOF'
+empty="$(python3 - "$PUB" <<'PYEOF'
 import re, sys, pathlib
 bad = []
 for f in pathlib.Path(sys.argv[1]).rglob("index.html"):
@@ -469,7 +485,7 @@ else no "column/aside mismatch: $empty"; fi
 # A menu that says Catalog pointing at /services/ is a section with two
 # names, and the reader sees both. Every nav label must slugify to the last
 # segment of its own URL.
-slug="$(python3 - "$SITE/public" <<'PYEOF'
+slug="$(python3 - "$PUB" <<'PYEOF'
 import re, sys, pathlib
 h = (pathlib.Path(sys.argv[1]) / "index.html").read_text()
 nav = re.search(r'<nav aria-label="Sections">.*?</nav>', h, re.S)
@@ -494,7 +510,7 @@ else no "label and slug disagree: $slug"; fi
 # is broken for everyone with scripting off. Assert the served stamp is a
 # real timestamp, that it is the same shape as the live one so the upgrade
 # reflows nothing, and that this is still the only script in the theme.
-read -r stamp shape n <<<"$(python3 - "$SITE/public" "$THEME/layouts" <<'PYEOF'
+read -r stamp shape n <<<"$(python3 - "$PUB" "$THEME/layouts" <<'PYEOF'
 import re, sys, pathlib
 h = (pathlib.Path(sys.argv[1]) / "index.html").read_text()
 # Anchored on data-clock, the attribute the script targets, so a change
@@ -528,7 +544,7 @@ else no "clock fallback broken (real=$stamp same-shape=$shape scripts=$n)"; fi
 # Those stopped existing when the date column became a group head, so it
 # found nothing to measure and passed on every build. A check that matches
 # no elements must fail, not succeed.
-log="$(python3 - "$SITE/public" <<'PYEOF'
+log="$(python3 - "$PUB" <<'PYEOF'
 import re, sys, pathlib
 bad, seen_any = [], False
 for f in pathlib.Path(sys.argv[1]).rglob("index.html"):
@@ -564,7 +580,7 @@ else no "log grouping wrong: $log"; fi
 # removing them would strip a data table of the labels a screen reader
 # announces with every cell. Both failure directions are caught: a thead
 # that stops being hidden, and one that stops existing.
-hd="$(python3 - "$SITE/public" <<'PYEOF'
+hd="$(python3 - "$PUB" <<'PYEOF'
 import re, sys, pathlib
 bad, seen = [], False
 for f in pathlib.Path(sys.argv[1]).rglob("index.html"):
@@ -589,10 +605,10 @@ else no "column heads wrong: $hd"; fi
 # not offering it. Its first entry is the default and has to be the
 # publication's own zone, or the clock disagrees with the dates beneath it
 # on first paint.
-read -r n hid first cfg <<<"$(python3 - "$SITE" <<'PYEOF'
+read -r n hid first cfg <<<"$(python3 - "$SITE" "$PUB" <<'PYEOF'
 import re, sys, pathlib, json, subprocess
-root = pathlib.Path(sys.argv[1])
-h = (root / "public" / "index.html").read_text()
+root, pub = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
+h = (pub / "index.html").read_text()
 # Match the class token, not the whole attribute: these elements carry
 # more than one class, and an exact-attribute match silently stops finding
 # them the moment a second is added.
@@ -617,7 +633,9 @@ read -r tzc tzp <<<"$(python3 - "$SITE/hugo.toml" <<'PYEOF'
 import re, sys, pathlib
 t = pathlib.Path(sys.argv[1]).read_text()
 a = re.search(r"^timeZone = '([^']+)'", t, re.M)
-b = re.search(r"^\s*timezone = '([^']+)'", t, re.M)
+# Tolerant of alignment: the param is written `timezone   = '...'` in the
+# demo's config and the exact-single-space match could not see it.
+b = re.search(r"^\s*timezone\s*=\s*'([^']+)'", t, re.M)
 print(f"{a.group(1) if a else '-'} {b.group(1) if b else '-'}")
 PYEOF
 )"
@@ -656,7 +674,7 @@ else no "classes with no rule: $orphan"; fi
 # The previous version of this check looked for a .masthead__top wrapper.
 # That element no longer exists, so it found nothing to measure and passed
 # on every build — the same way the date check did when its cells moved.
-read -r sib bal <<<"$(python3 - "$SITE/public/index.html" <<'PYEOF'
+read -r sib bal <<<"$(python3 - "$PUB/index.html" <<'PYEOF'
 import re, sys, pathlib
 h = pathlib.Path(sys.argv[1]).read_text()
 m = re.search(r'<header class="masthead">.*?</header>', h, re.S)
@@ -706,7 +724,7 @@ else no "dates formatted outside the zone: $stray"; fi
 # would pin the zones with everything else. And the aside has to stretch to
 # the column's height rather than its content's, or the panels unstick as
 # soon as the last one scrolls by.
-read -r stick child stretch slots <<<"$(python3 - "$THEME/assets/css" "$SITE/public/index.html" <<'PYEOF'
+read -r stick child stretch slots <<<"$(python3 - "$THEME/assets/css" "$PUB/index.html" <<'PYEOF'
 import re, sys, pathlib
 css = "\n".join(f.read_text() for f in sorted(pathlib.Path(sys.argv[1]).glob("*.css"))
                 if f.name != "print.css")
@@ -849,7 +867,7 @@ else no "sticky gap uncovered: $cover"; fi
 # so a link can only point at a day with entries on it — but only as long
 # as the term stamped in front matter is the one the journal prints, and
 # those are computed in two different places.
-days="$(python3 - "$SITE/public" <<'PYEOF'
+days="$(python3 - "$PUB" <<'PYEOF'
 import re, sys, pathlib
 root = pathlib.Path(sys.argv[1])
 bad, seen = [], 0
@@ -875,7 +893,7 @@ else no "day links broken: $days"; fi
 # The headline sits at the same height whether or not the page has a
 # breadcrumb. The slot is reserved on every page, so a title does not drop
 # by the trail's height the moment a page is nested.
-slot="$(python3 - "$SITE/public" <<'PYEOF'
+slot="$(python3 - "$PUB" <<'PYEOF'
 import re, sys, pathlib
 bad, seen = [], 0
 for f in pathlib.Path(sys.argv[1]).rglob("index.html"):
@@ -991,7 +1009,11 @@ else no "button contrast: worst ${worst}:1 over ${pairs:-0} palettes, unpinned s
 # unused when the fault was the fixture: a consuming site is free to use only
 # part of a theme, and the theme's own demo is the thing that must use all of
 # it. It is also why the check now works in a clone with no Pulse beside it.
-unused="$( (cd "$THEME" && hugo --source exampleSite --themesDir ../.. \
+# Through the same symlinked themes dir as the fixture: `--themesDir ../..`
+# only resolved when the checkout directory happened to be named after the
+# theme, and when it did not, the build failed, printed no "is unused" lines,
+# and this check passed on a build that never happened.
+unused="$( (hugo --source "$SITE" --themesDir "$TMP/themes" \
               --printUnusedTemplates --destination "$TMP/ut" 2>&1) \
            | grep -o 'Template [^ ]* is unused' | sed 's/Template //;s/ is unused//' | head -5 )"
 if [ -z "$unused" ]

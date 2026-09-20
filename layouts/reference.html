@@ -11,9 +11,11 @@
     Everything in both asides already exists. A third column is a third
     place to put the theme's own panels, not a third set of them.
   */ -}}
-  {{ partial "breadcrumb.html" . }}
+  {{- /* Through page-head.html, which reserves the crumb slot. Writing the
+         trail and the headline separately skipped the slot, so this was the
+         one page whose headline sat at a different height. */ -}}
+  {{ partial "page-head.html" (dict "page" .) }}
   <article class="prose">
-    {{ partial "heading.html" (dict "title" .Title "level" 1) }}
     {{ .Content }}
     {{- with .Params.tags }}<div class="index__tags">{{ partial "tags/list.html" (dict "page" $) }}</div>{{ end }}
   </article>

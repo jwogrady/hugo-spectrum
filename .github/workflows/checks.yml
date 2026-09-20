@@ -1,0 +1,36 @@
+# The theme's own checks, on every pull request and every push to master.
+#
+# scripts/check.sh is self-contained: it builds exampleSite against a symlink
+# of this checkout, so it needs nothing outside the repository. Its last line
+# is `[ "$fail" -eq 0 ]`, so a failed assertion fails the job.
+name: checks
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Extended, because the stylesheet goes through Hugo Pipes. Pinned to
+      # the version the theme is built against; theme.toml declares 0.146.0
+      # as the floor.
+      - name: Install Hugo extended
+        env:
+          HUGO_VERSION: 0.166.0
+        run: |
+          set -euo pipefail
+          curl -sSLo hugo.deb \
+            "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb"
+          sudo dpkg -i hugo.deb
+          hugo version
+
+      - name: scripts/check.sh
+        run: bash scripts/check.sh

@@ -291,6 +291,11 @@
    headline in an entry's own prose were s11 and s10 apart — one heading,
    two different spaces beneath it depending on the template. */
 .hd--page { margin-bottom: var(--s10); }
+/* A head inside a page, set exactly like the page's own but distinguishable
+   from it: hd--page is how the checks find a page headline, and once faq and
+   landing used it for their sections every conversion page looked like a
+   headline with no breadcrumb slot above it. */
+.hd--section { margin-bottom: var(--s10); }
 /* The banner headline. It is the same head object as every other, set
    large — a hero that hand-rolled its own <h1> would be the fifth
    implementation of the thing this partial exists to hold. */

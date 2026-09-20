@@ -28,7 +28,7 @@
   <div class="landing">
     {{- range .Params.sections }}
     <section class="landing__section">
-      {{ partial "heading.html" (dict "title" .title "level" 2) }}
+      {{ partial "heading.html" (dict "title" .title "level" 2 "variant" "section") }}
       {{- with .blurb }}<p class="landing__blurb">{{ . }}</p>{{ end }}
       {{- with .items }}
       <ul class="landing__grid">

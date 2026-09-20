@@ -2,7 +2,13 @@
   {{ partial "page-head.html" (dict "page" .) }}
   <div class="prose">{{ .Content }}</div>
   {{- if .Pages }}
-  {{ partial "index-table.html" (dict "pages" (sort .Pages "Title") "trail" "price_from") }}
+  {{- /* Dated pages sort newest-first; standing pages sort by title. The
+         table groups by day, so ordering a dated section alphabetically made
+         one date head two groups and put the heads out of order — visible on
+         /posts/ and on nothing the consuming site happened to have. */ -}}
+  {{- $dated := false }}{{ range .Pages }}{{ if not .Date.IsZero }}{{ $dated = true }}{{ end }}{{ end }}
+  {{- $ordered := cond $dated (sort .Pages "Date" "desc") (sort .Pages "Title") }}
+  {{ partial "index-table.html" (dict "pages" $ordered "trail" "price_from") }}
   {{- else }}<p class="hint">Nothing here yet.</p>{{ end }}
 {{ end }}
 

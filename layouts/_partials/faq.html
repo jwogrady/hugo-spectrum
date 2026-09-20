@@ -3,7 +3,7 @@
        so the page and the graph can never disagree.  faq = [{q, a}] */ -}}
 {{- with .page.Params.faq }}
 <section class="faq">
-  {{ partial "heading.html" (dict "title" "Questions" "level" 2) }}
+  {{ partial "heading.html" (dict "title" "Questions" "level" 2 "variant" "section") }}
   <dl class="faq__list">
     {{- range . }}
     <dt class="faq__q">{{ .q }}</dt>
