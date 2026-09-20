@@ -313,7 +313,7 @@ presentation has leaked into content.
 
 ## License
 
-Copyright © 2026 Status26 Inc. Written by jwogrady.
+Copyright © 2026 Status26, Inc. Written by jwogrady.
 
 MIT — see [LICENSE](LICENSE). Bundled typefaces are SIL OFL 1.1; see
 [assets/fonts/LICENSES.md](assets/fonts/LICENSES.md).

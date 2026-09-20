@@ -8,7 +8,7 @@ tags = ["publication", "index", "journal", "documentation", "dark", "accessible"
 features = ["responsive", "dark-mode", "light-mode", "print-styles", "taxonomy", "pagination", "self-hosted-fonts", "no-javascript", "wcag-aa"]
 min_version = "0.146.0"
 
-copyright = "Copyright (c) 2026 Status26 Inc."
+copyright = "Copyright (c) 2026 Status26, Inc."
 
 [author]
   name = "jwogrady"
