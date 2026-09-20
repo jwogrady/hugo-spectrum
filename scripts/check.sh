@@ -154,6 +154,45 @@ PYEOF
   if [ "$broken" -eq 0 ]
   then ok "no var() glued to the next token in published css"
   else no "$broken var() declarations broken by minification"; fi
+
+  # A page states its title twice: the headline a reader sees, and the <title>
+  # a tab, a bookmark and a search result see. Hugo names a term page after its
+  # own key, so the two diverge silently on exactly the pages nobody screenshots
+  # — /archives/2026-09/ headed "September 2026" and tabbed "2026-09 — Spectrum"
+  # for as long as there was no demo site rendering both at once.
+  #
+  # Asserted as the invariant rather than against a list of known-bad keys: the
+  # tab must begin with the headline, on every page that has one.
+  read -r seen bad first <<<"$(python3 - "$TMP/refs" <<'PYEOF'
+import re, sys, pathlib, html
+root = pathlib.Path(sys.argv[1])
+strip = lambda t: html.unescape(re.sub(r"<[^>]*>", "", t)).strip()
+seen = bad = 0; first = "-"
+for f in sorted(root.rglob("index.html")):
+    # Home is the exception by design: it is titled with the publication's
+    # name alone, so its headline ("Journal") never prefixes its tab. Its
+    # pager pages are home too — .IsHome is true for /page/2/ — and carry
+    # the same title, so they take the same exemption.
+    rel = f.relative_to(root).parent
+    if rel == pathlib.Path(".") or re.fullmatch(r"page/\d+", rel.as_posix()): continue
+    t = f.read_text(errors="replace")
+    mt = re.search(r"<title>(.*?)</title>", t, re.S)
+    mh = re.search(r"<h1[^>]*>(.*?)</h1>", t, re.S)
+    if not mt or not mh: continue
+    title, h1 = strip(mt.group(1)), strip(mh.group(1))
+    if not h1: continue
+    seen += 1
+    if not title.startswith(h1):
+        bad += 1
+        if first == "-": first = f"{f.relative_to(root).parent}: {h1!r} vs {title!r}"
+print(f"{seen} {bad} {first}")
+PYEOF
+)"
+  # Fails when it matches nothing: a check anchored to rendered output that
+  # stops finding pages reports "no findings" as success.
+  if [ "${seen:-0}" -gt 0 ] && [ "${bad:-1}" -eq 0 ]
+  then ok "every browser tab title matches its own headline ($seen pages)"
+  else no "tab title diverges from the headline ($bad of ${seen:-0}) $first"; fi
 fi
 
 if (cd "$THEME/../.." && hugo --gc -D --panicOnWarning --printPathWarnings --quiet) 2>/dev/null

@@ -1,0 +1,27 @@
+{{- /*
+  The display title for a page: what a reader should see, in the headline and
+  in the browser tab alike.
+
+  Taxonomy pages are why this exists. Hugo names a term page after its own key,
+  so /archives/2026-09/ is titled "2026-09" and /tags/ is titled "tags". The
+  layouts formatted those for the headline and head.html did not, so the page
+  read "September 2026" while the tab, the bookmark and the search result read
+  "2026-09 — Spectrum" — the machine key, in the three places a reader is least
+  able to tell it is wrong.
+
+  The headline was fixed once already, in term.html, and the head was missed
+  because nothing rendered both at the same time. One string now, computed
+  here, used by both.
+*/ -}}
+{{- $p := . -}}
+{{- $title := $p.Title -}}
+{{- if eq $p.Kind "taxonomy" -}}
+  {{- $title = cond (eq $p.Data.Singular "archive") "Date index" "Subject index" -}}
+{{- else if eq $p.Kind "term" -}}
+  {{- if eq $p.Data.Singular "archive" -}}
+    {{- $title = partial "archive-title.html" (dict "term" $p.Data.Term) -}}
+  {{- else -}}
+    {{- $title = printf "Tag — %s" $p.Title -}}
+  {{- end -}}
+{{- end -}}
+{{- return $title -}}

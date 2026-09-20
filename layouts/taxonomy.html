@@ -1,12 +1,14 @@
 {{ define "main" }}
   {{- /* Two taxonomies, two indexes. This called the tags partial for both,
          so /archives/ headed itself "Subject index" and printed the tag
-         spectrum over a set of dates. */ -}}
+         spectrum over a set of dates.
+
+         The head is the same call either way — page-title.html already knows
+         which index this is, and so does the browser tab. */ -}}
+  {{ partial "page-head.html" (dict "page" . "crumb" false "title" (partial "page-title.html" .)) }}
   {{- if eq .Data.Singular "archive" }}
-  {{ partial "page-head.html" (dict "page" . "crumb" false "title" "Date index") }}
   {{ partial "archive-index.html" . }}
   {{- else }}
-  {{ partial "page-head.html" (dict "page" . "crumb" false "title" "Subject index") }}
   {{ partial "tags/index.html" . }}
   {{- end }}
 {{ end }}

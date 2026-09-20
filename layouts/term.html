@@ -3,8 +3,7 @@
        It used to hardcode "Tag — ", so every archive page announced itself
        as a tag and printed its own machine key: "Tag — 2026-09". */ -}}
 {{- $isArchive := eq .Data.Singular "archive" -}}
-{{- $title := printf "Tag — %s" .Title -}}
-{{- if $isArchive }}{{ $title = partial "archive-title.html" (dict "term" .Data.Term) }}{{ end }}
+{{- $title := partial "page-title.html" . -}}
 {{ partial "page-head.html" (dict "page" . "crumb" false "title" $title) }}
 {{- if and $isArchive (eq (len .Data.Term) 10) }}{{ partial "archive-nav.html" (dict "term" .Data.Term) }}{{ end }}
 {{- $paged := .Paginate (sort .Pages "Date" "desc") }}

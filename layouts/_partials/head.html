@@ -2,7 +2,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  {{- $title := cond .IsHome site.Title (printf "%s — %s" .Title site.Title) }}
+  {{- /* .Title here printed the raw taxonomy key in the tab. */ -}}
+  {{- $display := partial "page-title.html" . }}
+  {{- $title := cond .IsHome site.Title (printf "%s — %s" $display site.Title) }}
   <title>{{ $title }}</title>
   {{- with or .Description .Summary site.Params.description }}
   <meta name="description" content="{{ . | plainify | truncate 160 }}">
