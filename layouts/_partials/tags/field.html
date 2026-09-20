@@ -1,0 +1,22 @@
+{{- $current := .current | default "" -}}
+{{- $limit := int (default 0 .limit) -}}
+{{- $tags := partialCached "tags/collect.html" . -}}
+{{- if $tags -}}
+{{- $shown := cond (and (gt $limit 0) (gt (len $tags) $limit)) (first $limit $tags) $tags -}}
+{{- /* The link sits outside the box, bottom right — the same relationship
+       the clock's zones have to theirs, top right. A control or a way out
+       belongs beside the panel, not inside its border. */ -}}
+<div class="signal-unit">
+  <section class="signal-field" aria-labelledby="signal-field-head">
+    {{ partial "heading.html" (dict "title" "Spectrum" "variant" "panel" "id" "signal-field-head") }}
+    <div class="signal-field__body">
+      {{- range $shown }}
+        {{- partial "tags/signal.html" (dict "tag" . "current" (eq .name $current)) }}
+      {{- end }}
+    </div>
+  </section>
+  <p class="panel-edge signal-field__more"><a href="{{ "/tags/" | relURL }}">
+    {{- if gt (len $tags) (len $shown) }}All {{ len $tags }} subjects &rarr;{{ else }}Subject index &rarr;{{ end -}}
+  </a></p>
+</div>
+{{- end -}}

@@ -1,0 +1,894 @@
+#!/usr/bin/env bash
+# Spectrum build checks. Exercises the tag-frequency partials against the
+# edge cases that break naive tag clouds. No dependencies beyond hugo + python3.
+set -uo pipefail
+THEME="$(cd "$(dirname "$0")/.." && pwd)"
+TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
+pass=0; fail=0
+ok(){ printf '  \033[32mPASS\033[0m %s\n' "$1"; pass=$((pass+1)); }
+no(){ printf '  \033[31mFAIL\033[0m %s\n' "$1"; fail=$((fail+1)); }
+
+fixture () { # $1 name ; stdin = list of "slug:tag,tag"
+  local d="$TMP/$1"; mkdir -p "$d/content/posts" "$d/themes"
+  ln -s "$THEME" "$d/themes/spectrum"
+  cat > "$d/hugo.toml" <<EOF
+baseURL = 'https://example.org/'
+title = 'fixture'
+theme = 'spectrum'
+capitalizeListTitles = false
+[taxonomies]
+  tag = 'tags'
+EOF
+  local i=0
+  while IFS=: read -r slug tags; do
+    [ -z "$slug" ] && continue
+    i=$((i+1))
+    mkdir -p "$d/content/posts/$slug"
+    { echo '+++'; echo "title = \"$slug\""; echo "date = 2026-01-$(printf %02d $((i%28+1)))";
+      if [ -n "$tags" ]; then
+        printf 'tags = ['; printf '"%s",' ${tags//,/ } | sed 's/,$//'; printf ']\n'
+      fi
+      echo '+++'; } > "$d/content/posts/$slug/index.md"
+  done
+  (cd "$d" && hugo --quiet --destination out --panicOnWarning 2>&1)
+  echo "$d"
+}
+
+echo "── edge cases ──"
+
+# 1. no tags at all
+d=$(fixture notags <<< "alpha:")
+[ -f "$d/out/index.html" ] && ! grep -q 'tag-signal' "$d/out/index.html" \
+  && ok "no tags: builds, renders no signal field" || no "no tags"
+
+# 2. a single tag
+d=$(fixture onetag <<< "alpha:solo")
+grep -q 'tag-signal:1.0000' "$d/out/index.html" \
+  && ok "one tag: intensity pinned to 1.0" || no "one tag"
+
+# 3. every count equal -> flat field, distance 0 everywhere
+d=$(fixture equal <<< "a:x
+b:y
+c:z")
+# The subject index renders each subject twice — once in the field, once in
+# the ranked climb — so the assertion is the invariant rather than a count:
+# with every count equal, every signal on the page sits at full intensity.
+tot=$(grep -o 'class="tag-signal__name"' "$d/out/tags/index.html" | wc -l)
+n=$(grep -o 'class="tag-signal__name" style="--tag-signal:1.0000' "$d/out/tags/index.html" | wc -l)
+[ "$tot" -gt 0 ] && [ "$n" -eq "$tot" ] && ok "equal counts: every tag at full intensity, field reads flat" || no "equal counts ($n of $tot at full intensity)"
+
+# 4. one extreme outlier must not crush the rest
+d=$(fixture outlier <<< "a:big
+b:big
+c:big
+e:big
+f:big
+g:big
+h:big
+i:big
+j:big
+k:big
+l:big
+m:big
+n:big
+o:big
+p:big
+q:big
+r:big
+s:big
+t:big
+u:big
+v:rare
+w:other")
+# The real invariant under banding: an extreme outlier costs one band and
+# leaves every other subject at full chroma. Under the old intensity curve a
+# 20-vs-1 spread would have crushed the rest toward the floor.
+read -r bands nonapex_full <<<"$(python3 - "$d/out/tags/index.html" <<'PYEOF'
+import re, sys
+s = open(sys.argv[1]).read()
+rows = re.findall(r'--tag-signal:([0-9.]+);--tag-hue:([0-9.]+);--tag-chroma:([0-9.]+);', s)
+bands = len({r[0] for r in rows})
+nonapex = [c for _, _, c in rows if float(c) > 0]
+print(bands, int(all(abs(float(c) - 1.0) < 1e-6 for c in nonapex) and len(nonapex) > 0))
+PYEOF
+)"
+if [ "${bands:-0}" -ge 2 ] && [ "${nonapex_full:-0}" -eq 1 ]
+then ok "extreme outlier (20 vs 1): $bands bands, non-apex subjects keep full chroma"
+else no "outlier flattened the field (bands=$bands full-chroma=$nonapex_full)"; fi
+
+# 5. hundreds of tags
+{ for i in $(seq 1 220); do echo "p$i:t$((i%140))"; done; } > "$TMP/many.txt"
+d=$(fixture many < "$TMP/many.txt")
+c=$(grep -o 'class="tag-signal"' "$d/out/tags/index.html" | wc -l)
+[ "$c" -ge 130 ] && ok "hundreds of tags: $c signals rendered" || no "many tags ($c)"
+
+# 6. determinism — same input, byte-identical output
+d1=$(fixture det1 <<< "a:x,y
+b:y,z
+c:z")
+d2=$(fixture det2 <<< "a:x,y
+b:y,z
+c:z")
+if diff -q <(grep -o '\-\-tag-signal:[0-9.]*' "$d1/out/tags/index.html") \
+           <(grep -o '\-\-tag-signal:[0-9.]*' "$d2/out/tags/index.html") >/dev/null
+then ok "deterministic across builds"; else no "non-deterministic output"; fi
+
+echo "── main site ──"
+
+# Reference codes are the publication conceit; a malformed one is invisible
+# in the markup and obvious on the page. GroupByDate returns a slice, and
+# ranging it with two variables silently yields the index instead of the year.
+SITE="$THEME/../.."
+if (cd "$SITE" && hugo --quiet --destination "$TMP/refs" -D --panicOnWarning) 2>/dev/null; then
+  # Checked in front matter and at the URL, not in the rendered page. It
+  # scanned the journal index until the reference left that table, then the
+  # entry page until the eyebrow was dropped — twice it went to 0/0 and
+  # reported no findings as success. A reference is a citation handle: it
+  # lives in front matter and it has to resolve. Neither of those moves
+  # when the page stops printing it.
+  read -r total good aliased <<<"$(python3 - "$SITE" "$TMP/refs" <<'PYEOF'
+import re, sys, pathlib
+root, out = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
+total = good = aliased = 0
+for f in sorted((root / "content" / "posts").glob("*/index.md")):
+    m = re.search(r'^ref\s*=\s*"([^"]+)"', f.read_text(), re.M)
+    if not m: continue
+    total += 1
+    ref = m.group(1)
+    if re.fullmatch(r"JRN \d\d-\d{3}", ref):
+        good += 1
+        code = ref.split(" ", 1)[1]
+        if (out / "r" / code / "index.html").exists(): aliased += 1
+print(f"{total} {good} {aliased}")
+PYEOF
+)"
+  if [ "${total:-0}" -gt 0 ] && [ "$total" -eq "${good:-0}" ] && [ "$total" -eq "${aliased:-0}" ]
+  then ok "every reference is well-formed and resolves ($good/$total)"
+  else no "references broken ($good well-formed, $aliased resolve, of $total)"; fi
+
+  # A CSS minifier may strip the space after a closing paren. That is safe for
+  # calc() but not for var(), whose substitution happens after parsing:
+  # `var(--rule-hair)solid` becomes `1pxsolid` and the declaration is dropped.
+  # It silently broke every border, the focus ring and the animation once.
+  broken=$(grep -rhoE 'var\(--[a-z0-9-]+(,[^)]*)?\)[a-zA-Z]+' "$TMP/refs"/css/*.css 2>/dev/null | wc -l)
+  if [ "$broken" -eq 0 ]
+  then ok "no var() glued to the next token in published css"
+  else no "$broken var() declarations broken by minification"; fi
+fi
+
+if (cd "$THEME/../.." && hugo --gc -D --panicOnWarning --printPathWarnings --quiet) 2>/dev/null
+then ok "strict build clean (warnings fatal)"; else no "strict build"; fi
+
+
+# Typography arithmetic. Paragraphs separated by less than the space between
+# their own lines do not read as separate blocks — an easy regression to make
+# by changing one token.
+read -r gap lead ok <<<"$(python3 - "$THEME/assets/css" <<'PYEOF'
+import re, sys, pathlib
+css = "\n".join(p.read_text() for p in pathlib.Path(sys.argv[1]).glob("*.css"))
+def v(n, depth=0):
+    # Tokens alias other tokens now (--space-para: var(--s11)), so resolve the
+    # chain rather than reading the first literal and silently getting zero.
+    m = re.search(rf"{re.escape(n)}:\s*([^;]+);", css)
+    if not m or depth > 8: return 0.0
+    val = m.group(1).strip()
+    a = re.fullmatch(r"var\(\s*(--[\w-]+)\s*\)", val)
+    if a: return v(a.group(1), depth + 1)
+    lit = re.match(r"([\d.]+)rem", val)
+    return float(lit.group(1)) * 16 if lit else 0.0
+def num(n):
+    m = re.search(rf"{re.escape(n)}:\s*([\d.]+)\s*;", css)
+    return float(m.group(1)) if m else 0.0
+gap = v("--space-para"); lead = v("--size-prose") * num("--lh-prose")
+print(f"{gap:.0f} {lead:.0f} {1 if lead and gap/lead >= 0.7 else 0}")
+PYEOF
+)"
+if [ "${ok:-0}" -eq 1 ]
+then ok "paragraph gap ${gap}px exceeds 0.7 of ${lead}px leading"
+else no "paragraph gap ${gap}px too tight against ${lead}px leading"; fi
+
+
+# The masthead's height is set by the identity, not by the sections beside
+# it. If a nav link had the taller line box the header would grow when the
+# menu was restyled, and the identity would stop being what sizes the
+# masthead. The same invariant has followed this row through three
+# layouts — a count beside a head, a clock beside a nameplate, now a nav
+# beside an identity — so it is retargeted rather than retired each time.
+read -r tbox mbox <<<"$(python3 - "$THEME/assets/css" <<'PYEOF'
+import re, sys, pathlib
+# print.css redefines these in points; the invariant is about screen layout
+css = "\n".join(p.read_text() for p in sorted(pathlib.Path(sys.argv[1]).glob("*.css"))
+                if p.name != "print.css")
+SIZES = {"2xs": 10.51, "xs": 12.33, "sm": 14.48, "base": 17.0,
+         "lg": 19.96, "xl": 23.43, "2xl": 27.51, "3xl": 32.29, "4xl": 37.91}
+LHS   = {"label": 1.25, "title": 1.3, "tight": 1.18, "snug": 1.35, "body": 1.65}
+def box(sel):
+    # Anchor at the start of a rule. Unanchored, ".nameplate" matched
+    # ".identity:hover .nameplate", a rule with neither a size nor a
+    # line-height, so the check measured the 16x1.65 fallback and passed.
+    m = re.search(rf"(?:^|[}}\n])\s*{re.escape(sel)}\s*\{{([^}}]*)\}}", css, re.M)
+    if not m:
+        return None                      # missing selector is a failure, not a pass
+    b = m.group(1)
+    fs = re.search(r"font-size:\s*var\(--size-([a-z0-9]+)\)", b)
+    lh = re.search(r"line-height:\s*var\(--lh-([a-z]+)\)", b)
+    size = SIZES.get(fs.group(1), 16.0) if fs else 16.0
+    ratio = LHS.get(lh.group(1), 1.65) if lh else 1.65   # no line-height -> inherits body
+    return size * ratio
+t, m = box(".masthead__name"), box(".masthead__sections a")
+print(f"{t:.1f} {m:.1f}" if t and m else "0 0")
+PYEOF
+)"
+if [ "${tbox:-0}" != "0" ] && awk -v a="$tbox" -v b="$mbox" 'BEGIN{exit !(a+0 >= b+0)}'
+then ok "masthead height set by the identity (${tbox}px) not the nav (${mbox}px)"
+else no "the nav drives the masthead height (name=${tbox:-?} nav=${mbox:-?})"; fi
+
+
+# Any rule that sets a font size but no line-height silently inherits body
+# leading, which makes row heights depend on which sibling happens to be
+# tallest. That is how a header starts shifting between pages.
+orphans=$(python3 - "$THEME/assets/css" <<'PYEOF'
+import re, sys, pathlib
+css = "\n".join(p.read_text() for p in sorted(pathlib.Path(sys.argv[1]).glob("*.css"))
+                if p.name != "print.css")
+# Comments blanked first. A comment containing a brace shifts every rule
+# boundary after it, and this check quietly stopped seeing `table` and
+# `label` — both of which were sized with no leading.
+css = re.sub(r"/\*.*?\*/", lambda m: "\n" * m.group(0).count("\n"), css, flags=re.S)
+bad = [" ".join(m.group(1).split())[:44]
+       for m in re.finditer(r"([^{}]+)\{([^}]*)\}", css)
+       if "font-size: var(--size-" in m.group(2)
+       and "line-height" not in m.group(2)
+       and ":root" not in m.group(1)
+       and not m.group(1).strip().startswith("/*")]
+print("|".join(bad))
+PYEOF
+)
+if [ -z "$orphans" ]
+then ok "every sized rule declares a line-height"
+else no "rules sized without a line-height: $(printf "%s" "$orphans" | tr "|" ",")"; fi
+
+
+# Both containers must fill the frame and total the same width, or the page
+# edges move on navigation. The two-column spread is main + gap + aside; the
+# one-column page is the frame itself. Asserted as arithmetic, not as the
+# presence of a string, because the numbers are what the eye sees.
+#
+# Note the derivation does most of the work: --col-main is calc(page - aside
+# - gap), so widening the aside narrows main and the sum still holds. This
+# check catches the case that actually goes wrong — someone hardcoding
+# --col-main back to a literal, which is how it drifted before.
+read -r sum pg pad cap <<<"$(python3 - "$THEME/assets/css" <<'PYEOF'
+import re, sys, pathlib
+d = pathlib.Path(sys.argv[1])
+tok = (d / "tokens.css").read_text()
+css = "\n".join(f.read_text() for f in sorted(d.glob("*.css")) if f.name != "print.css")
+def v(n, depth=0):
+    m = re.search(rf"{re.escape(n)}:\s*([^;]+);", tok)
+    if not m or depth > 8: return None
+    val = m.group(1).strip()
+    a = re.fullmatch(r"var\(\s*(--[\w-]+)\s*\)", val)
+    if a: return v(a.group(1), depth + 1)
+    c = re.fullmatch(r"calc\((.*)\)", val)   # nested var() parens
+    if c:
+        t = re.findall(r"var\((--[\w-]+)\)", c.group(1))
+        vals = [v(x, depth + 1) for x in t]
+        if any(x is None for x in vals): return None
+        return vals[0] - sum(vals[1:])
+    lit = re.match(r"([\d.]+)rem", val)
+    return float(lit.group(1)) if lit else None
+main, aside, gap, page = v("--col-main"), v("--col-aside"), v("--col-gap"), v("--page")
+total = None if None in (main, aside, gap) else main + aside + gap
+grid = "minmax(0, var(--col-main)) var(--col-aside)" in css and "gap: var(--col-gap)" in css
+pad  = bool(re.search(r"main\.page \{[^}]*padding-block", css))
+# Nothing may pin a one-column page narrower than the frame.
+cap  = not re.search(r"main\.page > :not\(\.spread\) \{ max-width: var\(--col-", css)
+print(f"{'1' if total and abs(total - page) < 0.01 and grid else '0'} {page} "
+      f"{'1' if pad else '0'} {'1' if cap else '0'}")
+PYEOF
+)"
+if [ "${sum:-0}" -eq 1 ] && [ "${pad:-0}" -eq 1 ] && [ "${cap:-0}" -eq 1 ]
+then ok "both containers fill the ${pg}rem frame (main + gap + aside = page)"
+else no "containers disagree (sum=$sum pad=$pad uncapped=$cap)"; fi
+
+echo
+echo "── the ratio ──"
+
+# Every length in the stylesheet must be a step on the space ladder, a step
+# on the type scale, a declared frame width or one of the five breakpoints.
+# Authority on a page is consistency, and consistency is not something you
+# can keep by eye across 1,400 lines of CSS — it has to be arithmetic.
+off="$(python3 - "$THEME/assets/css" <<'PYEOF'
+import re, sys, pathlib
+d = pathlib.Path(sys.argv[1])
+tok = (d / "tokens.css").read_text()
+ladder = {round(float(m), 4) for m in re.findall(r"--s\d+:\s*([\d.]+)rem", tok)}
+ladder |= {round(float(m), 4) for m in re.findall(r"--size-[\w-]+:\s*([\d.]+)rem", tok)}
+allowed = ladder | {1.0, 0.0, 34.0, 43.25, 17.0, 72.0, 40.0, 44.0, 60.0, 64.0}
+bad = []
+# Roles and frame widths declared in tokens.css are checked too — a role
+# aliasing a bare 6.5rem was invisible while the file was skipped whole.
+for name, val in re.findall(r"(--[\w-]+):\s*([\d.]+)rem", tok):
+    if re.fullmatch(r"--s\d+", name) or name.startswith("--size-"): continue
+    if not any(abs(float(val) - c) < 0.003 for c in allowed):
+        bad.append(f"tokens.css {name}: {val}rem")
+for f in sorted(d.glob("*.css")):
+    if f.name in ("tokens.css", "print.css"): continue
+    # Blank comment bodies but keep their newlines, or the reported line
+    # number points at the wrong line and the report sends you hunting.
+    src = re.sub(r"/\*.*?\*/", lambda m: "\n" * m.group(0).count("\n"),
+                 f.read_text(), flags=re.S)
+    for ln, line in enumerate(src.split("\n"), 1):
+        for m in re.finditer(r"(-?\d*\.?\d+)rem", line):
+            v = abs(float(m.group(1)))
+            if not any(abs(v - c) < 0.003 for c in allowed):
+                bad.append(f"{f.name}:{ln} {m.group(0)}")
+print(" ".join(bad[:6]) if bad else "")
+PYEOF
+)"
+# A crashed check must fail, not pass on an empty string. This class of
+# bug — a check whose failure mode is passing — has now bitten four times.
+st=$?; if [ $st -ne 0 ]; then no "ladder check crashed"; elif [ -z "$off" ]
+then ok "every length in the stylesheet is a step on the ladder"
+else no "off-ladder lengths: $off"; fi
+
+# The ladder check only ever read rem, so a bare line-height sat off every
+# scale in plain sight: .index__claim carried 1.5 while the leading tokens
+# run 1.18 / 1.25 / 1.3 / 1.35 / 1.65 / 1.72. Leading is typography too.
+# print.css is excluded, as it is from the ladder check above: paper is a
+# different medium with its own scale, set in points.
+lh="$(python3 - "$THEME/assets/css" <<'PYEOF'
+import re, sys, pathlib
+d = pathlib.Path(sys.argv[1])
+bad = []
+for f in sorted(d.glob("*.css")):
+    if f.name in ("tokens.css", "print.css"): continue
+    src = re.sub(r"/\*.*?\*/", lambda m: "\n" * m.group(0).count("\n"),
+                 f.read_text(), flags=re.S)
+    for ln, line in enumerate(src.split("\n"), 1):
+        for m in re.finditer(r"line-height:\s*([^;}]+)", line):
+            v = m.group(1).strip()
+            if not v.startswith("var(--lh-"):
+                bad.append(f"{f.name}:{ln} {v}")
+print(" ".join(bad[:6]) if bad else "")
+PYEOF
+)"
+st=$?; if [ $st -ne 0 ]; then no "leading check crashed"; elif [ -z "$lh" ]
+then ok "every line-height is a leading token"
+else no "off-scale leading: $lh"; fi
+
+# The ladder itself must actually be geometric. A step edited by hand to
+# "look right" would otherwise sit in the file claiming to be phi.
+read -r sr tr <<<"$(python3 - "$THEME/assets/css/tokens.css" <<'PYEOF'
+import re, sys, pathlib
+tok = pathlib.Path(sys.argv[1]).read_text()
+def ratios(vals):
+    return [b / a for a, b in zip(vals, vals[1:])]
+sp = [float(v) for _, v in sorted(
+    ((int(n), v) for n, v in re.findall(r"--s(\d+):\s*([\d.]+)rem", tok)))]
+ty = [float(v) for v in re.findall(r"--size-\w+:\s*([\d.]+)rem", tok)]
+ty = sorted(set(ty))
+ok_s = all(abs(r - 1.272020) < 0.004 for r in ratios(sp))
+ok_t = all(abs(r - 1.173985) < 0.004 for r in ratios(ty))
+print(f"{1 if ok_s else 0} {1 if ok_t else 0}")
+PYEOF
+)"
+if [ "${sr:-0}" -eq 1 ] && [ "${tr:-0}" -eq 1 ]
+then ok "space ladder is phi^1/2 and type scale is phi^1/3 throughout"
+else no "scale is not geometric (space=$sr type=$tr)"; fi
+
+# One head, one record grammar. A layout that writes its own band or its own
+# row markup is how the spacing drifted apart in the first place.
+read -r bands rows <<<"$(python3 - "$THEME/layouts" <<'PYEOF'
+import sys, pathlib
+d = pathlib.Path(sys.argv[1])
+bands = rows = 0
+for f in list(d.glob("*.html")) + [q for q in d.rglob("_partials/**/*.html")
+                                   if q.name not in ("heading.html", "index-table.html")]:
+    src = f.read_text()
+    bands += src.count('class="hd')
+    rows  += src.count('<tr>')
+print(f"{bands} {rows}")
+PYEOF
+)"
+if [ "${bands:-1}" -eq 0 ] && [ "${rows:-1}" -eq 0 ]
+then ok "no layout or partial hand-rolls a head or a record row"
+else no "markup written outside the components (bands=$bands rows=$rows)"; fi
+
+# A two-column page with nothing in its second column is a 17rem hole. That
+# is what `and` short-circuiting to false, compared unequal to nil, produced
+# on every post. Negative-tested against exactly that.
+#
+# It does not catch the other bug from the same sitting — .CurrentSection of
+# a top-level page being home, which gave Plates a branch nav of the whole
+# site. That version is wrong but self-consistent, so the column and the
+# aside still agree and this check is silent. Knowing which defects a check
+# cannot see is part of the check.
+empty="$(python3 - "$SITE/public" <<'PYEOF'
+import re, sys, pathlib
+bad = []
+for f in pathlib.Path(sys.argv[1]).rglob("index.html"):
+    h = f.read_text()
+    m = re.search(r'class="page page--(\w+)"', h)
+    if not m: continue
+    two = m.group(1) == "two"
+    aside = 'class="spread__aside' in h
+    if two != aside:
+        bad.append(f"{f.parent.name or '/'}:{'two-col, empty aside' if two else 'aside without a spread'}")
+print(" ".join(sorted(set(bad))[:6]))
+PYEOF
+)"
+if [ -z "$empty" ]
+then ok "every two-column page has an aside, and no other page does"
+else no "column/aside mismatch: $empty"; fi
+
+# A menu that says Catalog pointing at /services/ is a section with two
+# names, and the reader sees both. Every nav label must slugify to the last
+# segment of its own URL.
+slug="$(python3 - "$SITE/public" <<'PYEOF'
+import re, sys, pathlib
+h = (pathlib.Path(sys.argv[1]) / "index.html").read_text()
+nav = re.search(r'<nav aria-label="Sections">.*?</nav>', h, re.S)
+bad = []
+if nav:
+    for href, txt in re.findall(r'href="([^"]+)"[^>]*>([^<]+)', nav.group(0)):
+        seg = href.strip("/").split("/")[-1]
+        if not seg: continue          # the journal lives at the root
+        want = re.sub(r"[^a-z0-9]+", "-", txt.strip().lower()).strip("-")
+        if seg != want:
+            bad.append(f"{txt.strip()} -> /{seg}/")
+print(" ".join(bad))
+PYEOF
+)"
+if [ -z "$slug" ]
+then ok "every nav label matches its own slug"
+else no "label and slug disagree: $slug"; fi
+
+# The clock is progressive enhancement, which is only true while the served
+# markup is already correct. The failure mode is rendering an empty element
+# for the script to fill — the page then looks fine to whoever wrote it and
+# is broken for everyone with scripting off. Assert the served stamp is a
+# real timestamp, that it is the same shape as the live one so the upgrade
+# reflows nothing, and that this is still the only script in the theme.
+read -r stamp shape n <<<"$(python3 - "$SITE/public" "$THEME/layouts" <<'PYEOF'
+import re, sys, pathlib
+h = (pathlib.Path(sys.argv[1]) / "index.html").read_text()
+# Anchored on data-clock, the attribute the script targets, so a change
+# of wrapper element cannot quietly stop this from measuring anything.
+m = re.search(r'<time[^>]*\bdata-clock\b[^>]*>(.*?)</time>', h, re.S)
+txt = " ".join(re.sub(r"<[^>]+>", " ", m.group(1)).split()) if m else ""
+# Any real zone abbreviation, not just UTC: the publication's zone is
+# configurable and CST reads CDT for half the year.
+real  = bool(re.fullmatch(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} [A-Z]{2,5}", txt))
+shape = len(txt) == len("2026-09-19 14:32:07 UTC")
+n = sum(f.read_text().count("<script") for f in pathlib.Path(sys.argv[2]).rglob("*.html"))
+print(f"{1 if real else 0} {1 if shape else 0} {n}")
+PYEOF
+)"
+if [ "${stamp:-0}" -eq 1 ] && [ "${shape:-0}" -eq 1 ] && [ "${n:-9}" -eq 1 ]
+then ok "clock degrades to a real served timestamp (1 script in the theme)"
+else no "clock fallback broken (real=$stamp same-shape=$shape scripts=$n)"; fi
+
+# Dated records are grouped by day, each group headed by a sticky date that
+# holds until the next one pushes it up. The invariants: one head per
+# distinct date, no date heading twice, heads in the same order as the rows,
+# and every group actually containing rows.
+#
+# The previous version of this check read <td class="index__date"> cells.
+# Those stopped existing when the date column became a group head, so it
+# found nothing to measure and passed on every build. A check that matches
+# no elements must fail, not succeed.
+log="$(python3 - "$SITE/public" <<'PYEOF'
+import re, sys, pathlib
+bad, seen_any = [], False
+for f in pathlib.Path(sys.argv[1]).rglob("index.html"):
+    h = f.read_text()
+    tbl = re.search(r'<table class="index">.*?</table>', h, re.S)
+    if not tbl: continue
+    t = tbl.group(0)
+    groups = re.findall(r'<tbody class="index__group">(.*?)</tbody>', t, re.S)
+    if not groups: continue
+    name = f.parent.name or "/"
+    heads = []
+    for g in groups:
+        hd = re.search(r'<tr class="index__day">.*?datetime="([^"]+)"', g, re.S)
+        rows = len(re.findall(r"<tr(?! class=)", g))
+        if hd:
+            seen_any = True
+            heads.append(hd.group(1))
+            if rows == 0: bad.append(f"{name}: {hd.group(1)} heads nothing")
+    if len(heads) != len(set(heads)):
+        bad.append(f"{name}: a date heads more than one group")
+    if heads != sorted(heads, reverse=True) and heads != sorted(heads):
+        bad.append(f"{name}: date heads out of order")
+if not seen_any:
+    bad.append("no dated group heads found anywhere - check matched nothing")
+print(" ".join(sorted(set(bad))[:5]))
+PYEOF
+)"
+if [ -z "$log" ]
+then ok "each day heads one group, once, in order"
+else no "log grouping wrong: $log"; fi
+
+# Column heads are hidden, not deleted. Hiding them is a visual decision;
+# removing them would strip a data table of the labels a screen reader
+# announces with every cell. Both failure directions are caught: a thead
+# that stops being hidden, and one that stops existing.
+hd="$(python3 - "$SITE/public" <<'PYEOF'
+import re, sys, pathlib
+bad, seen = [], False
+for f in pathlib.Path(sys.argv[1]).rglob("index.html"):
+    h = f.read_text()
+    if '<table class="index">' not in h: continue
+    seen = True
+    name = f.parent.name or "/"
+    th = re.search(r"<thead([^>]*)>(.*?)</thead>", h, re.S)
+    if not th: bad.append(f"{name}: no column heads"); continue
+    if "u-sr" not in th.group(1): bad.append(f"{name}: column heads not hidden")
+    if not re.search(r'<th scope="col"', th.group(2)): bad.append(f"{name}: heads not scoped")
+if not seen: bad.append("no index tables found - check matched nothing")
+print(" ".join(sorted(set(bad))[:5]))
+PYEOF
+)"
+if [ -z "$hd" ]
+then ok "column heads hidden from the page, kept for screen readers"
+else no "column heads wrong: $hd"; fi
+
+# The zone selector. It is inert without scripting, so it ships hidden and
+# the script reveals it — offering a control that cannot work is worse than
+# not offering it. Its first entry is the default and has to be the
+# publication's own zone, or the clock disagrees with the dates beneath it
+# on first paint.
+read -r n hid first cfg <<<"$(python3 - "$SITE" <<'PYEOF'
+import re, sys, pathlib, json, subprocess
+root = pathlib.Path(sys.argv[1])
+h = (root / "public" / "index.html").read_text()
+# Match the class token, not the whole attribute: these elements carry
+# more than one class, and an exact-attribute match silently stops finding
+# them the moment a second is added.
+pick = re.search(r'<div\b([^>]*\bclass="[^"]*\bclock__zones\b[^"]*"[^>]*)>(.*?)</div>', h, re.S)
+n = len(re.findall(r'data-tz="([^"]+)"', pick.group(2))) if pick else 0
+hid = 1 if pick and "hidden" in pick.group(1) else 0
+first = re.search(r'data-tz="([^"]+)"', pick.group(2)).group(1) if n else ""
+cfg = ""
+m = re.search(r"^timeZone = '([^']+)'", (root / "hugo.toml").read_text(), re.M)
+if m: cfg = m.group(1)
+print(f"{n} {hid} {first or '-'} {cfg or '-'}")
+PYEOF
+)"
+if [ "${n:-0}" -ge 2 ] && [ "${hid:-0}" -eq 1 ] && [ "$first" = "$cfg" ]
+then ok "zone selector ships hidden, defaults to the build zone ($cfg)"
+else no "zone selector wrong (buttons=$n hidden=$hid first=$first timeZone=$cfg)"; fi
+
+# An unset timeZone means Hugo uses the build machine's zone, so the same
+# commit renders different times on a laptop and in CI. The mirror the
+# script reads must agree with it.
+read -r tzc tzp <<<"$(python3 - "$SITE/hugo.toml" <<'PYEOF'
+import re, sys, pathlib
+t = pathlib.Path(sys.argv[1]).read_text()
+a = re.search(r"^timeZone = '([^']+)'", t, re.M)
+b = re.search(r"^\s*timezone = '([^']+)'", t, re.M)
+print(f"{a.group(1) if a else '-'} {b.group(1) if b else '-'}")
+PYEOF
+)"
+if [ "$tzc" != "-" ] && [ "$tzc" = "$tzp" ]
+then ok "timeZone is set and mirrored for the clock ($tzc)"
+else no "timezone config wrong (timeZone=$tzc param=$tzp)"; fi
+
+# A class in the markup with no rule behind it is invisible: the element
+# renders, unstyled, looking like a spacing mistake rather than a missing
+# declaration. .index__dayline shipped that way — the flex row that puts
+# the weekday at the far edge was written into the template and never into
+# the stylesheet, so the date and the weekday rendered flush together.
+orphan="$(python3 - "$THEME" <<'PYEOF'
+import re, sys, pathlib
+root = pathlib.Path(sys.argv[1])
+css = "\n".join(f.read_text() for f in (root / "assets/css").glob("*.css"))
+styled = set(re.findall(r"\.([a-zA-Z][\w-]*)", css))
+used = set()
+for f in (root / "layouts").rglob("*.html"):
+    for attr in re.findall(r'class="([^"{}]*)"', f.read_text()):
+        used |= {c for c in attr.split() if c}
+# Classes the script adds at runtime are styled but never in the templates;
+# the reverse is what matters here.
+missing = sorted(c for c in used - styled if not c.startswith("u-"))
+print(" ".join(missing[:8]))
+PYEOF
+)"
+if [ -z "$orphan" ]
+then ok "every class in the markup has a rule behind it"
+else no "classes with no rule: $orphan"; fi
+
+# The masthead is one row: the nav is a sibling of the identity, directly
+# inside the inner. Nested a level deeper it stops being floated against
+# the identity, which is what a lost </div> did once already.
+#
+# The previous version of this check looked for a .masthead__top wrapper.
+# That element no longer exists, so it found nothing to measure and passed
+# on every build — the same way the date check did when its cells moved.
+read -r sib bal <<<"$(python3 - "$SITE/public/index.html" <<'PYEOF'
+import re, sys, pathlib
+h = pathlib.Path(sys.argv[1]).read_text()
+m = re.search(r'<header class="masthead">.*?</header>', h, re.S)
+if not m: print("0 0"); raise SystemExit
+head, depth, inner_at, sib, seen_nav = m.group(0), 0, None, 0, False
+for tag in re.finditer(r'<(/?)(\w+)([^>]*)>', head):
+    close, name, attrs = tag.group(1), tag.group(2), tag.group(3)
+    if name in ("img", "br", "input", "path", "meta"): continue
+    if not close:
+        if "masthead__inner" in attrs: inner_at = depth + 1
+        elif name == "nav":
+            seen_nav = True
+            if inner_at is not None and depth == inner_at: sib = 1
+        depth += 1
+    else:
+        depth -= 1
+print(f"{sib if seen_nav else 0} {1 if depth == 0 else 0}")
+PYEOF
+)"
+if [ "${sib:-0}" -eq 1 ] && [ "${bal:-0}" -eq 1 ]
+then ok "masthead is one row, nav beside the identity, tags balanced"
+else no "masthead structure broken (nav-beside-identity=$sib balanced=$bal)"; fi
+
+# Every rendered date goes through .Local, so the whole site reads in the
+# publication's zone. Formatting the stored value instead put one entry
+# under September 20 on its own page and 19 SEP in the journal. Machine
+# values keep their offset and are exempt: that is the instant, not a
+# rendering of it.
+stray="$(python3 - "$THEME/layouts" <<'PYEOF'
+import re, sys, pathlib
+bad = []
+for f in sorted(pathlib.Path(sys.argv[1]).rglob("*.html")):
+    for n, line in enumerate(f.read_text().split("\n"), 1):
+        for m in re.finditer(r'\.(?:Date|Lastmod)\.Format\s+"([^"]+)"', line):
+            if m.group(1) == "2006-01-02T15:04:05Z07:00": continue   # the instant
+            bad.append(f"{f.name}:{n}")
+print(" ".join(sorted(set(bad))[:6]))
+PYEOF
+)"
+if [ -z "$stray" ]
+then ok "every rendered date goes through the publication zone"
+else no "dates formatted outside the zone: $stray"; fi
+
+# The panels stick as one block; the reserved slot above them scrolls away.
+# position:sticky travels the height of its containing block, so the block
+# is a child of the aside rather than the aside itself — sticking the aside
+# would pin the zones with everything else. And the aside has to stretch to
+# the column's height rather than its content's, or the panels unstick as
+# soon as the last one scrolls by.
+read -r stick child stretch slots <<<"$(python3 - "$THEME/assets/css" "$SITE/public/index.html" <<'PYEOF'
+import re, sys, pathlib
+css = "\n".join(f.read_text() for f in sorted(pathlib.Path(sys.argv[1]).glob("*.css"))
+                if f.name != "print.css")
+def rule(sel):
+    m = re.search(rf"(?:^|[}}\n])\s*{re.escape(sel)}\s*\{{([^}}]*)\}}", css, re.M)
+    return m.group(1) if m else ""
+
+stick = 1 if "position: sticky" in rule(".aside__panels") else 0
+
+# Depth-walked, not indentation-matched: whitespace is not structure.
+h = pathlib.Path(sys.argv[2]).read_text()
+a = re.search(r'<aside class="spread__aside".*?</aside>', h, re.S)
+kids, depth = [], 0
+for tag in re.finditer(r'<(/?)(\w+)([^>]*)>', a.group(0) if a else ""):
+    close, name, attrs = tag.group(1), tag.group(2), tag.group(3)
+    if name in ("img", "br", "input", "path", "meta", "time", "a", "span", "button"): continue
+    if not close:
+        if depth == 1:
+            c = re.search(r'class="([^"]+)"', attrs)
+            if c: kids.append(set(c.group(1).split()))
+        depth += 1
+    else:
+        depth -= 1
+# The slot is a sibling of the sticky block, not inside it: sticky travels
+# the height of its containing block, and the slot has to scroll away.
+child = 1 if (len(kids) >= 2 and "aside__top" in kids[0]
+              and "aside__panels" in kids[1]) else 0
+
+# align-items:start would leave the aside content-height, and the panels
+# would unstick as soon as the last one scrolled by.
+stretch = 0 if re.search(r"\.spread\s*\{[^}]*align-items:\s*start", css) else 1
+
+# A reserved slot with no height reserves nothing. Both slots exist so the
+# column beside them starts at one height on every page, and both are
+# invisible when empty — so losing the height is silent.
+slots = 1
+for sel in (".aside__top", ".page-head__crumb"):
+    if "min-height" not in rule(sel): slots = 0
+print(f"{stick} {child} {stretch} {slots}")
+PYEOF
+)"
+if [ "${stick:-0}" -eq 1 ] && [ "${child:-0}" -eq 1 ] && [ "${stretch:-0}" -eq 1 ] && [ "${slots:-0}" -eq 1 ]
+then ok "the panels stick, and both reserved slots hold their height"
+else no "sticky aside broken (sticky=$stick order=$child stretched=$stretch slots=$slots)"; fi
+
+# Braces balance in every stylesheet. A stray closing brace is ignored by
+# every parser, so a block deleted carelessly leaves one behind and nothing
+# ever says so — there was one sitting at the end of components.css from a
+# rule removed long before. Depth is also never allowed to go negative,
+# which catches the brace being in the wrong place rather than merely
+# surplus.
+braces="$(python3 - "$THEME/assets/css" <<'PYEOF'
+import re, sys, pathlib
+bad = []
+for f in sorted(pathlib.Path(sys.argv[1]).glob("*.css")):
+    src = re.sub(r"/\*.*?\*/", lambda m: "\n" * m.group(0).count("\n"),
+                 f.read_text(), flags=re.S)
+    depth = 0
+    for n, line in enumerate(src.split("\n"), 1):
+        for ch in line:
+            if ch == "{": depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth < 0: bad.append(f"{f.name}:{n} unmatched }}"); depth = 0
+    if depth: bad.append(f"{f.name}: {depth} block(s) left open")
+print(" ".join(bad[:5]))
+PYEOF
+)"
+if [ -z "$braces" ]
+then ok "braces balance in every stylesheet"
+else no "unbalanced css: $braces"; fi
+
+# A tag's hover underline has to be drawn on the element that carries the
+# frequency colour. The anchor is color:inherit — it has to be, or the
+# :visited pass reaches the colour and flattens every tag to one hue — so
+# an underline declared there takes the surrounding ink instead of the
+# tag's. And hover must not bring up a border: a grey rectangle around a
+# word whose whole job is to be a colour.
+tag="$(python3 - "$THEME/assets/css" <<'PYEOF'
+import re, sys, pathlib
+css = "\n".join(f.read_text() for f in sorted(pathlib.Path(sys.argv[1]).glob("*.css"))
+                if f.name != "print.css")
+def rule(sel):
+    m = re.search(rf"(?:^|[}}\n])\s*{re.escape(sel)}\s*\{{([^}}]*)\}}", css, re.M)
+    return m.group(1) if m else None
+bad = []
+anchor = rule(".tag-signal:hover")
+span   = rule(".tag-signal:hover .tag-signal__name")
+if span is None or "text-decoration" not in span:
+    bad.append("underline not on the coloured span")
+if anchor and "text-decoration" in anchor:
+    bad.append("underline still on the anchor")
+if anchor and re.search(r"border(-\w+)?-?color\s*:", anchor):
+    bad.append("hover draws a border")
+print(" ".join(bad))
+PYEOF
+)"
+if [ -z "$tag" ]
+then ok "tag hover underlines in the tag's own color, with no box"
+else no "tag hover wrong: $tag"; fi
+
+# The masthead sticks, so everything else that sticks pins below it, and
+# the only strip content can scroll through is the gap between the two.
+# A pinned band has to cover exactly that gap: a shorter cover leaves a
+# slit, and a taller one reaches past the masthead and eats the row above.
+#
+# --sticky-top must be derived from the masthead's own height, not typed,
+# or restyling the identity silently moves the masthead out from under
+# everything pinned to it.
+cover="$(python3 - "$THEME/assets/css" <<'PYEOF'
+import re, sys, pathlib
+css = "\n".join(f.read_text() for f in sorted(pathlib.Path(sys.argv[1]).glob("*.css"))
+                if f.name != "print.css")
+def rule(sel):
+    m = re.search(rf"(?:^|[}}\n])\s*{re.escape(sel)}\s*\{{([^}}]*)\}}", css, re.M)
+    return m.group(1) if m else None
+bad = []
+mast = rule(".masthead") or ""
+if "position: sticky" not in mast: bad.append("masthead does not stick")
+tok = (pathlib.Path(sys.argv[1]) / "tokens.css").read_text()
+if not re.search(r"--sticky-top:\s*calc\(\s*var\(--masthead-h\)", tok):
+    bad.append("--sticky-top not derived from the masthead height")
+head = rule(".index__day th") or ""
+if "top: var(--sticky-top)" in head:
+    c = rule(".index__day th::before")
+    if c is None: bad.append("day head pinned with no cover")
+    else:
+        if "height: var(--sticky-gap)" not in c: bad.append("cover is not the gap's height")
+        if "bottom: 100%" not in c: bad.append("cover is not directly above the band")
+        if "background:" not in c: bad.append("cover is transparent")
+print(" ".join(bad))
+PYEOF
+)"
+if [ -z "$cover" ]
+then ok "the masthead sticks and pinned bands cover their own gap"
+else no "sticky gap uncovered: $cover"; fi
+
+# Every date in the journal links to a day that was actually built, and
+# every day page carries the navigation. Day terms come from the taxonomy,
+# so a link can only point at a day with entries on it — but only as long
+# as the term stamped in front matter is the one the journal prints, and
+# those are computed in two different places.
+days="$(python3 - "$SITE/public" <<'PYEOF'
+import re, sys, pathlib
+root = pathlib.Path(sys.argv[1])
+bad, seen = [], 0
+for f in list(root.glob("index.html")) + list(root.glob("page/*/index.html")):
+    h = f.read_text()
+    for href in re.findall(r'<a class="index__daylink" href="([^"]+)"', h):
+        seen += 1
+        if not (root / href.strip("/") / "index.html").exists():
+            bad.append(f"{href} not built")
+for f in root.glob("archives/*/index.html"):
+    term = f.parent.name
+    if len(term) != 10: continue
+    if 'class="daynav"' not in f.read_text():
+        bad.append(f"{term} has no day nav")
+if not seen: bad.append("no day links found - check matched nothing")
+print(" ".join(sorted(set(bad))[:5]))
+PYEOF
+)"
+if [ -z "$days" ]
+then ok "every journal date links to a day that exists, and every day navigates"
+else no "day links broken: $days"; fi
+
+# The headline sits at the same height whether or not the page has a
+# breadcrumb. The slot is reserved on every page, so a title does not drop
+# by the trail's height the moment a page is nested.
+slot="$(python3 - "$SITE/public" <<'PYEOF'
+import re, sys, pathlib
+bad, seen = [], 0
+for f in pathlib.Path(sys.argv[1]).rglob("index.html"):
+    h = f.read_text()
+    if 'class="hd hd--page"' not in h: continue
+    seen += 1
+    if 'class="page-head__crumb"' not in h:
+        bad.append(f"{f.parent.name or '/'}: headline with no reserved slot")
+if not seen: bad.append("no page heads found - check matched nothing")
+print(" ".join(sorted(set(bad))[:5]))
+PYEOF
+)"
+if [ -z "$slot" ]
+then ok "the headline sits at one height, breadcrumb or not"
+else no "breadcrumb slot missing: $slot"; fi
+
+# Every palette block that sets a surface must also set the tag tuning for
+# it. Custom properties do not inherit between sibling selectors, so a
+# block that omits them falls back to :root — the paper palette, whose apex
+# lightness is 0.22. The two explicitly-forced dark blocks were doing
+# exactly that, which painted the most-used subject near-black on black for
+# any site that set theme = 'dark' rather than leaving it to the OS.
+pal="$(python3 - "$THEME/assets/css/tokens.css" <<'PYEOF'
+import re, sys, pathlib
+t = pathlib.Path(sys.argv[1]).read_text()
+NEED = {"--tag-apex-hue", "--tag-l-rare", "--tag-l-apex", "--tag-c-peak", "--tag-glow-max"}
+def is_uv(sel):
+    return bool(re.search(r'(?<!:not\()\[data-palette="ultraviolet"\]', sel))
+bad, seen = [], 0
+for m in re.finditer(r'(?m)^([^{}\n][^{}]*?)\{([^{}]*)\}', t):
+    sel, body = " ".join(m.group(1).split()), m.group(2)
+    if "--surface:" not in body: continue
+    seen += 1
+    have = dict(re.findall(r"(--tag-[\w-]+)\s*:\s*([^;]+);", body))
+    missing = NEED - set(have)
+    if missing:
+        bad.append(f"{sel[:28]}: no {','.join(sorted(missing))}")
+        continue
+    # A dark surface needs a light apex, and the hue must match the palette.
+    surf = re.search(r"--surface:\s*#(\w{6})", body).group(1)
+    dark = sum(int(surf[i:i+2], 16) for i in (0, 2, 4)) < 3 * 128
+    apex = float(have["--tag-l-apex"])
+    if dark and apex < 0.6: bad.append(f"{sel[:28]}: apex {apex} on a dark surface")
+    if not dark and apex > 0.6: bad.append(f"{sel[:28]}: apex {apex} on a light surface")
+    hue = have["--tag-apex-hue"].strip()
+    if is_uv(sel) and hue == "82": bad.append(f"{sel[:28]}: default hue in the uv palette")
+if not seen: bad.append("no palette blocks found - check matched nothing")
+print(" ".join(bad[:4]))
+PYEOF
+)"
+if [ -z "$pal" ]
+then ok "every palette tunes its own tags for its own surface"
+else no "palette tuning wrong: $pal"; fi
+
+# Every template the theme ships is reached by the demo content. A partial
+# nothing exercises is a feature documented but never rendered — figure.html
+# sat unused while the README promised entries take a featured image.
+unused="$( (cd "$SITE" && hugo --printUnusedTemplates --destination "$TMP/ut" 2>&1) \
+           | grep -o 'Template [^ ]* is unused' | sed 's/Template //;s/ is unused//' | head -5 )"
+if [ -z "$unused" ]
+then ok "every template the theme ships is exercised by the content"
+else no "templates never reached: $(printf '%s' "$unused" | tr '\n' ' ')"; fi
+
+echo
+printf "  %d passed, %d failed\n" "$pass" "$fail"
+[ "$fail" -eq 0 ]

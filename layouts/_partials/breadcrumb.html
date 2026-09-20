@@ -1,0 +1,13 @@
+{{- if and .Parent (not (eq .Section "posts")) (not .IsHome) }}
+{{- $trail := slice . }}
+{{- $p := . }}
+{{- range seq 6 }}{{ with $p.Parent }}{{ $trail = $trail | append . }}{{ $p = . }}{{ end }}{{ end }}
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  <ol>
+    {{- range seq (len $trail) 1 }}
+      {{- $item := index $trail (sub . 1) }}
+      <li>{{ if eq $item $ }}<span aria-current="page">{{ $item.Title }}</span>{{ else }}<a href="{{ $item.RelPermalink }}">{{ $item.Title }}</a>{{ end }}</li>
+    {{- end }}
+  </ol>
+</nav>
+{{- end -}}

@@ -1,0 +1,29 @@
+{{- /*
+  Previous and next day, for a day archive. Days come from the archives
+  taxonomy itself, so the navigation can only ever point at a day that
+  exists — there is no walking the calendar into empty pages.
+
+  Newest first everywhere else, so "previous" is the older day.
+*/ -}}
+{{- $cur := .term -}}
+{{- $days := slice -}}
+{{- range $t, $v := site.Taxonomies.archives }}{{ if eq (len $t) 10 }}{{ $days = $days | append $t }}{{ end }}{{ end -}}
+{{- $days = sort $days "value" "desc" -}}
+{{- $i := -1 -}}
+{{- range $n, $d := $days }}{{ if eq $d $cur }}{{ $i = $n }}{{ end }}{{ end -}}
+{{- if ge $i 0 }}
+{{- $newer := cond (gt $i 0) (index $days (sub $i 1)) "" -}}
+{{- $older := cond (lt $i (sub (len $days) 1)) (index $days (add $i 1)) "" -}}
+<nav class="daynav" aria-label="Adjacent days">
+  <span class="daynav__side">
+    {{- with $older }}
+    <a rel="prev" href="{{ (printf "/archives/%s/" .) | relURL }}">&larr; {{ partial "archive-title.html" (dict "term" .) }}</a>
+    {{- end }}
+  </span>
+  <span class="daynav__side daynav__side--next">
+    {{- with $newer }}
+    <a rel="next" href="{{ (printf "/archives/%s/" .) | relURL }}">{{ partial "archive-title.html" (dict "term" .) }} &rarr;</a>
+    {{- end }}
+  </span>
+</nav>
+{{- end }}

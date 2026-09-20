@@ -1,0 +1,15 @@
+{{- /* The section page a hierarchical page branch hangs off, or nil when this
+       page is not in one.
+
+       A branch is a real section, with child pages, that is not the journal:
+       posts are flat and dated, so they are indexed rather than navigated.
+       The home page is excluded deliberately — .CurrentSection of any
+       top-level page is home, and home has pages, so without this test
+       Plates and Contact both claimed to be inside a branch. */ -}}
+{{- $sec := cond (eq .Kind "section") . .CurrentSection -}}
+{{- with $sec -}}
+  {{- if and (eq .Kind "section") (not .IsHome) (ne .Section "posts") .Pages -}}
+    {{- return . -}}
+  {{- end -}}
+{{- end -}}
+{{- return nil -}}

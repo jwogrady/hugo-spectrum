@@ -1,10 +1,11 @@
 {{ define "main" }}
-  <h1>{{ .Title }}</h1>
-  {{ .Content }}
-  {{ range .Pages }}
-    <section>
-      <h2><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></h2>
-      {{ .Summary }}
-    </section>
-  {{ end }}
+  {{ partial "page-head.html" (dict "page" .) }}
+  <div class="prose">{{ .Content }}</div>
+  {{- if .Pages }}
+  {{ partial "index-table.html" (dict "pages" (sort .Pages "Title") "trail" "price_from") }}
+  {{- else }}<p class="hint">Nothing here yet.</p>{{ end }}
+{{ end }}
+
+{{ define "aside" }}
+  {{- with partial "branch-root.html" . }}{{ partial "page-nav.html" (dict "root" . "current" $) }}{{ end }}
 {{ end }}

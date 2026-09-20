@@ -1,1 +1,125 @@
-<p>Copyright {{ now.Year }}. All rights reserved.</p>
+<footer class="site-foot">
+  <div class="page">
+    <hr>
+    <p class="eyebrow">{{ or site.Params.spectrum.owner site.Title }} · {{ now.Year }}</p>
+    {{- with site.Params.spectrum.footerNote }}<p class="hint">{{ . }}</p>{{ end }}
+  </div>
+</footer>
+{{- /* The only script in the theme: an upgrade to markup that is already
+       correct. Inline so it costs no request, deferred to the footer so it
+       never blocks the head.
+
+       It runs the edition stamp as a clock and lets the reader put the
+       whole publication into another zone. Re-zoning the journal is one
+       calculation per timestamp plus a regroup: the rows are already in
+       instant order, so walking them and starting a group wherever the
+       local date changes reproduces exactly what the template did at build
+       time. Without it, moving a time without moving its day would file a
+       record under a day it is not shown to be on. */ -}}
+{{- $zones := site.Params.spectrum.zones }}
+<script>
+(function () {
+  var clock = document.querySelector('[data-clock]');
+  if (!window.Intl || !Intl.DateTimeFormat) return;
+
+  var ZONES = {{ $zones | jsonify | safeJS }};
+  var KEY = 'spectrum.tz';
+  var tz = ZONES[0].tz;
+  try { var v = localStorage.getItem(KEY);
+        if (v && ZONES.some(function (z) { return z.tz === v; })) tz = v; } catch (e) {}
+
+  var cache = {};
+  function parts(d, opts, key) {
+    var k = tz + '|' + key;
+    if (!cache[k]) cache[k] = new Intl.DateTimeFormat('en-CA', opts(tz));
+    return cache[k].formatToParts(d).reduce(function (o, p) { o[p.type] = p.value; return o; }, {});
+  }
+  var O = {
+    stamp: function (z) { return { timeZone: z, hour12: false, year: 'numeric', month: '2-digit',
+      day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short' }; },
+    hm:    function (z) { return { timeZone: z, hour12: false, hour: '2-digit', minute: '2-digit' }; },
+    day:   function (z) { return { timeZone: z, year: 'numeric', month: '2-digit', day: '2-digit' }; },
+    head:  function (z) { return { timeZone: z, year: 'numeric', month: 'short', day: '2-digit',
+      weekday: 'long' }; }
+  };
+
+  /* ── the clock ─────────────────────────────────────────────────────── */
+  function tick() {
+    if (!clock) return;
+    var d = new Date(), p = parts(d, O.stamp, 'stamp');
+    clock.setAttribute('datetime', d.toISOString());
+    clock.textContent = p.year + '-' + p.month + '-' + p.day + ' ';
+    var s = document.createElement('span');
+    s.className = 'clock__time';
+    s.textContent = p.hour + ':' + p.minute + ':' + p.second + ' ' + p.timeZoneName;
+    clock.appendChild(s);
+  }
+
+  /* ── the journal ───────────────────────────────────────────────────── */
+  function dayHead(d, cols) {
+    var p = parts(d, O.head, 'head'), k = parts(d, O.day, 'day');
+    var tr = document.createElement('tr'); tr.className = 'index__day';
+    var th = document.createElement('th');
+    th.setAttribute('scope', 'rowgroup'); th.setAttribute('colspan', cols);
+    var line = document.createElement('span'); line.className = 'index__dayline';
+    var t = document.createElement('time');
+    t.setAttribute('datetime', k.year + '-' + k.month + '-' + k.day);
+    t.textContent = (p.day + ' ' + p.month + ' ' + p.year).toUpperCase();
+    var w = document.createElement('span');
+    w.className = 'index__weekday'; w.textContent = p.weekday.toUpperCase();
+    line.appendChild(t); line.appendChild(w); th.appendChild(line); tr.appendChild(th);
+    return tr;
+  }
+
+  function regroup(table) {
+    var rows = [].slice.call(table.querySelectorAll('tbody > tr:not(.index__day)'));
+    var timed = rows.filter(function (r) { return r.querySelector('.index__time time[datetime]'); });
+    if (!timed.length) return;
+    var cols = rows[0].children.length;
+    var frag = document.createDocumentFragment(), body = null, key = null;
+    timed.forEach(function (r) {
+      var cell = r.querySelector('.index__time time[datetime]');
+      var d = new Date(cell.getAttribute('datetime'));
+      var k = parts(d, O.day, 'day'), id = k.year + '-' + k.month + '-' + k.day;
+      var hm = parts(d, O.hm, 'hm');
+      cell.textContent = hm.hour + ':' + hm.minute;
+      if (id !== key) {
+        key = id;
+        body = document.createElement('tbody');
+        body.className = 'index__group';
+        body.appendChild(dayHead(d, cols));
+        frag.appendChild(body);
+      }
+      body.appendChild(r);
+    });
+    [].slice.call(table.querySelectorAll('tbody')).forEach(function (b) { b.remove(); });
+    table.appendChild(frag);
+  }
+
+  function apply() {
+    tick();
+    [].slice.call(document.querySelectorAll('table.index')).forEach(regroup);
+  }
+
+  /* ── the selector ──────────────────────────────────────────────────── */
+  var picker = document.querySelector('.clock__zones');
+  var buttons = picker ? [].slice.call(picker.querySelectorAll('[data-tz]')) : [];
+  function mark() {
+    buttons.forEach(function (b) {
+      b.setAttribute('aria-pressed', String(b.getAttribute('data-tz') === tz));
+    });
+  }
+  buttons.forEach(function (b) {
+    b.addEventListener('click', function () {
+      tz = b.getAttribute('data-tz');
+      try { localStorage.setItem(KEY, tz); } catch (e) {}
+      mark(); apply();
+    });
+  });
+  if (picker) picker.hidden = false;
+
+  mark();
+  apply();
+  setInterval(tick, 1000);
+})();
+</script>

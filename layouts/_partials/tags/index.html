@@ -1,0 +1,75 @@
+{{- $tags := partialCached "tags/collect.html" . -}}
+{{- $flat := true -}}
+{{- range $tags }}{{ if ne .distance 0.0 }}{{ $flat = false }}{{ end }}{{ end -}}
+
+{{- if $tags }}
+{{- /* The field. BRAND.md's third trap is a list pretending to be one:
+       ordering subjects by frequency in a left-aligned wrap gives a sorted
+       list with colour on it. The apex belongs in the centre with frequency
+       falling away to both edges, so the distribution is laid out in space
+       as well as in luminance and its shape reads before any one subject does.
+
+       The compact sidebar field is deliberately not this — a centre-out arc
+       needs width to read as an arc, and in a 17rem column it wraps into
+       ragged lines with the rarest subject stranded on the top row looking
+       like a heading. This is the full-width index that comment defers to.
+
+       collect.html returns count-descending, so index 0 is the apex. Odd
+       indices go right, even indices go left, and the left side is reversed
+       so both outer edges are the rarest subjects. Counts are not printed
+       here — they are in every signal's accessible name, and the ranked
+       climb below this is where the page becomes a reference. */ -}}
+{{- $left := slice }}{{ $right := slice }}
+{{- range $i, $t := $tags }}
+  {{- if gt $i 0 }}
+    {{- if eq (mod $i 2) 1 }}{{ $right = $right | append $t }}
+    {{- else }}{{ $left = $left | append $t }}{{ end }}
+  {{- end }}
+{{- end }}
+{{- $bell := slice }}
+{{- if $left }}{{ range seq (len $left) 1 }}{{ $bell = $bell | append (index $left (sub . 1)) }}{{ end }}{{ end }}
+{{- $bell = $bell | append (index $tags 0) }}
+{{- range $right }}{{ $bell = $bell | append . }}{{ end }}
+<p class="eyebrow">The field &mdash; apex at centre, frequency falling to both edges</p>
+<div class="signal-bell">
+  {{- range $bell }}
+    {{- partial "tags/signal.html" (dict "tag" .) }}
+  {{- end }}
+</div>
+
+{{- /* Ascending by count, so the ramp climbs to the apex and the brightest
+       subject lands last. collect.html returns count-descending, so reverse
+       it — ties stay alphabetical because the sort was stable. */ -}}
+{{- $arranged := slice }}
+{{- range seq (len $tags) 1 }}{{ $arranged = $arranged | append (index $tags (sub . 1)) }}{{ end }}
+<div class="signal-index">
+  {{- range $arranged }}
+    {{- partial "tags/signal.html" (dict "tag" . "showCount" true) }}
+  {{- end }}
+</div>
+
+<div class="signal-legend">
+  <p class="eyebrow">Reading the signals</p>
+  <p>
+    <strong>Brightness and hue both rise with frequency.</strong> Each count
+    has one color and one brightness, so two subjects used equally often are
+    identical — because they are. The scale climbs from gold through green,
+    cyan and violet, and only the most-used subject reaches white. Type size
+    and weight never vary, so no subject is made unreadable to make another
+    loud.
+    {{- if $flat }} Every subject here is used equally often, so the field is flat.{{ end }}
+  </p>
+  <p class="signal-legend__scale" role="img"
+     aria-label="Scale from rare, dim and colored, to most frequent, bright and near-white">
+    {{- range $k := seq 0 10 }}
+      {{- $i := add 0.12 (mul 0.88 (div (float $k) 10.0)) -}}
+      <span class="signal-legend__step"
+            style="--tag-signal:{{ printf "%.3f" $i }};--tag-hue:{{ printf "%.1f" (mul 33.0 (float $k)) }};"></span>
+    {{- end }}
+  </p>
+  <p class="hint">rare &nbsp;&rarr;&nbsp; frequent</p>
+</div>
+
+{{- else }}
+<p class="hint">No subjects yet.</p>
+{{- end -}}

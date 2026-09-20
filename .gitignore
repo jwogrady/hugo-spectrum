@@ -1,0 +1,4 @@
+# Hugo build output and caches — never belongs in the theme
+/public/
+/resources/
+.hugo_build.lock

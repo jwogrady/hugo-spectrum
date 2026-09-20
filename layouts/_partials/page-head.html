@@ -1,0 +1,19 @@
+{{- /*
+  A page's head: a reserved slot for the breadcrumb, then the headline.
+  Thin wrapper over heading.html so a page never states its own
+  arrangement.
+
+  The slot is always emitted, even when there is no trail to put in it, so
+  the headline sits at the same height on every page. Letting the crumb
+  push it meant a title jumped down by its height the moment a page was
+  nested — the same content at two elevations depending on where it lived.
+
+    page   the page (required)
+    title  headline         (default .Title)
+    crumb  render breadcrumb (default true)
+*/ -}}
+{{- $p := .page -}}
+<div class="page-head__crumb">
+  {{- if ne .crumb false }}{{ partial "breadcrumb.html" $p }}{{ end -}}
+</div>
+{{ partial "heading.html" (dict "title" (or .title $p.Title) "level" 1) }}

@@ -1,0 +1,13 @@
+name = "Spectrum"
+license = "MIT"
+licenselink = "https://github.com/jwogrady/hugo-pulse-spectrum/blob/master/LICENSE"
+description = "An authoritative field-manual theme for Hugo. A publication index rather than a landing page, with a frequency spectrum over its taxonomy."
+homepage = "https://github.com/jwogrady/hugo-pulse-spectrum"
+demosite = ""
+tags = ["publication", "index", "journal", "documentation", "dark", "accessible", "no-js"]
+features = ["responsive", "dark-mode", "light-mode", "print-styles", "taxonomy", "pagination", "self-hosted-fonts", "no-javascript", "wcag-aa"]
+min_version = "0.146.0"
+
+[author]
+  name = "jwogrady"
+  homepage = "https://github.com/jwogrady"

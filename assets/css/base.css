@@ -1,0 +1,226 @@
+/* ═══ SPECTRUM — BASE ═══════════════════════════════════════════════════ */
+
+*, *::before, *::after { box-sizing: border-box; }
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  /* Reserve the scrollbar track on every page. Without it a short page has
+     no scrollbar and a long one does, so the centered column shifts
+     horizontally on every navigation and the masthead appears to jump. */
+  overflow-y: scroll;                 /* fallback: always show the track */
+}
+@supports (scrollbar-gutter: stable) {
+  /* both-edges, not stable alone: reserving on one edge only shifts a
+     centred container left by half a scrollbar width, which is a visible
+     asymmetry on a page whose whole frame is meant to be centred. */
+  html { overflow-y: auto; scrollbar-gutter: stable both-edges; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--size-base);
+  line-height: var(--lh-body);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: break-word;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── layout ───────────────────────────────────────────────────────────── */
+.page  { width: 100%; max-width: var(--page);   margin-inline: auto; padding-inline: var(--gutter); }
+/* Every page gets the same space beneath the masthead. A `main.wrap` rule
+   used to do this but the class was renamed to `page` and the rule was lost,
+   so the journal padded itself and section pages had none — the band sat
+   higher on one than the other. */
+main.page { padding-block: var(--space-section) var(--space-major); }
+
+/* Both containers fill the frame. A one-column page is one column the full
+   width of the page; a two-column page splits the same width into main plus
+   aside. So the outer edges sit in the same place everywhere and nothing
+   shifts on navigation — which was the actual complaint behind pinning
+   everything to 51rem, a fix that just moved the empty space to the right
+   of every page that had no sidebar.
+
+   Reading width is not the container's job: .prose caps at the measure and
+   headings at measure-tight, so text stays legible however wide the frame. */
+.page--one > * { max-width: none; }
+
+/* Present to assistive technology, absent from the page. Used where a
+   repeated value is suppressed on screen but the row still has to state
+   it. clip-path, not display:none or visibility:hidden — both of those
+   take the text out of the accessibility tree too, which is the opposite
+   of the point. */
+.u-sr {
+  position: absolute; width: 1px; height: 1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+
+.skip {
+  position: absolute; left: -9999px; z-index: var(--z-skip);
+  background: var(--band); color: var(--band-ink);
+  padding: var(--space-tight) var(--space-item);
+  border: var(--rule-bold) solid var(--focus);
+}
+.skip:focus { left: var(--gutter); top: var(--space-tight); }
+
+/* ── headings · serif for formal, sans for operational ────────────────── */
+h1, h2, h3, h4 {
+  font-family: var(--font-serif); font-weight: var(--weight-title); margin: 0 0 var(--space-row);
+  text-wrap: balance;                /* even line lengths in a headline */
+  max-width: var(--measure-tight);
+}
+h1 { font-size: var(--size-3xl); line-height: var(--lh-tight); letter-spacing: var(--tracking-heading);
+     margin-bottom: var(--s10); }
+/* Space above a heading must exceed the paragraph gap, or the heading reads
+   as belonging to the text above it rather than below. Each level steps down
+   the space ladder: s13 / s12 / s11 above, s7 / s6 below. The old values here
+   (2.75rem, 0.65rem, 2rem, 0.5rem, 1.75rem, 0.4rem) were picked by eye and
+   were the reason spacing appeared to bounce between pages. */
+h2 { font-size: var(--size-xl);  line-height: var(--lh-snug); margin-top: var(--s13); margin-bottom: var(--s7); }
+h3 { font-size: var(--size-lg);  line-height: var(--lh-snug); margin-top: var(--s12); margin-bottom: var(--s7); }
+h4 { font-size: var(--size-base); line-height: var(--lh-snug); margin-top: var(--s11); margin-bottom: var(--s6); }
+
+/* A serif title at body scale. Defined once — the index and the plate index are
+   the same role and must not drift apart. */
+.index__title, .plates__title {
+  font-family: var(--font-serif);
+  font-size: var(--size-base);
+  font-weight: var(--weight-title);
+  line-height: var(--lh-title);
+  letter-spacing: var(--tracking-title);
+}
+
+/* An eyebrow is how a publication labels a thing before naming it. */
+.eyebrow {
+  display: block; font-family: var(--font-sans); font-size: var(--size-2xs);
+  font-weight: var(--weight-label); letter-spacing: var(--tracking-eyebrow); text-transform: uppercase;
+  color: var(--ink-faint); margin-bottom: var(--space-hair);
+  line-height: var(--lh-label);
+}
+
+p, ul, ol, blockquote, pre, table, figure { margin: 0 0 var(--space-item); }
+
+/* ── prose · the reading layer is serif, the interface layer is not ───── */
+.prose { max-width: var(--measure); }
+.prose p, .prose li, .prose blockquote {
+  font-family: var(--font-serif); font-size: var(--size-prose); line-height: var(--lh-prose);
+  text-wrap: pretty;                 /* no single-word last lines */
+}
+.prose p { margin-bottom: var(--space-para); }
+.prose ul, .prose ol, .prose blockquote, .prose pre, .prose table { margin-bottom: var(--space-para); }
+.prose li + li { margin-top: var(--s5); }
+.prose h2 + p, .prose h3 + p, .prose h2 + ul, .prose h3 + ul { margin-top: 0; }
+.prose > :first-child { margin-top: 0; }
+
+blockquote {
+  border-left: var(--rule-bold) solid var(--rule-strong);
+  margin-inline: 0; padding: var(--space-hair) 0 var(--space-hair) var(--space-item);
+  color: var(--ink-soft);
+}
+
+/* ── links ────────────────────────────────────────────────────────────── */
+a { color: var(--link); text-decoration-thickness: var(--rule-hair); text-underline-offset: var(--underline-offset); }
+a:hover  { color: var(--link-hover); text-decoration-thickness: var(--rule-bold); }
+a:active { color: var(--link-active); }
+a:visited { color: var(--link-visited); }
+
+/* One focus treatment, everywhere, never removed. Off-hue by design. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: var(--focus-width) solid var(--focus);
+  outline-offset: var(--focus-offset);
+  border-radius: var(--radius-chip);
+}
+
+/* ── data face · reference codes and aligned numerals only ────────────── */
+code, kbd, samp, pre, .ref { font-family: var(--font-data); font-size: 0.92em; font-variant-numeric: tabular-nums; }
+.ref { letter-spacing: var(--tracking-ref); color: var(--ink-faint); white-space: nowrap; }
+code { background: var(--surface-sunken); border: var(--rule-hair) solid var(--rule); border-radius: var(--radius-chip); padding: 0.08em 0.3em; }
+pre  { background: var(--surface-sunken); border: var(--rule-hair) solid var(--rule); border-radius: var(--radius-panel); padding: var(--space-item); overflow-x: auto; }
+pre code { background: none; border: 0; padding: 0; }
+
+/* ── rules ────────────────────────────────────────────────────────────── */
+hr { border: 0; border-top: var(--rule-hair) solid var(--rule); margin: var(--space-section) 0; }
+/* ── tables · the publication table is the house style ────────────────── */
+table { width: 100%; border-collapse: collapse; font-size: var(--size-sm); line-height: var(--lh-body); }
+caption {
+  text-align: left; font-size: var(--size-2xs); font-weight: var(--weight-label);
+  letter-spacing: var(--tracking-eyebrow); text-transform: uppercase;
+  color: var(--ink-faint); padding-bottom: var(--space-tight); line-height: var(--lh-label);
+}
+th {
+  text-align: left; font-weight: var(--weight-label); font-size: var(--size-2xs);
+  letter-spacing: var(--tracking-eyebrow); text-transform: uppercase;
+  color: var(--ink-soft);
+  border-bottom: var(--rule-bold) solid var(--ink);
+  padding: var(--space-tight) var(--space-row) var(--space-hair) 0;
+  white-space: nowrap; line-height: var(--lh-label);
+}
+td { border-bottom: var(--rule-hair) solid var(--rule); padding: var(--space-row) var(--space-row) var(--space-row) 0; vertical-align: baseline; }
+/* No row hover. Darkening a whole row put a black block behind an entry
+   whose own title already underlines, in a table that has no rules and no
+   boxes — one more container drawn around something that does not need
+   one. The link says what is live. */
+td:last-child, th:last-child { padding-right: 0; }
+/* ── buttons ──────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-block; font-family: var(--font-sans); font-size: var(--size-sm);
+  font-weight: var(--weight-label); letter-spacing: var(--tracking-ref); line-height: var(--lh-tight);
+  padding: var(--s7) var(--s9); border-radius: var(--radius-chip); cursor: pointer;
+  border: var(--rule-hair) solid var(--signal); background: var(--signal); color: var(--ink-on-signal);
+  text-decoration: none;
+}
+/* The hover fill is a palette token because the direction is not the same
+   in both modes: on paper a filled control darkens, on field black it
+   brightens. Reaching for --signal-bright in both dropped the button
+   label to 3.70:1 on the default paper palette. */
+.btn:hover  { background: var(--signal-hover); border-color: var(--signal-hover); color: var(--ink-on-signal); }
+.btn:active { transform: translateY(var(--rule-hair)); }
+.btn[aria-disabled="true"], .btn:disabled {
+  background: var(--disabled-surface); border-color: var(--disabled-rule);
+  color: var(--disabled-ink); cursor: not-allowed; pointer-events: none;
+}
+
+/* ── forms · block-form discipline, labels above, rules below ─────────── */
+/* Uppercase, so it carries the eyebrow's tracking like every other
+   uppercase label — it was the one that did not, at 0.02em, sitting on the
+   same line as .field__flag, which does. And a leading of its own, or the
+   label half of that row is 20px tall against the flag's 13px. */
+label { display: block; font-size: var(--size-xs); font-weight: var(--weight-label);
+        letter-spacing: var(--tracking-eyebrow); line-height: var(--lh-label);
+        text-transform: uppercase; color: var(--ink-soft); margin-bottom: var(--space-hair); }
+input, select, textarea {
+  width: 100%; font: inherit; font-size: var(--size-sm); color: var(--ink);
+  background: var(--surface-raised); border: var(--rule-hair) solid var(--rule-strong);
+  border-radius: var(--radius-chip); padding: var(--s7) var(--s8); line-height: var(--lh-snug);
+}
+input:disabled, select:disabled, textarea:disabled {
+  background: var(--disabled-surface); color: var(--disabled-ink); border-color: var(--disabled-rule);
+}
+.field { margin-bottom: var(--space-item); }
+.hint { font-size: var(--size-xs); color: var(--ink-faint); margin-top: var(--space-hair); line-height: var(--lh-body);
+}
+
+/* ── media · a caption is a caption wherever it is ────────────────────
+   One caption treatment for prose figures and for plate cells. They were
+   --ink-faint here and --ink-soft on the plates, so the same sentence read
+   at two weights depending on which page it was on — and the fainter of
+   the two was the lower-contrast one. The credit is the secondary line in
+   both, and now says so itself rather than inheriting whichever colour the
+   surrounding caption happened to carry. */
+img, video { max-width: 100%; height: auto; }
+figure img { display: block; border: var(--rule-hair) solid var(--rule); }
+figcaption { margin-top: var(--space-tight); font-size: var(--size-xs); color: var(--ink-soft); line-height: var(--lh-body); }
+.credit { display: block; font-style: italic; color: var(--ink-faint); }
+
+/* ── the foot ─────────────────────────────────────────────────────────
+   The only region of the page with no rule of its own: it had a print
+   border and nothing on screen, so the last line of the publication sat
+   flush against the bottom of the document. */
+.site-foot { padding-bottom: var(--space-section); }
+

@@ -1,0 +1,17 @@
+{{- /*
+  Every head on the site. There were four implementations of this one job:
+  .band in two layouts, .page-head, and .signal-field__head / .archive__head
+  which were byte-identical to each other. Four places to change, four
+  chances to drift, and drift is exactly what the user could see.
+
+    title    the head text (required)
+    level    heading element, 1..4          (default 2)
+    variant  "page"  headline, no box       (default)
+             "panel" black bar for a sidebar panel
+    id       id for aria-labelledby (optional)
+*/ -}}
+{{- $lvl := default 2 .level -}}
+{{- $var := default "page" .variant -}}
+<div class="hd hd--{{ $var }}">
+  <h{{ $lvl }} class="hd__title"{{ with .id }} id="{{ . }}"{{ end }}>{{ .title }}</h{{ $lvl }}>
+</div>

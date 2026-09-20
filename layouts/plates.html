@@ -1,0 +1,37 @@
+{{ define "main" }}
+  {{- $imgs := .Resources.ByType "image" }}
+  {{ partial "page-head.html" (dict "page" .) }}
+  <div class="prose">{{ .Content }}</div>
+
+  {{- if $imgs }}
+  <ul class="plates">
+    {{- range $i, $img := $imgs }}
+      {{- /* Thumbnail and a wider display copy, both WebP. Hugo caches these,
+             so the cost is paid once per build rather than per page. */ -}}
+      {{- $thumb := $img.Process "resize 560x webp q80" }}
+      {{- $full  := $img.Process "resize 1400x webp q82" }}
+      <li class="plates__cell">
+        <figure>
+          <a href="{{ $full.RelPermalink }}">
+            <img src="{{ $thumb.RelPermalink }}"
+                 width="{{ $thumb.Width }}" height="{{ $thumb.Height }}"
+                 alt="{{ with $img.Params.alt }}{{ . }}{{ else }}{{ $img.Title }}{{ end }}"
+                 loading="{{ cond (lt $i 2) "eager" "lazy" }}" decoding="async">
+          </a>
+          <figcaption>
+            <span class="plates__ref">PL {{ printf "%02d" (add $i 1) }}</span>
+            <span class="plates__title">{{ or $img.Title $img.Name }}</span>
+            {{- with $img.Params.caption }}<span class="plates__caption">{{ . }}</span>{{ end }}
+            {{- with $img.Params.credit }}
+            <span class="credit">{{ . }}{{ with $img.Params.shot_where }}, {{ . }}{{ end }}{{ with $img.Params.shot_on }} · {{ . }}{{ end }}</span>
+            {{- end }}
+            <span class="plates__dims">{{ $img.Width }}&times;{{ $img.Height }}</span>
+          </figcaption>
+        </figure>
+      </li>
+    {{- end }}
+  </ul>
+  {{- else }}
+  <p class="hint">No plates in this bundle yet. Drop images beside the page's <code>index.md</code>.</p>
+  {{- end }}
+{{ end }}

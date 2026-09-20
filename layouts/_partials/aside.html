@@ -1,0 +1,18 @@
+{{- /*
+  The journal's panels: the mission clock, subject frequency, then the date
+  archive. The aside element and its slots belong to baseof; this is only
+  what goes in them.
+
+  Assembled by hand in each layout before this, which is how the tag pages
+  ended up with Spectrum but no Archive — the two layouts were never going
+  to stay in step by inspection.
+
+    current  the tag being viewed, so the field can mark it (default none)
+    limit    cap on subjects shown  (optional)
+*/ -}}
+{{ partialCached "clock.html" . }}
+{{- /* The whole field is a function of the tag counts and which tag is
+         current — 100% cacheable by the metrics, and it was rebuilding on
+         every page. */ -}}
+{{ partialCached "tags/field.html" (dict "current" (default "" .current) "limit" .limit) (default "" .current) (default 0 .limit) }}
+{{ partialCached "archive.html" . }}

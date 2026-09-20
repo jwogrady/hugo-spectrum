@@ -1,7 +1,20 @@
 {{ define "main" }}
-  <h1>{{ .Title }}</h1>
-  {{ .Content }}
-  {{ range .Pages }}
-    <h2><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></h2>
-  {{ end }}
+{{- /* One term layout for both taxonomies, headed by whichever it is.
+       It used to hardcode "Tag — ", so every archive page announced itself
+       as a tag and printed its own machine key: "Tag — 2026-09". */ -}}
+{{- $isArchive := eq .Data.Singular "archive" -}}
+{{- $title := printf "Tag — %s" .Title -}}
+{{- if $isArchive }}{{ $title = partial "archive-title.html" (dict "term" .Data.Term) }}{{ end }}
+{{ partial "page-head.html" (dict "page" . "crumb" false "title" $title) }}
+{{- if and $isArchive (eq (len .Data.Term) 10) }}{{ partial "archive-nav.html" (dict "term" .Data.Term) }}{{ end }}
+{{- $paged := .Paginate (sort .Pages "Date" "desc") }}
+{{ partial "index-table.html" (dict "pages" $paged.Pages) }}
+{{ partial "pager.html" . }}
 {{ end }}
+
+{{ define "aside-top" }}{{ partialCached "clock-zones.html" . }}{{ end }}
+{{ define "aside" }}
+{{- /* Keyed on the scalar, not on the dict: a map is a fresh value every
+       call, so a dict key never matches and the cache never hits. */ -}}
+{{- $cur := cond (eq .Data.Singular "tag") .Title "" -}}
+{{ partialCached "aside.html" (dict "current" $cur) $cur }}{{ end }}

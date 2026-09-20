@@ -1,0 +1,29 @@
+{{- /*
+  The stylesheet, built once.
+
+  Nothing here depends on the page, but it sat inline in head.html and so
+  ran on all sixty-one of them: four font URLs, a template execution, a
+  concat and a fingerprint, rebuilt per page. Hugo memoizes the resources
+  themselves; this is the template work around them.
+
+  Returns the fingerprinted resource. Call it through partialCached.
+
+  Deliberately not minified. Hugo's CSS minifier strips whitespace after a
+  closing paren, which is safe for calc() but not for var(): substitution
+  happens after parsing, so `var(--rule-hair)solid` becomes `1pxsolid` and
+  the declaration is dropped. It silently broke every border, the focus
+  ring, twelve padding shorthands and the rotation animation. Gzip recovers
+  most of the size anyway.
+*/ -}}
+{{- $fontCtx := dict
+      "sans"        (partial "fonturl.html" "fonts/public-sans-var.woff2")
+      "serif"       (partial "fonturl.html" "fonts/source-serif-4-var.woff2")
+      "serifItalic" (partial "fonturl.html" "fonts/source-serif-4-italic-var.woff2")
+      "mono"        (partial "fonturl.html" "fonts/source-code-pro-var.woff2") }}
+{{- $fonts := resources.Get "css/fonts.css" | resources.ExecuteAsTemplate "css/fonts.gen.css" $fontCtx }}
+{{- return (slice $fonts
+      (resources.Get "css/tokens.css")
+      (resources.Get "css/base.css")
+      (resources.Get "css/components.css")
+      (resources.Get "css/print.css")
+    | resources.Concat "css/spectrum.css" | fingerprint) -}}

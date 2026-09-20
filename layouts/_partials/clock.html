@@ -1,0 +1,25 @@
+{{- /*
+  The mission clock: a sidebar panel above the spectrum. The zone
+  selector is clock-zones.html, which sits outside the sticky panels.
+
+  Served as site.Lastmod in the publication's own zone — the date it last
+  changed, which is a real fact, and it keeps two builds of the same content
+  byte-identical. The script then runs it as the reader's clock and lets
+  them put the whole publication into another zone.
+
+  With scripting off the served value stands and nothing is missing, which
+  is the point of doing it this way round rather than rendering an empty
+  element and filling it. The served string is the same shape as the live
+  one, down to the seconds and the zone, so the upgrade reflows nothing.
+
+  No aria-live: a value that changes every second must not be announced
+  every second.
+*/ -}}
+{{- $z := site.Lastmod.Local }}
+<section class="clock" aria-labelledby="clock-head">
+  {{ partial "heading.html" (dict "title" "Mission clock" "variant" "panel" "id" "clock-head") }}
+  <div class="clock__body">
+    <time class="clock__readout" data-clock
+          datetime="{{ site.Lastmod.Format "2006-01-02T15:04:05Z07:00" }}">{{ $z.Format "2006-01-02" }} <span class="clock__time">{{ $z.Format "15:04:05 MST" }}</span></time>
+  </div>
+</section>
