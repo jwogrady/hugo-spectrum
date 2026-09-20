@@ -1,11 +1,12 @@
 +++
 title       = "Layouts"
 weight      = 40
-description = "The frame, and the five ways it is divided."
+description = "The frame, and the six ways it is divided."
 +++
 
-Reference for the layouts the theme ships. Each page below is built with the
-layout it documents, so the three-column page really has three columns.
+Reference for the frame and the four layouts documented here: one, two and
+three columns, and the hero. Each page below is built with the layout it
+documents, so the three-column page really has three columns.
 
 A nested branch: this page is a child of Docs and a parent of its own, which
 is why the tree in the aside has two levels on it. The navigation recurses to

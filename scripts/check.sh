@@ -1039,6 +1039,40 @@ if [ "${blocks:-0}" -gt 0 ] && [ "${bad:-1}" -eq 0 ] && [ "${kinds:-0}" -ge 6 ]
 then ok "every page carries a well-formed schema graph ($blocks blocks, $kinds types)"
 else no "schema broken ($bad bad of ${blocks:-0}, ${kinds:-0} types)"; fi
 
+# Heading order. A heading may go back up any number of levels — an h2 after
+# an h3 closes the h3's section — but going down it may only ever descend by
+# one. h1 followed by h3 is a level nobody wrote, and a reader navigating by
+# heading falls through the hole.
+#
+# The conversion pages ran h1 -> h3 -> h3 -> h3 -> h2 for as long as they
+# existed: features.html set its items at h3 with nothing between them and
+# the page title, and faq.html then closed with an h2. Every check here was
+# green throughout, because none of them had ever looked at the outline.
+read -r pages skips first <<<"$(python3 - "$TMP/ut" <<'PYEOF'
+import re, sys, pathlib
+root = pathlib.Path(sys.argv[1]); pages = skips = 0; first = "-"
+for f in sorted(root.rglob("*.html")):
+    body = f.read_text(errors="replace")
+    # The outline is the page's, so the sr-only column heads count too; only
+    # headings inside the document body are in scope.
+    levels = [int(m.group(1)) for m in re.finditer(r"<h([1-6])\b", body)]
+    if not levels: continue
+    pages += 1
+    for prev, cur in zip(levels, levels[1:]):
+        if cur > prev + 1:
+            skips += 1
+            if first == "-":
+                first = f"{f.relative_to(root).parent or '/'}:h{prev}->h{cur}"
+            break
+print(pages, skips, first)
+PYEOF
+)"
+# Fails when it matches nothing, like the rest: a build that stopped emitting
+# headings would otherwise pass with zero skips.
+if [ "${pages:-0}" -gt 0 ] && [ "${skips:-1}" -eq 0 ]
+then ok "no page skips a heading level ($pages pages)"
+else no "heading levels skipped on ${skips:-?} of ${pages:-0} pages, first $first"; fi
+
 echo
 printf "  %d passed, %d failed\n" "$pass" "$fail"
 [ "$fail" -eq 0 ]

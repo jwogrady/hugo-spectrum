@@ -33,6 +33,12 @@
 {{- $b := .Process "fill 1400x420 center webp q82" }}
 <img class="hero__plate" src="{{ $b.RelPermalink }}"
      width="{{ $b.Width }}" height="{{ $b.Height }}"
-     alt="{{ with .Params.alt }}{{ . }}{{ else }}{{ or .Title .Name }}{{ end }}"
+     {{- /* Decorative, so empty. The plate is picked by hashing the page's
+            path: it carries no information about the page, and inheriting the
+            gallery's description made every hero open by reading "A radial
+            bloom of warm colour off-centre to the left" to a screen reader
+            before the headline. In the gallery the image is the content and
+            keeps its description; here it is wallpaper. */ -}}
+     alt=""
      loading="eager" decoding="async">
 {{- end }}

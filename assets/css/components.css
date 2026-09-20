@@ -153,9 +153,15 @@
    in source order, which puts the main column first — a reader on a phone
    gets the substance, not the apparatus.
 
-   The main column lands under the 34rem measure here, which is the point:
-   three columns are for material that is scanned, not prose that is read. */
-@media (min-width: 60rem) {
+   The main column lands under the 34rem measure, which is the point: three
+   columns are for material that is scanned, not prose that is read.
+
+   72rem, not the 60rem the two-column spread uses. Two asides and two gaps
+   cost 42.47rem before the main column gets anything, so at a 60rem viewport
+   main resolved to 14.98rem — narrower than either 17rem aside beside it,
+   which inverts the hierarchy the layout exists to state. At this breakpoint
+   it is 26.98rem, and it reaches its full 29.53rem once the frame does. */
+@media (min-width: 72rem) {
   .spread--three {
     grid-template-columns: minmax(0, var(--col-main-three)) var(--col-aside) var(--col-aside);
   }

@@ -99,8 +99,8 @@ their dates.
 
 ## Layout
 
-One frame, 72rem, on every page. Five layouts divide it; none of them
-changes it, so the outer edges sit in the same place everywhere.
+One frame, 72rem, on every page. Six layouts divide it; none of them changes
+it, so the outer edges sit in the same place everywhere.
 
 | layout | frame | use it for |
 |---|---|---|
@@ -112,9 +112,12 @@ changes it, so the outer edges sit in the same place everywhere.
 | conversion | 72rem | products, services and booking — a page that asks for something |
 
 The third column is the aside again rather than a new width, so the frame
-still sums to 72rem. It costs reading width — 29.53rem is under the 34rem
-measure — which is the trade: two columns of apparatus are only worth it when
-the apparatus is the point.
+still sums to 72rem. It costs reading width — 29.53rem at a full frame, under
+the 34rem measure — which is the trade: two columns of apparatus are only
+worth it when the apparatus is the point. It engages at 72rem rather than the
+60rem two columns use, because two asides and two gaps take 42.47rem before
+the main column gets any: below that the middle column is narrower than the
+sides and the hierarchy reads backwards.
 
 The hero is a banner plate above a large headline. The plate is drawn from a
 page bundle named by `spectrum.banners`, chosen per page from a hash of the
@@ -125,8 +128,9 @@ guarantee it against a photograph. The band keeps the frame.
 A landing page carries its bands in front matter rather than markup, like the
 contact form, because a landing page is data.
 
-`exampleSite/patterns/` has one page per layout, each built with the layout it
-describes.
+`exampleSite/docs/layouts/` documents one, two and three columns and the hero,
+each page built with the layout it describes. The landing and conversion
+layouts are shown working under `exampleSite/patterns/` instead.
 
 Both columns reserve their first slot — the breadcrumb on the left, the
 clock's zone selector on the right — so a headline does not drop by the

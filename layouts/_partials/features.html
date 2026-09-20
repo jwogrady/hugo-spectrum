@@ -5,7 +5,11 @@
 <ul class="features">
   {{- range . }}
   <li class="features__item">
-    <h3 class="features__title">{{ .title }}</h3>
+    {{- /* h2, not h3. These are the page's own sections and nothing sits
+           between them and the h1, so h3 skipped a level — and faq.html then
+           emitted an h2 after them, putting the outline out of order as well.
+           The size is set by the class, so the level is free to be correct. */ -}}
+    <h2 class="features__title">{{ .title }}</h2>
     {{- with .body }}<p class="features__body">{{ . }}</p>{{ end }}
   </li>
   {{- end }}

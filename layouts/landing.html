@@ -16,6 +16,10 @@
         [[params.sections.items]]
           title = "..."  url = "/..."  blurb = "..."
   */ -}}
+  {{- /* These layouts are one column, which removed the branch nav, and
+         none of them drew a trail — so a page three levels deep had no way
+         up at all while emitting a four-item BreadcrumbList to crawlers. */ -}}
+  {{ partial "breadcrumb.html" . }}
   <div class="hero">
     {{ partial "banner.html" (dict "page" .) }}
     {{ partial "heading.html" (dict "title" .Title "level" 1 "variant" "hero") }}

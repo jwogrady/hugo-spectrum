@@ -111,8 +111,13 @@
 {{- with $p.Params.faq }}
   {{- $qs := slice -}}
   {{- range . }}
+    {{- /* markdownify, because faq.html renders the answer that way and this
+           shipped the raw source: a page saying "see JRN 26-006" over a graph
+           saying "see [JRN 26-006](/r/26-006/)". Both files claimed the two
+           could never disagree, and this was the one path where they did.
+           Links are permitted inside an Answer, so the link survives. */ -}}
     {{- $qs = $qs | append (dict "@type" "Question" "name" .q
-          "acceptedAnswer" (dict "@type" "Answer" "text" .a)) -}}
+          "acceptedAnswer" (dict "@type" "Answer" "text" (.a | markdownify))) -}}
   {{- end -}}
   {{- $graph = $graph | append (dict "@type" "FAQPage" "@id" (printf "%s#faq" $p.Permalink) "mainEntity" $qs) -}}
 {{- end -}}
