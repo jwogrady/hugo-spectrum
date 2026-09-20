@@ -930,6 +930,58 @@ if [ -z "$pal" ]
 then ok "every palette tunes its own tags for its own surface"
 else no "palette tuning wrong: $pal"; fi
 
+# The filled control, in every palette, in every link state.
+#
+# Two failures live here and only one is a colour. The pairing a palette
+# declares was never wrong — 5.39:1 at worst. What was wrong is that a
+# button made from an <a> could not keep it: `a:visited` is 0,1,1 and `.btn`
+# is 0,1,0, so a visited target dropped the label to --link-visited on the
+# signal fill at 1.07:1, in all six palettes at once. So this asserts the
+# arithmetic AND the specificity, because the arithmetic passed throughout.
+read -r pairs worst unpinned <<<"$(python3 - "$THEME/assets/css" <<'PYEOF'
+import re, sys, pathlib
+d = pathlib.Path(sys.argv[1])
+tok = (d / "tokens.css").read_text()
+base = (d / "base.css").read_text()
+
+def lum(h):
+    h = h.lstrip("#")
+    if len(h) == 3: h = "".join(c * 2 for c in h)
+    r, g, b = [int(h[i:i+2], 16) / 255 for i in (0, 2, 4)]
+    f = lambda c: c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+    return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b)
+def ratio(a, b):
+    la, lb = lum(a), lum(b)
+    return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
+
+# Every block that declares either half of the pair, carrying forward the
+# root defaults for whichever half it does not restate.
+starts = [(m.start(), m.group(0)) for m in re.finditer(r"(?m)^(?::root|@media)[^{]*\{", tok)]
+ends = [p for p, _ in starts][1:] + [len(tok)]
+root_sig = root_ink = None
+pairs = []; worst = 99.0
+for (pos, _), end in zip(starts, ends):
+    blk = tok[pos:end]
+    g = lambda n: (re.search(rf"{n}:\s*(#[0-9A-Fa-f]{{3,8}})", blk) or [None, None])[1]
+    sig, ink = g("--signal"), g("--ink-on-signal")
+    if root_sig is None and sig: root_sig = sig
+    if root_ink is None and ink: root_ink = ink
+    sig, ink = sig or root_sig, ink or root_ink
+    if not (sig and ink): continue
+    pairs.append(1); worst = min(worst, ratio(ink, sig))
+
+# The label must be pinned on every link state, or a link rule outranks it.
+want = {":link", ":visited", ":active"}
+have = {st for st in want
+        if re.search(rf"\.btn{st}[^{{]*\{{[^}}]*color:\s*var\(--ink-on-signal\)", base)}
+print(len(pairs), round(worst, 2), " ".join(sorted(want - have)) or "-")
+PYEOF
+)"
+if [ "${pairs:-0}" -gt 0 ] && [ "$unpinned" = "-" ] \
+   && python3 -c "import sys; sys.exit(0 if float('$worst') >= 4.5 else 1)"
+then ok "the filled control meets AA in every palette (worst ${worst}:1, pinned on every link state)"
+else no "button contrast: worst ${worst}:1 over ${pairs:-0} palettes, unpinned states: $unpinned"; fi
+
 # Every template the theme ships is reached by the demo content. A partial
 # nothing exercises is a feature documented but never rendered — figure.html
 # sat unused while the README promised entries take a featured image.

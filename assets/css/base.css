@@ -179,6 +179,18 @@ td:last-child, th:last-child { padding-right: 0; }
    in both modes: on paper a filled control darkens, on field black it
    brightens. Reaching for --signal-bright in both dropped the button
    label to 3.70:1 on the default paper palette. */
+/* A button that is a link has to out-specify the link rules. `a:visited` is
+   0,1,1 and `.btn` is 0,1,0, so the moment a reader had been to the target
+   the label took --link-visited and sat on the signal fill at 1.07:1 — a
+   filled amber control with the label very nearly invisible on it. Every
+   palette was affected, none of them by a bad token: the pairing the
+   palette declares is 5.39:1 at worst. It survived because the only .btn in
+   the theme was the contact form's <button>, which no link rule can reach,
+   and the conversion pages are the first to make a button out of an <a>.
+
+   Pinned on every link state rather than bumped once, so adding a state
+   later cannot reopen it. */
+.btn:link, .btn:visited, .btn:active { color: var(--ink-on-signal); }
 .btn:hover  { background: var(--signal-hover); border-color: var(--signal-hover); color: var(--ink-on-signal); }
 .btn:active { transform: translateY(var(--rule-hair)); }
 .btn[aria-disabled="true"], .btn:disabled {
