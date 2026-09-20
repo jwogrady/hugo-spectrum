@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.2.0](https://github.com/jwogrady/hugo-spectrum/compare/v0.1.0...v0.2.0) (2026-09-20)
+
+
+### Features
+
+* the clock carries four US zones, UTC, and the reader's own ([2dffd3f](https://github.com/jwogrady/hugo-spectrum/commit/2dffd3fd55ea7c549f38ad54ad4116d5740cef55))
+* the mission time selector ([2dffd3f](https://github.com/jwogrady/hugo-spectrum/commit/2dffd3fd55ea7c549f38ad54ad4116d5740cef55))
+
+
+### Documentation
+
+* the mission clock is mission time ([2dffd3f](https://github.com/jwogrady/hugo-spectrum/commit/2dffd3fd55ea7c549f38ad54ad4116d5740cef55))
+
+
+### Styling
+
+* the zone row is one control, not six ([2dffd3f](https://github.com/jwogrady/hugo-spectrum/commit/2dffd3fd55ea7c549f38ad54ad4116d5740cef55))
+
 ## [0.1.0](https://github.com/jwogrady/hugo-spectrum/compare/v0.0.0...v0.1.0) (2026-09-20)
 
 
