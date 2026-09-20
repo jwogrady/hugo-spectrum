@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.0](https://github.com/jwogrady/hugo-spectrum/compare/v0.3.0...v0.4.0) (2026-09-20)
+
+
+### Features
+
+* entryAside gives a branchless page the journal's panels ([df48c84](https://github.com/jwogrady/hugo-spectrum/commit/df48c84cf67efecfd8af0f253c35317aa25ccc67))
+
+
+### Documentation
+
+* cover entryAside in the column layout pages ([454d436](https://github.com/jwogrady/hugo-spectrum/commit/454d436f03eb79fc6a63a0e48275ca0a3637285d))
+
 ## [0.3.0](https://github.com/jwogrady/hugo-spectrum/compare/v0.2.1...v0.3.0) (2026-09-20)
 
 
