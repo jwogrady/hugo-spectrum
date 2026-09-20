@@ -698,10 +698,18 @@ if [ "${sib:-0}" -eq 1 ] && [ "${bal:-0}" -eq 1 ]
 then ok "masthead is one row, nav beside the identity, tags balanced"
 else no "masthead structure broken (nav-beside-identity=$sib balanced=$bal)"; fi
 
-# Every rendered date goes through .Local, so the whole site reads in the
-# publication's zone. Formatting the stored value instead put one entry
-# under September 20 on its own page and 19 SEP in the journal. Machine
-# values keep their offset and are exempt: that is the instant, not a
+# Every rendered date goes through time.In on the publication's zone, so the
+# whole site reads in that zone wherever it is built. Two ways to get this
+# wrong, and both shipped:
+#
+#   .Date.Format   formats the stored value. One entry filed at 00:17 UTC came
+#                  out September 20 on its own page and 19 SEP in the journal.
+#   .Date.Local    formats in the *build machine's* zone, which is only the
+#                  publication's by luck. Correct on a laptop in Chicago, a day
+#                  out in a UTC runner: the journal grew a day whose archive
+#                  page no entry belongs to, and the day link 404ed.
+#
+# Machine values keep their offset and are exempt: that is the instant, not a
 # rendering of it.
 stray="$(python3 - "$THEME/layouts" <<'PYEOF'
 import re, sys, pathlib
@@ -710,6 +718,8 @@ for f in sorted(pathlib.Path(sys.argv[1]).rglob("*.html")):
     for n, line in enumerate(f.read_text().split("\n"), 1):
         for m in re.finditer(r'\.(?:Date|Lastmod)\.Format\s+"([^"]+)"', line):
             if m.group(1) == "2006-01-02T15:04:05Z07:00": continue   # the instant
+            bad.append(f"{f.name}:{n}")
+        if re.search(r'\.(?:Date|Lastmod)\.Local\b', line):
             bad.append(f"{f.name}:{n}")
 print(" ".join(sorted(set(bad))[:6]))
 PYEOF

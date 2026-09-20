@@ -2,10 +2,10 @@
      Nothing here switches on section — present fields render, absent ones don't. */}}
 <p class="meta">
   {{- if not .Date.IsZero }}
-  {{- /* .Local, like everywhere else. Formatting the stored date here put
-         an entry filed at 00:17 UTC under September 20 on its own page and
-         19 SEP in the journal — the same entry, two dates. */ -}}
-  <time datetime="{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}">{{ .Date.Local.Format "January 2, 2006" }}</time>
+  {{- /* The publication's zone, like everywhere else. Formatting the stored
+         date here put an entry filed at 00:17 UTC under September 20 on its
+         own page and 19 SEP in the journal — the same entry, two dates. */ -}}
+  <time datetime="{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}">{{ (time.In (or site.Params.spectrum.timezone "UTC") .Date).Format "January 2, 2006" }}</time>
   {{- end }}
 
   {{- with .Params.price_from }}

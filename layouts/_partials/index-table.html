@@ -21,6 +21,10 @@
 {{- $pages := .pages -}}
 {{- $tags  := ne .tags false -}}
 {{- $trail := .trail -}}
+{{- /* The publication's zone, mirrored from site timeZone. Not .Local: that
+       is the build machine's zone, so the same commit grouped entries one way
+       on a laptop in Chicago and another in a UTC runner. */ -}}
+{{- $tz    := or site.Params.spectrum.timezone "UTC" -}}
 {{- $dated := false -}}
 {{- range $pages }}{{ if not .Date.IsZero }}{{ $dated = true }}{{ end }}{{ end -}}
 
@@ -31,16 +35,16 @@
 {{- $curDay := "" -}}
 {{- $curDate := false -}}
 {{- range $pages -}}
-  {{- /* Keyed on the local date, not the stored one. An entry filed at
+  {{- /* Keyed on the publication's date, not the stored one. An entry filed at
          01:00 UTC belongs to the previous day in Chicago, and grouping on
          one zone while printing another files records under a day they are
          not shown to be on. */ -}}
-  {{- $d := cond .Date.IsZero "" (.Date.Local.Format "2006-01-02") -}}
+  {{- $d := cond .Date.IsZero "" ((time.In $tz .Date).Format "2006-01-02") -}}
   {{- if and (ne $d $curDay) (gt (len $cur) 0) -}}
     {{- $groups = $groups | append (dict "day" $curDay "date" $curDate "pages" $cur) -}}
     {{- $cur = slice -}}
   {{- end -}}
-  {{- if ne $d $curDay }}{{ $curDate = .Date.Local }}{{ end -}}
+  {{- if ne $d $curDay }}{{ $curDate = time.In $tz .Date }}{{ end -}}
   {{- $curDay = $d -}}
   {{- $cur = $cur | append . -}}
 {{- end -}}
@@ -83,7 +87,7 @@
     <tr>
       {{- if $dated }}
       {{- if .Date.IsZero }}<td class="index__time">&mdash;</td>
-      {{- else }}<td class="index__time"><time datetime="{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}">{{ .Date.Local.Format "15:04" }}</time></td>{{ end }}
+      {{- else }}<td class="index__time"><time datetime="{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}">{{ (time.In $tz .Date).Format "15:04" }}</time></td>{{ end }}
       {{- end }}
       <td>
         {{- /* The gradient is the same object in both views: an entry's

@@ -15,7 +15,7 @@
   No aria-live: a value that changes every second must not be announced
   every second.
 */ -}}
-{{- $z := site.Lastmod.Local }}
+{{- $z := time.In (or site.Params.spectrum.timezone "UTC") site.Lastmod }}
 <section class="clock" aria-labelledby="clock-head">
   {{ partial "heading.html" (dict "title" "Mission clock" "variant" "panel" "id" "clock-head") }}
   <div class="clock__body">
