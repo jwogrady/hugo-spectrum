@@ -1,30 +1,32 @@
 <footer class="site-foot">
   <div class="page">
-    {{- /* The foot is the page spread again: the publication on the left at
-           the main column's width, the colophon on the right in the aside's.
-           It was three ragged lines stacked down the left of a 72rem frame
-           with the other half empty — the one block on the site that did not
-           use the grid everything else is built on.
-
-           The rule is the grid's own border rather than an <hr>, so the gap
-           above it is the grid's padding and not a rule's margin colliding
-           with one. */ -}}
+    {{- /* The foot is the page spread again: the publication's own block on
+           the left at the main column's width, and what the theme is on the
+           right in the aside's. */ -}}
     <div class="site-foot__grid">
       <div>
         {{- /* Not .eyebrow. Uppercase with tracking is the panel head's
-               voice, and a copyright notice shouted above a sentence-case
-               colophon was two registers in three lines. */ -}}
+               voice, and a copyright shouted over a sentence-case colophon
+               was two registers in three lines. */ -}}
         <p class="site-foot__notice">&copy; {{ now.Year }} {{ or site.Params.spectrum.copyright site.Params.spectrum.owner site.Title }}</p>
         {{- with site.Params.spectrum.footerNote }}<p class="hint">{{ . }}</p>{{ end }}
+        {{- /* The credit sits under the notice because it is the same kind
+               of statement — who made this — and a different claim from the
+               site's copyright, which is why it is its own line and never
+               merged into one. Status26's copyright covers the code, never
+               what a site publishes with it. */ -}}
+        {{- if ne site.Params.spectrum.themeCredit false }}
+        <p class="hint site-foot__credit">Built with <a href="https://github.com/jwogrady/hugo-pulse-spectrum">Spectrum</a>,
+          a Hugo theme by <a href="https://github.com/jwogrady">jwogrady</a> &mdash; &copy; 2026 Status26, Inc.</p>
+        {{- end }}
       </div>
-      {{- /* The theme's notice, which is a different claim from the site's
-             and is kept a column away from it. Status26's copyright covers
-             the code, never what a site publishes with it. Suppress with
-             spectrum.themeCredit = false. */ -}}
+      {{- /* What the theme is, rather than who owns it. The column opposite
+             is where the masthead puts navigation, so it is the one place in
+             the frame a reader already looks for something other than the
+             publication's own voice. */ -}}
       {{- if ne site.Params.spectrum.themeCredit false }}
-      <p class="hint site-foot__credit">Built with <a href="https://github.com/jwogrady/hugo-pulse-spectrum">Spectrum</a>,
-        a Hugo theme by <a href="https://github.com/jwogrady">jwogrady</a><br>
-        &copy; 2026 Status26, Inc. &middot; MIT</p>
+      <p class="hint site-foot__about"><a href="https://github.com/jwogrady/hugo-pulse-spectrum">Spectrum</a>
+        is an open-source, MIT-licensed Hugo theme for growth hackers.</p>
       {{- end }}
     </div>
   </div>

@@ -248,7 +248,9 @@ figcaption { margin-top: var(--space-tight); font-size: var(--size-xs); color: v
   font-size: var(--size-xs); line-height: var(--lh-label);
   color: var(--ink-soft); margin: 0;
 }
-.site-foot__credit { margin-top: 0; }
+/* Set off from the colophon above it: the same voice, a separate claim. */
+.site-foot__credit { margin-top: var(--space-tight); }
+.site-foot__about { margin-top: 0; }
 @media (min-width: 60rem) {
   /* The page's own columns. The foot's outer edges land where every other
      block's do, and the right half of the frame stops being empty. */
@@ -257,6 +259,6 @@ figcaption { margin-top: var(--space-tight); font-size: var(--size-xs); color: v
     gap: var(--col-gap);
   }
   /* Ranged right against the frame's edge, the way the masthead's nav is. */
-  .site-foot__credit { text-align: right; }
+  .site-foot__about { text-align: right; }
 }
 
