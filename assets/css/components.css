@@ -742,14 +742,33 @@
 /* The outline itself is base.css's one focus treatment; only the underline
    suppression belongs here. */
 .tag-signal:focus-visible { text-decoration: none; }
-/* The current marker is the theme's bold rule, the same weight the nav and
-   the branch mark their own current item with. It was 3px here — a fourth
-   border width in a stylesheet that has two. */
+/* The current subject, marked in its own colour.
+
+   It used to take --ink for its border and the signal amber for an inset
+   bar: a white box and a second hue drawn around one word, in a field whose
+   entire job is that the words are colours. Two subjects then differed by
+   frequency, and one differed by having a container — which reads louder
+   than any of the encoding.
+
+   Brackets instead, the way an index marks the entry you are standing on.
+   They are emitted inside the span, so they take currentColor and are
+   exactly the tag's own hue; the anchor could never do this, because it is
+   `color: inherit` so the restricted :visited pass cannot reach the
+   frequency colour.
+
+   Not a glow, though a glow was the obvious idea: a centred bloom already
+   means apex frequency on this element, so lighting up the current subject
+   would say "most used" in the one vocabulary the field reserves for that.
+   State stays structural, and structural here can at last be coloured. */
 .tag-signal[aria-current="page"] {
-  border-color: var(--ink);
-  box-shadow: inset var(--rule-bold) 0 0 0 var(--signal);
-  padding-left: var(--s8);
+  border-color: transparent;
+  box-shadow: none;
 }
+.tag-signal[aria-current="page"] .tag-signal__name::before { content: "["; margin-right: var(--s3); }
+.tag-signal[aria-current="page"] .tag-signal__name::after  { content: "]"; margin-left:  var(--s3); }
+/* The brackets are decoration for a state the anchor already carries in
+   aria-current, and its aria-label supplies the accessible name, so nothing
+   here reaches a screen reader as stray punctuation. */
 .tag-signal { transition: border-color var(--motion-quick) linear; }
 @media (prefers-reduced-motion: reduce) { .tag-signal { transition: none; } }
 
