@@ -683,7 +683,19 @@ else no "column heads wrong: $hd"; fi
 # params.spectrum.timezone, and the script lands a reader on whichever listed
 # zone keeps their machine's own wall clock, falling to UTC when none does. So
 # the order is free, and this asserts membership rather than position.
-read -r n hid zlist cfg <<<"$(python3 - "$SITE" "$PUB" <<'PYEOF'
+# The publication's zone as Hugo actually resolved it, not as hugo.toml
+# spells it. Both checks below need it and both used to re-read the file;
+# see the note on the mirror check for what that missed. Resolved once here
+# so there is one answer and no second place for it to go stale.
+EFF_TZ="$(hugo config --source "$SITE" --themesDir "$TMP/themes" --format json 2>/dev/null | python3 -c "
+import json, sys
+try:
+    print(json.load(sys.stdin).get('timezone') or '-')
+except Exception:
+    print('-')
+")"
+
+read -r n hid zlist cfg <<<"$(python3 - "$SITE" "$PUB" "$EFF_TZ" <<'PYEOF'
 import re, sys, pathlib, json, subprocess
 root, pub = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
 h = (pub / "index.html").read_text()
@@ -694,9 +706,9 @@ pick = re.search(r'<div\b([^>]*\bclass="[^"]*\bclock__zones\b[^"]*"[^>]*)>(.*?)<
 tzs = re.findall(r'data-tz="([^"]+)"', pick.group(2)) if pick else []
 n = len(tzs)
 hid = 1 if pick and "hidden" in pick.group(1) else 0
-cfg = ""
-m = re.search(r"^timeZone = '([^']+)'", (root / "hugo.toml").read_text(), re.M)
-if m: cfg = m.group(1)
+# Handed in, not read from hugo.toml: a zone the file declares and Hugo
+# discarded would still be compared against the rendered buttons here.
+cfg = sys.argv[3] if len(sys.argv) > 3 and sys.argv[3] != "-" else ""
 print(f"{n} {hid} {','.join(tzs) or '-'} {cfg or '-'}")
 PYEOF
 )"
