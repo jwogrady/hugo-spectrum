@@ -12,6 +12,11 @@
     {{- with .Params.featured_image }}{{ with $.Resources.Get . }}{{ partial "figure.html" (dict "resource" .) }}{{ end }}{{ end }}
     {{ .Content }}
     {{- with .Params.tags }}<div class="index__tags">{{ partial "tags/list.html" (dict "page" $) }}</div>{{ end }}
+    {{- /* Documents carry their revision record; records do not. A post is
+           what is published now, and one edited after its date has just been
+           edited. A page is a standard, and changing a standard quietly is
+           the thing the convention exists to prevent. */ -}}
+    {{- if ne .Section "posts" }}{{ partial "revisions.html" . }}{{ end }}
   </article>
 {{ end }}
 
