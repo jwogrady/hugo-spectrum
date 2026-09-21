@@ -1274,6 +1274,42 @@ else
   no "index second line: the example site build is missing"
 fi
 
+# AggregateRating: capability here, never in the demo.
+#
+# rating is the only offer field that renders nowhere on the page — it exists
+# solely to emit an AggregateRating — so a demo carrying one ships a
+# machine-readable claim about what customers thought, invisible to anyone
+# copying exampleSite into a real site. A search engine acts on it. That is
+# fabricated proof with a neutral filename, and it is the half that ships by
+# accident precisely because no one can see it.
+#
+# The capability still has to work, so it is tested on a fixture that is
+# built and thrown away. Adversarial and structural coverage belongs in
+# fixtures; fabricated proof belongs nowhere near a corpus built to be copied.
+rd="$TMP/rating"; mkdir -p "$rd/content/patterns" "$rd/themes"
+ln -s "$THEME" "$rd/themes/spectrum"
+cat > "$rd/hugo.toml" <<'TOML'
+baseURL = 'https://example.org/'
+title = 'rating fixture'
+theme = 'spectrum'
+TOML
+cat > "$rd/content/patterns/thing.md" <<'MD'
++++
+title  = "Thing"
+layout = "conversion"
+sku    = "SKU-1"
+price  = "10.00"
+rating = { value = "4.2", count = "9" }
++++
+Body.
+MD
+(cd "$rd" && hugo --quiet --destination out --panicOnWarning) >/dev/null 2>&1
+agg=$(grep -o '"AggregateRating"' "$rd/out/patterns/thing/index.html" 2>/dev/null | wc -l)
+demo=$(grep -ro '"AggregateRating"' "$PUB" 2>/dev/null | wc -l)
+if [ "${agg:-0}" -ge 1 ] && [ "${demo:-1}" -eq 0 ]
+then ok "AggregateRating is supported, and the demo fabricates none"
+else no "AggregateRating (fixture=$agg demo=$demo)"; fi
+
 # The revision record, asserted in both directions.
 #
 # docs/citation.md has said since the theme existed that corrections are
