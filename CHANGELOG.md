@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.5.0](https://github.com/jwogrady/hugo-spectrum/compare/v0.4.0...v0.5.0) (2026-09-21)
+
+
+### Features
+
+* **index:** fall back to excerpt and description for the second line ([4e45200](https://github.com/jwogrady/hugo-spectrum/commit/4e4520063d41fdda1f27379a4f28947aff262cce))
+* **spectrum:** state the field's resolution when it is thin ([4e45200](https://github.com/jwogrady/hugo-spectrum/commit/4e4520063d41fdda1f27379a4f28947aff262cce))
+
+
+### Fixes
+
+* **spectrum:** spread the band ramp over its full range ([4e45200](https://github.com/jwogrady/hugo-spectrum/commit/4e4520063d41fdda1f27379a4f28947aff262cce))
+
+
+### Documentation
+
+* correct the architecture, the content model and four stale claims ([4e45200](https://github.com/jwogrady/hugo-spectrum/commit/4e4520063d41fdda1f27379a4f28947aff262cce))
+* note that the fallback line runs longer than the claim it replaces ([4e45200](https://github.com/jwogrady/hugo-spectrum/commit/4e4520063d41fdda1f27379a4f28947aff262cce))
+
 ## [0.4.0](https://github.com/jwogrady/hugo-spectrum/compare/v0.3.0...v0.4.0) (2026-09-20)
 
 
