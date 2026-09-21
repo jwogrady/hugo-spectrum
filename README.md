@@ -156,6 +156,15 @@ a missing one costs a line of register rather than a hole in the column. It
 stops before `.Summary` on purpose, which would fill every remaining row with
 body prose broken mid-sentence.
 
+Expect the fallback rows to run *longer* as well as read differently. A
+description is written to fill a search-result snippet, so it is long by
+construction: measured across twenty entries on a consuming site, claims
+averaged 64 characters and descriptions 83, which is the difference between a
+row that wraps and one that does not. The column therefore gains variable row
+height exactly on the rows where nothing was authored. There is no cap on the
+fallback line, because truncating authored prose mid-sentence is the thing this
+chain already refuses to do for `.Summary`.
+
 **References are permanent.** Each entry carries a citation handle,
 `JRN 26-015`, assigned once and never renumbered, resolving at `/r/26-015/`.
 It lives in front matter rather than on the page: a handle is for citing an
