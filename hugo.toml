@@ -1,6 +1,10 @@
-# Spectrum — how it appears.
-# This theme owns presentation only. Content types, taxonomy, and URLs
-# belong to the Pulse repo that consumes this theme.
+# Spectrum — theme defaults.
+#
+# Nothing here is consumed from another repository. Spectrum and Pulse are
+# siblings, not layers: neither builds on the other. What the theme does
+# expect of a site it is installed in — a `posts` section, `tags` and
+# `archives` taxonomies, archive URLs, and a timezone — is in README.md
+# under "The content model".
 
 [params]
   # Overridden by the consuming site.

@@ -73,10 +73,19 @@ lightness. Two subjects used equally often therefore render identically,
 because they are identical.
 
 `tagBandCeiling` is the one knob worth touching. Non-apex bands occupy the
-lower part of the lightness ramp so the apex has somewhere brighter to sit.
-Raise it and the bands spread further up, crowding the apex and washing the
-top of the range toward white. Lower it and the bands compress into the
-darker half, keeping color but losing separation.
+lower part of the lightness ramp so the apex has somewhere brighter to sit,
+and they are spread across it evenly: the rarest band sits at the floor, the
+last band below the apex sits on the ceiling exactly, and the rest divide the
+distance. Raise it and the bands spread further up, crowding the apex and
+washing the top of the range toward white. Lower it and the bands compress
+into the darker half, keeping color but losing separation.
+
+**The field's resolution is the number of distinct counts.** Thirty subjects
+sharing five counts is a five-band field, and no token widens it — the ramp is
+divided by however many bands there are, so a corpus with little variety in
+its counts has little to show and shows little. This is the one part of the
+spectrum that is bought with content rather than configured. The subject index
+says so on the page when the field is under four bands wide.
 
 Banding by distinct count is also the outlier defense: a subject used two
 hundred times is simply the next band above one used nineteen times, so a
