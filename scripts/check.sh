@@ -1299,6 +1299,74 @@ else
   no "index second line: the example site build is missing"
 fi
 
+# The second line, all four rungs, on a fixture rather than on the demo.
+#
+# This was asserted on exampleSite alone, which made it hostage to content
+# anyone is free to improve. The consuming site reported the trap: writing
+# the claims the ragged-row finding called for removed the only bare rows it
+# had, so the corpus that proved the fallback was needed stopped being able
+# to test it. A consumer who acts on a finding stops being able to test it,
+# and the demo is about to be rewritten with claims on every entry.
+#
+# Fixtures do not have that problem, because nobody is tempted to finish
+# them. The fourth rung is the one that matters and was never asserted
+# anywhere: a page with nothing authored must render no second line at all.
+# .Summary would fill it with the first seventy words of the body, which is
+# the tempting fix and the wrong one.
+fb="$TMP/fallback"; mkdir -p "$fb/content/posts" "$fb/themes"
+ln -s "$THEME" "$fb/themes/spectrum"
+cat > "$fb/hugo.toml" <<'TOML'
+baseURL = 'https://example.org/'
+title = 'fallback fixture'
+theme = 'spectrum'
+TOML
+cat > "$fb/content/posts/a.md" <<'MD'
++++
+title = "A"
+date = 2026-01-04
+claim = "CLAIMWINS"
+excerpt = "EXCERPTLOSES"
+description = "DESCLOSES"
++++
+Body prose that must never reach the index.
+MD
+cat > "$fb/content/posts/b.md" <<'MD'
++++
+title = "B"
+date = 2026-01-03
+excerpt = "EXCERPTWINS"
+description = "DESCLOSES"
++++
+Body prose that must never reach the index.
+MD
+cat > "$fb/content/posts/c.md" <<'MD'
++++
+title = "C"
+date = 2026-01-02
+description = "DESCWINS"
++++
+Body prose that must never reach the index.
+MD
+cat > "$fb/content/posts/d.md" <<'MD'
++++
+title = "D"
+date = 2026-01-01
++++
+Body prose that must never reach the index and is long enough to be a summary.
+MD
+(cd "$fb" && hugo --quiet --destination out --panicOnWarning) >/dev/null 2>&1
+fbh="$fb/out/index.html"
+rung1=0; grep -q 'index__claim">CLAIMWINS<'   "$fbh" 2>/dev/null && rung1=1
+rung2=0; grep -q 'index__claim">EXCERPTWINS<' "$fbh" 2>/dev/null && rung2=1
+rung3=0; grep -q 'index__claim">DESCWINS<'    "$fbh" 2>/dev/null && rung3=1
+lost=$(grep -o 'LOSES' "$fbh" 2>/dev/null | wc -l)
+subs=$(grep -o 'class="index__claim"' "$fbh" 2>/dev/null | wc -l)
+body=$(grep -o 'Body prose that must never reach the index' "$fbh" 2>/dev/null | wc -l)
+if [ "$rung1" -eq 1 ] && [ "$rung2" -eq 1 ] && [ "$rung3" -eq 1 ] \
+   && [ "${lost:-1}" -eq 0 ] && [ "${subs:-0}" -eq 3 ] && [ "${body:-1}" -eq 0 ]
+then ok "the second line falls claim > excerpt > description and stops: 3 of 4 rows subtitled, no body prose"
+else no "fallback chain (claim=$rung1 excerpt=$rung2 desc=$rung3 shadowed=$lost subtitled=$subs body=$body)"; fi
+
 # AggregateRating: capability here, never in the demo.
 #
 # rating is the only offer field that renders nowhere on the page — it exists
