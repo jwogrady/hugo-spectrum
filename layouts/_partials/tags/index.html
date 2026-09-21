@@ -1,6 +1,12 @@
 {{- $tags := partialCached "tags/collect.html" . -}}
 {{- $flat := true -}}
 {{- range $tags }}{{ if ne .distance 0.0 }}{{ $flat = false }}{{ end }}{{ end -}}
+{{- /* The field's resolution is the number of distinct counts, which is not
+       the number of subjects and is not under the reader's control. Below
+       four bands there is genuinely little to separate, and saying so is
+       better than letting a thin field read as a broken one. */ -}}
+{{- $bands := 0 -}}
+{{- if $tags }}{{ $bands = (index $tags 0).bands }}{{ end -}}
 
 {{- if $tags }}
 {{- /* The field. BRAND.md's third trap is a list pretending to be one:
@@ -57,7 +63,11 @@
     cyan and violet, and only the most-used subject reaches white. Type size
     and weight never vary, so no subject is made unreadable to make another
     loud.
-    {{- if $flat }} Every subject here is used equally often, so the field is flat.{{ end }}
+    {{- if $flat }} Every subject here is used equally often, so the field is flat.
+    {{- else if le $bands 3 }} A band is a distinct count, not a subject, so the
+    field's resolution comes from how varied the counts are rather than from how
+    many subjects there are: this one has {{ $bands }} bands, and it separates
+    further as the corpus grows.{{ end }}
   </p>
   <p class="signal-legend__scale" role="img"
      aria-label="Scale from rare, dim and colored, to most frequent, bright and near-white">
