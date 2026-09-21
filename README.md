@@ -21,9 +21,35 @@ subjects, so it previews what it is about. Frequency is never type size and
 never weight: the tables stay flat and scannable, and the colour does the
 work that decoration usually does badly.
 
-Spectrum is the presentation half of
-[Pulse](https://github.com/jwogrady/hugo-pulse). It carries no content types,
-no taxonomy and no URL structure; those belong to the site.
+Spectrum is one of a pair. [Pulse](https://github.com/jwogrady/hugo-pulse) is
+its sibling: the same content model, presented for a business where Spectrum
+presents it for the person running one. Neither is a fork of the other and
+neither depends on the other. They diverge on purpose, because a company and a
+founder are not writing to the same reader in the same voice.
+
+Spectrum came first, which looks like the wrong order until you say what the
+two are for: the pulse of a brand comes from its owner's spectrum. The business
+emits a beat; the person generates it. The recorder had to exist before the
+thing it records.
+
+## The content model
+
+The theme ships no archetypes and requires no front matter, but it is not
+model-agnostic and never was. Four things belong to the site, and the theme
+is built on them:
+
+| the site declares | the theme renders |
+|---|---|
+| a `posts` section | the journal — flat, dated, newest first, never navigated |
+| a `tags` taxonomy | the spectrum and the subject index |
+| an `archives` taxonomy, one term per year, month and day, under `/archives/` | linked day heads, and previous/next that cannot walk into an empty calendar |
+| `timeZone`, mirrored to `params.spectrum.timezone` | every date on the site, and the clock |
+
+`exampleSite/hugo.toml` is the shortest complete statement of it. Sections
+beyond `posts`, weights, menus and permalinks are yours, and a page gets
+whatever its own front matter asks for — `claim`, `resolves`, `sku`,
+`serviceType`, `bookingUrl`, `faq`, `form`, `banner`, `columns` — with nothing
+in that list required.
 
 ## Install
 
@@ -95,8 +121,9 @@ journal's own panels instead:
 A branch page is unaffected — it keeps its navigation either way. Any single
 page can still opt out with `columns = "one"` in its own front matter.
 
-Requires **Hugo 0.146+ extended** — built against 0.166.0. No Node, no npm,
-no build step.
+Requires **Hugo 0.146+** — built against 0.166.0. Extended is *not* required:
+the stylesheet is plain CSS through Pipes, not Sass. No Node, no npm, no build
+step.
 
 `timeZone` is not optional in practice. Unset, Hugo uses the build machine's
 zone, so the same commit renders different times on a laptop and in CI.
@@ -119,6 +146,25 @@ head. A horizontal line always means the date changed; everything else is
 separated by space. There are no row rules, no boxes and no hover
 backgrounds — the entry's own title underlines, in its own colour.
 
+**The second line is authored.** Under each title the index prints `claim`,
+falling back to `excerpt` and then `description` so a row is never empty. That
+chain is a safety net and not a substitute: a claim asserts, a description
+describes, and a description is written for a search result — it addresses
+someone who has not arrived yet, which reads oddly to someone already reading.
+A table of them is SEO copy in a table. Write claims; the fallback is there so
+a missing one costs a line of register rather than a hole in the column. It
+stops before `.Summary` on purpose, which would fill every remaining row with
+body prose broken mid-sentence.
+
+Expect the fallback rows to run *longer* as well as read differently. A
+description is written to fill a search-result snippet, so it is long by
+construction: measured across twenty entries on a consuming site, claims
+averaged 64 characters and descriptions 83, which is the difference between a
+row that wraps and one that does not. The column therefore gains variable row
+height exactly on the rows where nothing was authored. There is no cap on the
+fallback line, because truncating authored prose mid-sentence is the thing this
+chain already refuses to do for `.Summary`.
+
 **References are permanent.** Each entry carries a citation handle,
 `JRN 26-015`, assigned once and never renumbered, resolving at `/r/26-015/`.
 It lives in front matter rather than on the page: a handle is for citing an
@@ -133,6 +179,19 @@ reaches white. Ties cannot drift apart, because they are the same band.
 
 Counts appear in the accessible name and on hover, so colour is never the
 only channel. Type size and weight are identical at every frequency.
+
+**The field's resolution is the number of distinct counts, not the number of
+subjects, so it reads volume.** Twenty entries across thirty subjects settle
+into eight or so bands, 45° apart, and the index is legible as a distribution
+before a word of it is read. Three entries produce two counts, which is two
+bands — one hue and the white apex — and there is no arrangement of two bands
+that looks like a spectrum. Nothing is broken there; there is simply nothing
+yet to separate. The subject index says so in as many words when the field is
+under four bands wide, because a thin field and a broken one look alike to
+someone meeting the theme on a fresh site.
+
+Judge this feature on a corpus, not on a scaffold. `exampleSite` exists partly
+so there is one to judge it on.
 
 The sidebar carries the whole field, the date archive, and a mission time
 whose zone the reader can change — switching it re-renders the journal,
@@ -285,7 +344,7 @@ hugo server --source exampleSite --themesDir ../..
 The two shapes a Spectrum site has, side by side:
 
 **The journal** is `posts` — flat, dated, tagged, never navigated. Twelve
-entries across four days, with a tag distribution chosen to put six distinct
+entries across four days, with a tag distribution chosen to put five distinct
 bands on the field and only one subject at the apex. You reach an entry through
 the index, the spectrum or the date archive.
 
@@ -342,7 +401,7 @@ the footer ships an inline `<script>` and a policy worth having needs its hash.
 scripts/check.sh
 ```
 
-34 assertions, each written twice — once so it passes, once so it fails.
+42 assertions, each written twice — once so it passes, once so it fails.
 The second run is the only one that proves anything. They cover the tag
 field at its edges (no tags, one tag, all counts equal, a single extreme
 outlier, hundreds of tags), build determinism, and a long tail of structural

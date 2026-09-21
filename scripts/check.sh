@@ -113,6 +113,76 @@ if diff -q <(grep -o '\-\-tag-signal:[0-9.]*' "$d1/out/tags/index.html") \
            <(grep -o '\-\-tag-signal:[0-9.]*' "$d2/out/tags/index.html") >/dev/null
 then ok "deterministic across builds"; else no "non-deterministic output"; fi
 
+# 7. the lightness ramp spans its whole range, at any band count
+#
+# The apex is pinned at 1.0 on its own, so the bands under it divide the
+# ceiling between them: rarest on the floor, last-below-apex on the ceiling,
+# the rest spread evenly. Dividing by (bands - 1) counted an interval the
+# apex had already left, so the ceiling was never reached and the shortfall
+# grew as bands fell — eight bands stopped at 0.583 of a ramp documented as
+# 0.68, and three stopped at 0.34. That is most of why a small corpus looked
+# broken rather than merely quiet, so three bands is the case asserted: it is
+# the one a new site is actually in, and it fails loudest.
+d=$(fixture ramp <<< "a:rare
+b:mid
+c:mid
+d:top
+e:top
+f:top")
+ramp=$(grep -o '\-\-tag-signal:[0-9.]\{6\}' "$d/out/tags/index.html" \
+       | sed 's/.*://' | sort -u | tr '\n' ' ')
+[ "$ramp" = "0.0000 0.6800 1.0000 " ] \
+  && ok "three bands span floor, ceiling and apex (${ramp% })" \
+  || no "the ramp does not reach its ceiling (bands at: ${ramp% })"
+
+# 8. a lone band IS the apex, and the legend has to be able to say so
+#
+# distance divided by (bands - 1) behind a guard that forced the divisor to 1
+# when there was one band, so the only field that is flat reported the
+# maximum distance from an apex every one of its subjects was sitting on. The
+# note written for exactly that case was unreachable for as long as it has
+# existed. Both directions, because a note that always fires is no better.
+d=$(fixture flatfield <<< "a:x
+b:y
+c:z")
+flat_on=0;  grep -q 'so the field is flat' "$d/out/tags/index.html" && flat_on=1
+d=$(fixture bandedfield <<< "a:x
+b:x
+c:y")
+flat_off=0; grep -q 'so the field is flat' "$d/out/tags/index.html" && flat_off=1
+[ "$flat_on" -eq 1 ] && [ "$flat_off" -eq 0 ] \
+  && ok "a flat field says it is flat, and a banded one does not" \
+  || no "flat note (equal counts=$flat_on, unequal=$flat_off)"
+
+# 9. a thin field says it is thin
+#
+# Resolution is the count of distinct counts, so it is bought with content
+# and cannot be configured. Under four bands there is nothing to separate and
+# the field looks broken to anyone meeting the theme on a fresh site, which
+# is every evaluator. Three bands must say so; four must not, or the note
+# becomes furniture.
+d=$(fixture thinfield <<< "a:r
+b:m
+c:m
+d:t
+e:t
+f:t")
+thin_on=0;  grep -q 'bands, and it separates' "$d/out/tags/index.html" && thin_on=1
+d=$(fixture widefield <<< "a:r
+b:m
+c:m
+d:t
+e:t
+f:t
+g:q
+h:q
+i:q
+j:q")
+thin_off=0; grep -q 'bands, and it separates' "$d/out/tags/index.html" && thin_off=1
+[ "$thin_on" -eq 1 ] && [ "$thin_off" -eq 0 ] \
+  && ok "a three-band field declares its own resolution, a four-band one does not" \
+  || no "resolution note (3 bands=$thin_on, 4 bands=$thin_off)"
+
 echo "── main site ──"
 
 # Reference codes are the publication conceit; a malformed one is invisible
@@ -1177,6 +1247,43 @@ if (HUGO_PARAMS_SPECTRUM_ENTRYASIDE=false hugo --source "$SITE" \
   else no "entryAside branch page (nav=$b_nav clock=$b_clock)"; fi
 else
   no "entryAside: the off-case build failed"
+fi
+
+# The record's second line, and where the fallback chain has to stop.
+#
+# A table where some rows carry a subtitle and some do not reads as missing
+# data rather than as variation, so the chain runs claim -> excerpt ->
+# description: three fields that are all one authored line about the entry.
+# It stops there. .Summary would fill every remaining row, which is the
+# tempting and wrong fix — it is the first seventy words of the body, so the
+# column fills with paragraphs that break mid-sentence.
+#
+# Both directions on the same build: the landing page has a description and
+# no claim, so its row must gain the description; the journal's entries have
+# neither, so their rows must stay bare. If .Summary ever leaks in, the
+# second assertion is the one that catches it.
+if [ -f "$PUB/patterns/index.html" ] && [ -f "$PUB/index.html" ]; then
+  fb=0; grep -q 'index__claim">Calibration, bench time and reference standards' \
+          "$PUB/patterns/index.html" && fb=1
+  rows=$(grep -o 'class="index__title"' "$PUB/index.html" | wc -l)
+  subs=$(grep -o 'class="index__claim"' "$PUB/index.html" | wc -l)
+  if [ "$fb" -eq 1 ] && [ "$rows" -gt 0 ] && [ "$subs" -lt "$rows" ]
+  then ok "the index falls back to a description, and stops short of the body ($subs of $rows journal rows subtitled)"
+  else no "index second line (description fallback=$fb, $subs of $rows journal rows subtitled)"; fi
+else
+  no "index second line: the example site build is missing"
+fi
+
+# The demo has to stay out of the case it is meant to argue against. A
+# distribution that collapses to three bands would put the theme's own
+# example site under the resolution note, which is the opposite of a demo.
+if [ -f "$PUB/tags/index.html" ]; then
+  eb=$(grep -o '\-\-tag-signal:[0-9.]\{6\}' "$PUB/tags/index.html" | sort -u | wc -l)
+  [ "$eb" -ge 4 ] \
+    && ok "the example site's field has enough bands to read as a field ($eb)" \
+    || no "the example site collapsed to $eb bands"
+else
+  no "example site band count: build missing"
 fi
 
 echo

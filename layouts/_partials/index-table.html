@@ -97,7 +97,19 @@
         {{- $grad := partial "tags/title-gradient.html" (dict "page" .) }}
         <div class="index__title"><a href="{{ .RelPermalink }}"
           {{- with $grad }} class="spectral" style="--title-gradient:{{ . | safeCSS }}"{{ end }}>{{ .Title }}</a></div>
-        {{- with or .Params.claim .Params.excerpt }}<p class="index__claim">{{ . }}</p>{{ end }}
+        {{- /* The second line, in the order the page is most likely to have
+               authored one: `claim` is written for this table, `excerpt` for
+               a listing, `description` for a search result. All three are one
+               authored line about the entry, so the last is a better row than
+               a blank one — and a table where some rows carry a subtitle and
+               some do not reads as missing data rather than as variation.
+
+               The chain stops at authored prose. `.Summary` would fill every
+               remaining row, which is why it is tempting and why it is wrong:
+               it is the first seventy words of the body, so the column would
+               fill with paragraphs that break mid-sentence. A row with
+               nothing authored about it stays bare. */ -}}
+        {{- with or .Params.claim .Params.excerpt .Description }}<p class="index__claim">{{ . }}</p>{{ end }}
         {{- if $tags }}{{ partial "tags/list.html" (dict "page" .) }}{{ end }}
         {{- with $trail }}{{ with (index $entry.Params .) }}<p class="index__trail"><span class="ref">from {{ . }}</span></p>{{ end }}{{ end }}
       </td>
