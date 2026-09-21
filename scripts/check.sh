@@ -709,19 +709,32 @@ else no "zone selector wrong (buttons=$n hidden=$hid zones=$zlist timeZone=$cfg)
 # An unset timeZone means Hugo uses the build machine's zone, so the same
 # commit renders different times on a laptop and in CI. The mirror the
 # script reads must agree with it.
-read -r tzc tzp <<<"$(python3 - "$SITE/hugo.toml" <<'PYEOF'
-import re, sys, pathlib
-t = pathlib.Path(sys.argv[1]).read_text()
-a = re.search(r"^timeZone = '([^']+)'", t, re.M)
-# Tolerant of alignment: the param is written `timezone   = '...'` in the
-# demo's config and the exact-single-space match could not see it.
-b = re.search(r"^\s*timezone\s*=\s*'([^']+)'", t, re.M)
-print(f"{a.group(1) if a else '-'} {b.group(1) if b else '-'}")
-PYEOF
-)"
+#
+# Asked of `hugo config`, not of hugo.toml. A key's presence in the file is
+# not the same fact as Hugo having read it: a root setting written below a
+# table header is scoped INTO that table, so `timeZone` placed one line
+# under [frontmatter] becomes an unknown front-matter key and is discarded
+# in silence. The file still matches, the check still passes, and every date
+# on the site quietly falls back to the build machine's zone — the precise
+# failure this check exists to prevent, surviving the check that prevents
+# it. Found in the sibling Pulse repo, where exactly that had happened to
+# enableGitInfo and timeZone in one commit.
+#
+# Discarded and applied look identical from the outside, so the assertion
+# has to be made against the effective configuration.
+read -r tzc tzp <<<"$(hugo config --source "$SITE" --themesDir "$TMP/themes" --format json 2>/dev/null | python3 -c "
+import json, sys
+try:
+    c = json.load(sys.stdin)
+except Exception:
+    print('- -'); raise SystemExit
+root = c.get('timezone') or '-'
+param = (c.get('params') or {}).get('spectrum', {}).get('timezone') or '-'
+print(f'{root} {param}')
+")"
 if [ "$tzc" != "-" ] && [ "$tzc" = "$tzp" ]
-then ok "timeZone is set and mirrored for the clock ($tzc)"
-else no "timezone config wrong (timeZone=$tzc param=$tzp)"; fi
+then ok "timeZone is read by Hugo and mirrored for the clock ($tzc)"
+else no "timezone config wrong (effective timeZone=$tzc param=$tzp)"; fi
 
 # A class in the markup with no rule behind it is invisible: the element
 # renders, unstyled, looking like a spacing mistake rather than a missing
