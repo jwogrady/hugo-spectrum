@@ -1274,6 +1274,31 @@ else
   no "index second line: the example site build is missing"
 fi
 
+# The revision record, asserted in both directions.
+#
+# docs/citation.md has said since the theme existed that corrections are
+# recorded at the foot of the entry, and for four releases nothing rendered
+# one — a convention the publication states and its own theme cannot keep.
+#
+# The direction that matters is the second. A document is a thing whose
+# version a reader needs, and a record is what is published now; a post
+# edited after its date has simply been edited, so putting a revision
+# history on one would claim an accountability the journal does not have.
+# Asserted on the built site rather than on the partial, because the partial
+# rendering correctly while no layout calls it is exactly the failure that
+# hid here before.
+if [ -d "$PUB" ]; then
+  doc=0;  grep -q 'class="revisions"' "$PUB/docs/procedure/index.html" 2>/dev/null && doc=1
+  conv=0; grep -q 'class="revisions"' "$PUB/patterns/service/index.html" 2>/dev/null && conv=1
+  rows=$(grep -o 'class="revisions__entry"' "$PUB/docs/procedure/index.html" 2>/dev/null | wc -l)
+  recs=$(grep -l 'class="revisions"' "$PUB"/posts/*/index.html 2>/dev/null | wc -l)
+  if [ "$doc" -eq 1 ] && [ "$conv" -eq 1 ] && [ "$rows" -gt 0 ] && [ "$recs" -eq 0 ]
+  then ok "documents carry a revision record ($rows entries), records carry none"
+  else no "revision record (page=$doc conversion=$conv rows=$rows posts-with-one=$recs)"; fi
+else
+  no "revision record: the example site build is missing"
+fi
+
 # The demo has to stay out of the case it is meant to argue against. A
 # distribution that collapses to three bands would put the theme's own
 # example site under the resolution note, which is the opposite of a demo.
