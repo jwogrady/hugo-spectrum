@@ -6,7 +6,7 @@
   identically — they are identical.
 
     hue        evenly spaced around the wheel by band index
-    lightness  climbs linearly across the bands
+    lightness  climbs across the non-apex bands to the ceiling, apex to white
     chroma     full for every band except the apex, which goes white
 
   Banding by distinct count is itself outlier compression: a subject at 200
@@ -29,16 +29,34 @@
 {{- $maxCount := 0 -}}
 {{- if $counts }}{{ $maxCount = index $counts (sub $bands 1) }}{{ end -}}
 
+{{- /* Two ramps, two denominators, because they measure different things.
+
+       Lightness is normalised over the NON-apex bands. The apex is the top
+       band and is pinned at 1.0 on its own, so the bands under it spread
+       across the (bands - 2) intervals between them and the highest of them
+       lands on the ceiling exactly. Dividing by (bands - 1) instead put the
+       apex's own interval inside a ramp it had already left, so the ceiling
+       was never reached and everything below it was squeezed toward the
+       floor — worst where there is least to show. Eight bands topped out at
+       0.583 of a ramp documented as 0.68; three bands topped out at 0.34,
+       which is most of why a small corpus rendered nearly flat.
+
+       Distance is normalised over every band, and a lone band is the apex
+       by definition. The shared guard reported 1.0 for it — the far edge,
+       the exact opposite — so the legend's flat-field note, which fires on
+       distance 0, could never fire on the one field that is flat. */ -}}
+{{- $rampDenom := cond (gt $bands 2) (float (sub $bands 2)) 1.0 -}}
+{{- $distDenom := cond (gt $bands 1) (float (sub $bands 1)) 1.0 -}}
+
 {{- $out := slice -}}
 {{- range site.Taxonomies.tags.Alphabetical -}}
   {{- $c := .Count -}}
   {{- $b := 0 -}}
   {{- range $k, $v := $counts }}{{ if eq $v $c }}{{ $b = $k }}{{ end }}{{ end -}}
   {{- $isApex := eq $c $maxCount -}}
-  {{- $denom := cond (gt $bands 1) (float (sub $bands 1)) 1.0 -}}
   {{- /* Non-apex bands occupy the lower part of the lightness ramp so the
          apex has somewhere brighter to sit. */ -}}
-  {{- $t := cond $isApex 1.0 (mul $topShare (div (float $b) $denom)) -}}
+  {{- $t := cond $isApex 1.0 (mul $topShare (div (float $b) $rampDenom)) -}}
   {{- $hue := div (mul (mul 2.0 $span) (float $b)) (float $bands) -}}
   {{- $out = $out | append (dict
         "name"      .Term
@@ -49,7 +67,7 @@
         "intensity" $t
         "angle"     $hue
         "chroma"    (cond $isApex 0.0 1.0)
-        "distance"  (sub 1.0 (div (float $b) $denom))
+        "distance"  (cond (gt $bands 1) (sub 1.0 (div (float $b) $distDenom)) 0.0)
         "direction" (cond (eq (mod $b 2) 0) -1 1)
         "key"       (printf "%09d|%s" (sub 999999999 $c) (lower .Term))) -}}
 {{- end -}}
