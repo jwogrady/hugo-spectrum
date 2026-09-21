@@ -1,6 +1,18 @@
 +++
-title  = "Calibration procedure"
-weight = 10
+title   = "Calibration procedure"
+weight  = 10
+version = "3"
+revised = 2026-09-19
+
+[[revisions]]
+  date = 2026-09-19
+  note = "Every timing now carries the entry it was measured in. Two were wrong."
+[[revisions]]
+  date = 2026-09-18
+  note = "Warm-up raised from eleven minutes to nineteen, per JRN 26-006."
+[[revisions]]
+  date = 2026-09-16
+  note = "First issue."
 +++
 
 Nineteen minutes of warm-up, zeroed cold, then three runs against the reference
