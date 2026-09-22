@@ -1,0 +1,13 @@
+{{- /* Empty by design. The last thing inside <head>, for a site that has to
+       put something there — a tag manager loader, a verification meta, a
+       consent script — without forking head.html.
+
+       Append, not prepend. <meta charset> has to land inside the first 1024
+       bytes or the parser guesses the encoding, so nothing a site injects is
+       allowed to push it down the document. A site wanting its tag "as high
+       as possible" gets late-in-head instead, and the difference is
+       unmeasurable where the failure mode of the alternative is not.
+
+       Override it in a site's own layouts/_partials/. There is nothing in
+       here to diverge from, which is the whole point: a one-line override
+       cannot go stale against a theme that has moved on. */ -}}

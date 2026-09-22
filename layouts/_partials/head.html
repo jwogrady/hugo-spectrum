@@ -37,4 +37,8 @@
   {{- with .OutputFormats.Get "rss" }}
   <link rel="alternate" type="application/rss+xml" href="{{ .RelPermalink }}" title="{{ site.Title }}">
   {{- end }}
+
+  {{- /* Last: a site may add to <head>, and may not push <meta charset>
+         out of the first 1024 bytes doing it. */ -}}
+  {{ partial "head-append.html" . }}
 </head>
