@@ -1440,6 +1440,70 @@ else
   no "example site band count: build missing"
 fi
 
+# The render hooks, asserted by position rather than by presence.
+#
+# head-append.html and body-open.html ship empty so a site can add to <head>
+# and to the top of <body> without forking a forty-line head.html. A fork is a
+# copy, and a copy goes stale in silence the moment the original moves — the
+# site serves an old <head> against a new theme and nothing says so.
+#
+# Presence is not the contract, position is. A tag manager's <noscript> iframe
+# is specified to be the first child of <body> and is checked for it, and
+# anything appended to <head> must not be able to push <meta charset> out of
+# the first 1024 bytes where the parser stops guessing the encoding. So the
+# fixture overrides both hooks and asserts where the markup landed.
+#
+# The markers are real elements, not HTML comments. This build strips comments
+# from its output and leaves everything else alone, so a comment marker reads
+# as "the override did not apply" when the override applied perfectly. That
+# cost an hour once.
+hk="$TMP/hooks"; mkdir -p "$hk/content" "$hk/themes" "$hk/layouts/_partials"
+ln -s "$THEME" "$hk/themes/spectrum"
+cat > "$hk/hugo.toml" <<EOF
+baseURL = 'https://example.org/'
+title = 'hooks'
+theme = 'spectrum'
+EOF
+printf '<meta name="headmark" content="1">\n' > "$hk/layouts/_partials/head-append.html"
+printf '<i data-bodymark></i>\n'              > "$hk/layouts/_partials/body-open.html"
+(cd "$hk" && hugo --quiet --destination out --panicOnWarning >/dev/null 2>&1)
+H="$hk/out/index.html"
+if [ -f "$H" ]; then
+  # Byte offsets, so these are assertions about order in the document rather
+  # than about the markers merely existing somewhere in it.
+  off () { python3 -c "import sys;print(open(sys.argv[1],'rb').read().find(sys.argv[2].encode()))" "$H" "$1"; }
+  charset=$(off '<meta charset');        headmark=$(off 'name="headmark"')
+  headend=$(off '</head>');              bodyopen=$(off '<body>')
+  bodymark=$(off 'data-bodymark');       skip=$(off 'class="skip"')
+  if [ "$charset" -gt -1 ] && [ "$charset" -lt 1024 ] \
+     && [ "$headmark" -gt "$charset" ] && [ "$headmark" -lt "$headend" ] \
+     && [ "$bodymark" -gt "$bodyopen" ] && [ "$bodymark" -lt "$skip" ]
+  then ok "render hooks land in position (head-append inside <head>, body-open first in <body>)"
+  else no "render hooks (charset=$charset headmark=$headmark headend=$headend body=$bodyopen bodymark=$bodymark skip=$skip)"; fi
+else
+  no "render hooks: the fixture did not build"
+fi
+
+# The other direction, which protects every site that does not want them:
+# unoverridden, the hooks must contribute nothing. An empty partial that
+# emitted so much as a newline would change every page the theme renders, and
+# the skip link must stay the first thing inside <body>.
+if [ -d "$PUB" ]; then
+  stray=$(grep -rl 'headmark\|bodymark' "$PUB" --include='*.html' 2>/dev/null | wc -l)
+  first=$(python3 - "$PUB/index.html" <<'PY'
+import sys
+d = open(sys.argv[1]).read()
+i = d.find('<body>') + len('<body>')
+print(1 if d[i:i+40].lstrip().startswith('<a class="skip"') else 0)
+PY
+)
+  if [ "$stray" -eq 0 ] && [ "$first" -eq 1 ]
+  then ok "the hooks are inert unless a site overrides them"
+  else no "hooks inert (markers=$stray skip-link-first=$first)"; fi
+else
+  no "hooks inert: the example site build is missing"
+fi
+
 echo
 printf "  %d passed, %d failed\n" "$pass" "$fail"
 [ "$fail" -eq 0 ]

@@ -5,6 +5,10 @@
       {{- if site.Params.spectrum.tagRotate }} data-tag-rotate="on" style="--tag-rotate-duration:{{ default 240 site.Params.spectrum.tagRotateSeconds }}s"{{ end }}>
 {{ partial "head.html" . }}
 <body>
+{{- /* First, before the skip link: markup whose position is fixed by
+       something outside this theme has nowhere else to go. Empty
+       unless a site overrides it. */ -}}
+{{ partial "body-open.html" . }}
   <a class="skip" href="#main">Skip to content</a>
   {{- /* Cached on what actually varies: which menu entry is current.
          Pages in a section share one masthead; root-level pages do not —

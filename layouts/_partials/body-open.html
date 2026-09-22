@@ -1,0 +1,11 @@
+{{- /* Empty by design. The literal first child of <body>, before the skip
+       link, for markup whose position is fixed by something outside this
+       theme — a tag manager's <noscript> iframe is specified to sit exactly
+       here and is checked for it.
+
+       Before the skip link because "first child" is the contract; a site
+       that only needs "somewhere near the top" is unaffected either way, and
+       a site that needs the strict position has nowhere else to put it.
+
+       Override it in a site's own layouts/_partials/. See head-append.html
+       for the other half. */ -}}
