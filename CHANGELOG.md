@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/jwogrady/hugo-spectrum/compare/v0.6.0...v0.7.0) (2026-09-22)
+
+
+### Features
+
+* render hooks for &lt;head&gt; and the top of &lt;body&gt; ([#18](https://github.com/jwogrady/hugo-spectrum/issues/18)) ([2a246fa](https://github.com/jwogrady/hugo-spectrum/commit/2a246fac8c5d73504357e247f760cfb87dbcdc14))
+
 ## [0.6.0](https://github.com/jwogrady/hugo-spectrum/compare/v0.5.0...v0.6.0) (2026-09-22)
 
 
