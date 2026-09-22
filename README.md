@@ -430,11 +430,39 @@ See [TOKENS.md](TOKENS.md). Nothing requires forking: palettes, the spectrum
 shape, typography and every colour are CSS custom properties or site params.
 [BRAND.md](BRAND.md) documents the design system and the reasoning.
 
+### Render hooks
+
+Two partials ship empty so a site can reach the positions the theme owns
+without copying a template:
+
+| Partial | Where it renders |
+|---|---|
+| `_partials/head-append.html` | last inside `<head>` |
+| `_partials/body-open.html` | the first child of `<body>`, before the skip link |
+
+Override either in your own `layouts/_partials/`. The usual reason is a tag
+manager, which has a loader for `<head>` and a `<noscript>` iframe that is
+specified to sit exactly at the top of `<body>` and is checked for it.
+
+`head-append` appends rather than prepends on purpose. `<meta charset>` has
+to land inside the first 1024 bytes or the parser guesses the encoding, so
+nothing a site injects can push it down the document. "As high as possible"
+gets late-in-head instead, and that difference is unmeasurable where the
+failure mode of the alternative is not.
+
+The point of a hook being empty is that there is nothing in it to diverge
+from. Copy `head.html` to add one line and the copy is forty lines that stop
+tracking the theme the moment it moves, silently.
+
 ## Contract
 
 A consuming site must contain no layouts and no CSS, and swapping this theme
 for another must still render every content type. If that breaks,
 presentation has leaked into content.
+
+The two render hooks above are the one exception, and they are what keeps the
+rest of the rule keepable: a site that cannot reach `<head>` forks `head.html`
+instead, and then it has layouts after all — forty lines of them, going stale.
 
 ## Not in this version
 
