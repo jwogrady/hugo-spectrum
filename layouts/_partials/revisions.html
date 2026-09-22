@@ -1,0 +1,57 @@
+{{- /*
+  The revision record at the foot of a document.
+
+  docs/citation.md has said since the theme existed that "corrections are made
+  in place, with the change and its date recorded at the foot of the entry",
+  and nothing implemented it. A convention a publication states and its own
+  theme cannot render is a convention nobody can keep.
+
+  A document and a record want different things here. A post is a record: what
+  is published now is what matters, and a post edited after its date has simply
+  been edited. A page is a document: which version a reader saw matters, and
+  changing one silently is changing the standard without telling anyone. So
+  this renders on documents and never on posts, and the caller decides which
+  it is by whether it calls at all.
+
+    version    what to call the current state, printed as given
+    revised    when it last changed
+    revisions  a list of { date, note }, newest first — what actually changed
+
+  All three are optional and independent. A page with `revised` and no
+  `revisions` prints the date and no list, which is the honest rendering of
+  "this changed and nobody wrote down what": visible, and visibly thin.
+
+  Dates go through the publication's zone like every other date on the site,
+  so a revision cannot file under a day the archive does not have.
+*/ -}}
+{{- $tz := or site.Params.spectrum.timezone "UTC" -}}
+{{- $version := .Params.version -}}
+{{- $revised := .Params.revised -}}
+{{- $list := .Params.revisions -}}
+{{- if or $version $revised $list -}}
+<section class="revisions" aria-labelledby="revisions-head">
+  {{ partial "heading.html" (dict "title" "Revisions" "variant" "section" "level" 2 "id" "revisions-head") }}
+  {{- if or $version $revised }}
+  <p class="meta">
+    {{- with $version }}<span class="revisions__version">version {{ . }}</span>{{ end }}
+    {{- with $revised }}
+    {{- $d := time.AsTime . -}}
+    <time datetime="{{ $d.Format "2006-01-02" }}">revised {{ (time.In $tz $d).Format "02 Jan 2006" | upper }}</time>
+    {{- end }}
+  </p>
+  {{- end }}
+  {{- with $list }}
+  <ol class="revisions__list">
+    {{- range . }}
+    <li class="revisions__entry">
+      {{- with .date }}
+      {{- $d := time.AsTime . -}}
+      <time class="revisions__date" datetime="{{ $d.Format "2006-01-02" }}">{{ (time.In $tz $d).Format "02 Jan 2006" | upper }}</time>
+      {{- end }}
+      {{- with .note }}<span class="revisions__note">{{ . }}</span>{{ end }}
+    </li>
+    {{- end }}
+  </ol>
+  {{- end }}
+</section>
+{{- end -}}

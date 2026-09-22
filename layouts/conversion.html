@@ -32,4 +32,8 @@
   <article class="prose">{{ .Content }}</article>
   {{ partial "faq.html" (dict "page" .) }}
   {{ partial "cta.html" (dict "page" .) }}
+  {{- /* An offer is a document and its price is the part a reader is most
+         entitled to see the history of. Below the ask, because it is
+         apparatus rather than argument. */ -}}
+  {{ partial "revisions.html" . }}
 {{ end }}

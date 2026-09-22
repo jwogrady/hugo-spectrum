@@ -683,7 +683,19 @@ else no "column heads wrong: $hd"; fi
 # params.spectrum.timezone, and the script lands a reader on whichever listed
 # zone keeps their machine's own wall clock, falling to UTC when none does. So
 # the order is free, and this asserts membership rather than position.
-read -r n hid zlist cfg <<<"$(python3 - "$SITE" "$PUB" <<'PYEOF'
+# The publication's zone as Hugo actually resolved it, not as hugo.toml
+# spells it. Both checks below need it and both used to re-read the file;
+# see the note on the mirror check for what that missed. Resolved once here
+# so there is one answer and no second place for it to go stale.
+EFF_TZ="$(hugo config --source "$SITE" --themesDir "$TMP/themes" --format json 2>/dev/null | python3 -c "
+import json, sys
+try:
+    print(json.load(sys.stdin).get('timezone') or '-')
+except Exception:
+    print('-')
+")"
+
+read -r n hid zlist cfg <<<"$(python3 - "$SITE" "$PUB" "$EFF_TZ" <<'PYEOF'
 import re, sys, pathlib, json, subprocess
 root, pub = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
 h = (pub / "index.html").read_text()
@@ -694,9 +706,9 @@ pick = re.search(r'<div\b([^>]*\bclass="[^"]*\bclock__zones\b[^"]*"[^>]*)>(.*?)<
 tzs = re.findall(r'data-tz="([^"]+)"', pick.group(2)) if pick else []
 n = len(tzs)
 hid = 1 if pick and "hidden" in pick.group(1) else 0
-cfg = ""
-m = re.search(r"^timeZone = '([^']+)'", (root / "hugo.toml").read_text(), re.M)
-if m: cfg = m.group(1)
+# Handed in, not read from hugo.toml: a zone the file declares and Hugo
+# discarded would still be compared against the rendered buttons here.
+cfg = sys.argv[3] if len(sys.argv) > 3 and sys.argv[3] != "-" else ""
 print(f"{n} {hid} {','.join(tzs) or '-'} {cfg or '-'}")
 PYEOF
 )"
@@ -709,19 +721,32 @@ else no "zone selector wrong (buttons=$n hidden=$hid zones=$zlist timeZone=$cfg)
 # An unset timeZone means Hugo uses the build machine's zone, so the same
 # commit renders different times on a laptop and in CI. The mirror the
 # script reads must agree with it.
-read -r tzc tzp <<<"$(python3 - "$SITE/hugo.toml" <<'PYEOF'
-import re, sys, pathlib
-t = pathlib.Path(sys.argv[1]).read_text()
-a = re.search(r"^timeZone = '([^']+)'", t, re.M)
-# Tolerant of alignment: the param is written `timezone   = '...'` in the
-# demo's config and the exact-single-space match could not see it.
-b = re.search(r"^\s*timezone\s*=\s*'([^']+)'", t, re.M)
-print(f"{a.group(1) if a else '-'} {b.group(1) if b else '-'}")
-PYEOF
-)"
+#
+# Asked of `hugo config`, not of hugo.toml. A key's presence in the file is
+# not the same fact as Hugo having read it: a root setting written below a
+# table header is scoped INTO that table, so `timeZone` placed one line
+# under [frontmatter] becomes an unknown front-matter key and is discarded
+# in silence. The file still matches, the check still passes, and every date
+# on the site quietly falls back to the build machine's zone — the precise
+# failure this check exists to prevent, surviving the check that prevents
+# it. Found in the sibling Pulse repo, where exactly that had happened to
+# enableGitInfo and timeZone in one commit.
+#
+# Discarded and applied look identical from the outside, so the assertion
+# has to be made against the effective configuration.
+read -r tzc tzp <<<"$(hugo config --source "$SITE" --themesDir "$TMP/themes" --format json 2>/dev/null | python3 -c "
+import json, sys
+try:
+    c = json.load(sys.stdin)
+except Exception:
+    print('- -'); raise SystemExit
+root = c.get('timezone') or '-'
+param = (c.get('params') or {}).get('spectrum', {}).get('timezone') or '-'
+print(f'{root} {param}')
+")"
 if [ "$tzc" != "-" ] && [ "$tzc" = "$tzp" ]
-then ok "timeZone is set and mirrored for the clock ($tzc)"
-else no "timezone config wrong (timeZone=$tzc param=$tzp)"; fi
+then ok "timeZone is read by Hugo and mirrored for the clock ($tzc)"
+else no "timezone config wrong (effective timeZone=$tzc param=$tzp)"; fi
 
 # A class in the markup with no rule behind it is invisible: the element
 # renders, unstyled, looking like a spacing mistake rather than a missing
@@ -1272,6 +1297,135 @@ if [ -f "$PUB/patterns/index.html" ] && [ -f "$PUB/index.html" ]; then
   else no "index second line (description fallback=$fb, $subs of $rows journal rows subtitled)"; fi
 else
   no "index second line: the example site build is missing"
+fi
+
+# The second line, all four rungs, on a fixture rather than on the demo.
+#
+# This was asserted on exampleSite alone, which made it hostage to content
+# anyone is free to improve. The consuming site reported the trap: writing
+# the claims the ragged-row finding called for removed the only bare rows it
+# had, so the corpus that proved the fallback was needed stopped being able
+# to test it. A consumer who acts on a finding stops being able to test it,
+# and the demo is about to be rewritten with claims on every entry.
+#
+# Fixtures do not have that problem, because nobody is tempted to finish
+# them. The fourth rung is the one that matters and was never asserted
+# anywhere: a page with nothing authored must render no second line at all.
+# .Summary would fill it with the first seventy words of the body, which is
+# the tempting fix and the wrong one.
+fb="$TMP/fallback"; mkdir -p "$fb/content/posts" "$fb/themes"
+ln -s "$THEME" "$fb/themes/spectrum"
+cat > "$fb/hugo.toml" <<'TOML'
+baseURL = 'https://example.org/'
+title = 'fallback fixture'
+theme = 'spectrum'
+TOML
+cat > "$fb/content/posts/a.md" <<'MD'
++++
+title = "A"
+date = 2026-01-04
+claim = "CLAIMWINS"
+excerpt = "EXCERPTLOSES"
+description = "DESCLOSES"
++++
+Body prose that must never reach the index.
+MD
+cat > "$fb/content/posts/b.md" <<'MD'
++++
+title = "B"
+date = 2026-01-03
+excerpt = "EXCERPTWINS"
+description = "DESCLOSES"
++++
+Body prose that must never reach the index.
+MD
+cat > "$fb/content/posts/c.md" <<'MD'
++++
+title = "C"
+date = 2026-01-02
+description = "DESCWINS"
++++
+Body prose that must never reach the index.
+MD
+cat > "$fb/content/posts/d.md" <<'MD'
++++
+title = "D"
+date = 2026-01-01
++++
+Body prose that must never reach the index and is long enough to be a summary.
+MD
+(cd "$fb" && hugo --quiet --destination out --panicOnWarning) >/dev/null 2>&1
+fbh="$fb/out/index.html"
+rung1=0; grep -q 'index__claim">CLAIMWINS<'   "$fbh" 2>/dev/null && rung1=1
+rung2=0; grep -q 'index__claim">EXCERPTWINS<' "$fbh" 2>/dev/null && rung2=1
+rung3=0; grep -q 'index__claim">DESCWINS<'    "$fbh" 2>/dev/null && rung3=1
+lost=$(grep -o 'LOSES' "$fbh" 2>/dev/null | wc -l)
+subs=$(grep -o 'class="index__claim"' "$fbh" 2>/dev/null | wc -l)
+body=$(grep -o 'Body prose that must never reach the index' "$fbh" 2>/dev/null | wc -l)
+if [ "$rung1" -eq 1 ] && [ "$rung2" -eq 1 ] && [ "$rung3" -eq 1 ] \
+   && [ "${lost:-1}" -eq 0 ] && [ "${subs:-0}" -eq 3 ] && [ "${body:-1}" -eq 0 ]
+then ok "the second line falls claim > excerpt > description and stops: 3 of 4 rows subtitled, no body prose"
+else no "fallback chain (claim=$rung1 excerpt=$rung2 desc=$rung3 shadowed=$lost subtitled=$subs body=$body)"; fi
+
+# AggregateRating: capability here, never in the demo.
+#
+# rating is the only offer field that renders nowhere on the page — it exists
+# solely to emit an AggregateRating — so a demo carrying one ships a
+# machine-readable claim about what customers thought, invisible to anyone
+# copying exampleSite into a real site. A search engine acts on it. That is
+# fabricated proof with a neutral filename, and it is the half that ships by
+# accident precisely because no one can see it.
+#
+# The capability still has to work, so it is tested on a fixture that is
+# built and thrown away. Adversarial and structural coverage belongs in
+# fixtures; fabricated proof belongs nowhere near a corpus built to be copied.
+rd="$TMP/rating"; mkdir -p "$rd/content/patterns" "$rd/themes"
+ln -s "$THEME" "$rd/themes/spectrum"
+cat > "$rd/hugo.toml" <<'TOML'
+baseURL = 'https://example.org/'
+title = 'rating fixture'
+theme = 'spectrum'
+TOML
+cat > "$rd/content/patterns/thing.md" <<'MD'
++++
+title  = "Thing"
+layout = "conversion"
+sku    = "SKU-1"
+price  = "10.00"
+rating = { value = "4.2", count = "9" }
++++
+Body.
+MD
+(cd "$rd" && hugo --quiet --destination out --panicOnWarning) >/dev/null 2>&1
+agg=$(grep -o '"AggregateRating"' "$rd/out/patterns/thing/index.html" 2>/dev/null | wc -l)
+demo=$(grep -ro '"AggregateRating"' "$PUB" 2>/dev/null | wc -l)
+if [ "${agg:-0}" -ge 1 ] && [ "${demo:-1}" -eq 0 ]
+then ok "AggregateRating is supported, and the demo fabricates none"
+else no "AggregateRating (fixture=$agg demo=$demo)"; fi
+
+# The revision record, asserted in both directions.
+#
+# docs/citation.md has said since the theme existed that corrections are
+# recorded at the foot of the entry, and for four releases nothing rendered
+# one — a convention the publication states and its own theme cannot keep.
+#
+# The direction that matters is the second. A document is a thing whose
+# version a reader needs, and a record is what is published now; a post
+# edited after its date has simply been edited, so putting a revision
+# history on one would claim an accountability the journal does not have.
+# Asserted on the built site rather than on the partial, because the partial
+# rendering correctly while no layout calls it is exactly the failure that
+# hid here before.
+if [ -d "$PUB" ]; then
+  doc=0;  grep -q 'class="revisions"' "$PUB/docs/procedure/index.html" 2>/dev/null && doc=1
+  conv=0; grep -q 'class="revisions"' "$PUB/patterns/service/index.html" 2>/dev/null && conv=1
+  rows=$(grep -o 'class="revisions__entry"' "$PUB/docs/procedure/index.html" 2>/dev/null | wc -l)
+  recs=$(grep -l 'class="revisions"' "$PUB"/posts/*/index.html 2>/dev/null | wc -l)
+  if [ "$doc" -eq 1 ] && [ "$conv" -eq 1 ] && [ "$rows" -gt 0 ] && [ "$recs" -eq 0 ]
+  then ok "documents carry a revision record ($rows entries), records carry none"
+  else no "revision record (page=$doc conversion=$conv rows=$rows posts-with-one=$recs)"; fi
+else
+  no "revision record: the example site build is missing"
 fi
 
 # The demo has to stay out of the case it is meant to argue against. A

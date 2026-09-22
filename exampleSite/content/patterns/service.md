@@ -5,6 +5,15 @@ layout      = "conversion"
 weight      = 20
 standfirst  = "Three runs against the reference cell, a published record, and a handle you can cite."
 claim       = "If the three runs do not agree to 0.1%, you do not pay for the visit."
+version     = "2026.2"
+revised     = 2026-09-18
+
+[[revisions]]
+  date = 2026-09-18
+  note = "Rate rises to $420. Work already booked is honoured at the old rate."
+[[revisions]]
+  date = 2026-09-16
+  note = "Turnaround stated as five working days rather than \"about a week\"."
 
 serviceType    = "Instrument calibration"
 areaServed     = "United States"
