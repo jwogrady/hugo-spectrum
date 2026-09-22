@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.6.0](https://github.com/jwogrady/hugo-spectrum/compare/v0.5.0...v0.6.0) (2026-09-22)
+
+
+### Features
+
+* **page:** record revisions at the foot of a document ([f352804](https://github.com/jwogrady/hugo-spectrum/commit/f352804ee8bb623bad5283eccf22f0d4c84847a2))
+
+
+### Fixes
+
+* **example:** stop shipping a fabricated AggregateRating ([f352804](https://github.com/jwogrady/hugo-spectrum/commit/f352804ee8bb623bad5283eccf22f0d4c84847a2))
+
+
+### Documentation
+
+* **example:** give the procedure and the service a revision record ([f352804](https://github.com/jwogrady/hugo-spectrum/commit/f352804ee8bb623bad5283eccf22f0d4c84847a2))
+* state the two-corpora split that keeps the demo honest ([f352804](https://github.com/jwogrady/hugo-spectrum/commit/f352804ee8bb623bad5283eccf22f0d4c84847a2))
+
 ## [0.5.0](https://github.com/jwogrady/hugo-spectrum/compare/v0.4.0...v0.5.0) (2026-09-21)
 
 
