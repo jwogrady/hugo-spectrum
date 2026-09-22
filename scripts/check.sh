@@ -1249,6 +1249,58 @@ else
   no "entryAside: the off-case build failed"
 fi
 
+# gapSpacing, asserted in both directions and at both thresholds.
+#
+# The feature is two thresholds rather than one switch, so a check that only
+# proved the class appears would pass an implementation that opened a gap above
+# every row and printed an interval on all of them. The fixture carries a day
+# with three adjacencies in it, and each lands in a different case:
+#
+#   22:00 <- 21:54     6 min   no spacing at all, the table's own rhythm
+#   21:54 <- 21:36    18 min   spacing, and no interval printed
+#   21:36 <- 15:50   346 min   spacing, and the interval printed
+#
+# Read off the lower row of each pair: the index is newest first and the space
+# is padding above, so a gap belongs to the row beneath it.
+#
+# The off case is what protects existing publications, which is why the
+# parameter defaults to false. exampleSite opts in, so $PUB is the on case and
+# the off case is built here with it overridden back — by environment rather
+# than a second fixture directory, so the two builds are provably the same
+# content differing in one parameter.
+nogap="$TMP/gapspacing-off"
+if (HUGO_PARAMS_SPECTRUM_GAPSPACING=false hugo --source "$SITE" \
+         --themesDir "$TMP/themes" --destination "$nogap" \
+         -D --quiet --panicOnWarning) 2>/dev/null; then
+
+  # grep -o piped to wc, never grep -c: the rows are emitted on one line, and
+  # counting lines that contain a match would report every one of these as 1.
+  on_rows=$(grep -o 'class="index__resume"' "$PUB/index.html" | wc -l)
+  off_rows=$(grep -o 'class="index__resume"' "$nogap/index.html" | wc -l)
+  if [ "$on_rows" -gt 0 ] && [ "$off_rows" -eq 0 ]
+  then ok "gapSpacing: the index opens to the interval when set ($on_rows rows), and not at all when not"
+  else no "gapSpacing on/off (on=$on_rows rows, off=$off_rows rows)"; fi
+
+  # The tight pair must not be spaced at all: every gapped row on the page has
+  # to be one of the four buckets, and the 6-minute adjacency is not among them.
+  short=$(grep -o 'style="--gap:var(--s11)"' "$PUB/index.html" | wc -l)
+  lab=$(grep -o 'class="index__elapsed"' "$PUB/index.html" | wc -l)
+  long=$(grep -o 'style="--gap:var(--s1[356])"' "$PUB/index.html" | wc -l)
+  if [ "$short" -ge 1 ] && [ "$lab" -eq "$long" ] && [ "$lab" -lt "$on_rows" ]
+  then ok "gapSpacing: a short pause is spacing only, and every printed interval is a long one ($lab of $on_rows)"
+  else no "gapSpacing thresholds (short=$short labelled=$lab long=$long of $on_rows)"; fi
+
+  # The interval is decoration for a sighted reader and a repetition for
+  # everyone else: it is the difference between two times the table announces
+  # either side of it. If it ever loses aria-hidden it starts being spoken.
+  bare=$(grep -o 'class="index__elapsed"[^>]*>' "$PUB/index.html" | grep -cv 'aria-hidden')
+  if [ "$bare" -eq 0 ]
+  then ok "gapSpacing: the printed interval stays out of the accessibility tree"
+  else no "gapSpacing: $bare printed intervals are missing aria-hidden"; fi
+else
+  no "gapSpacing: the off-case build failed"
+fi
+
 # The record's second line, and where the fallback chain has to stop.
 #
 # A table where some rows carry a subtitle and some do not reads as missing

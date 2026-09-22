@@ -69,6 +69,7 @@ timeZone = 'America/Chicago'
   standfirst = 'Instrument log, calibration record, and standing pages'
   palette    = ''                    # '' default, 'ultraviolet' for the preset
   entryAside = true                  # entries keep the clock and the spectrum
+  gapSpacing = true                  # index rows open to the gap between filings
   timezone   = 'America/Chicago'     # must equal timeZone above
   copyright  = 'Status26, Inc.'                    # the entity, where owner is the masthead name
   banners    = '/plates'            # the pool the hero and landing banners draw from

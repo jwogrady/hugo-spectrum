@@ -25,6 +25,7 @@
        is the build machine's zone, so the same commit grouped entries one way
        on a laptop in Chicago and another in a UTC runner. */ -}}
 {{- $tz    := or site.Params.spectrum.timezone "UTC" -}}
+{{- $gaps  := site.Params.spectrum.gapSpacing | default false -}}
 {{- $dated := false -}}
 {{- range $pages }}{{ if not .Date.IsZero }}{{ $dated = true }}{{ end }}{{ end -}}
 
@@ -82,12 +83,54 @@
       </span>
     </th></tr>
     {{- end }}
+    {{- /* The pause between entries. Rows keep their default spacing when they
+           were filed minutes apart and open up when they were not, so a day of
+           work reads with the rhythm it was made at rather than as an even
+           list of times.
+
+           What opens the space is the elapsed interval and nothing else. It is
+           not a session, a sitting or a unit of work: a timestamp records when
+           an entry was filed, which is not when it was written, and spacing
+           that implied otherwise would be asserting something the dates cannot
+           support.
+
+           Bucketed rather than continuous. The spacing scale is geometric and
+           gaps within a day span two orders of magnitude, so four steps of the
+           scale carry the whole range while every row stays on the same
+           vertical rhythm as the rest of the page. A continuous mapping would
+           put rows at arbitrary offsets and buy nothing a reader can see.
+
+           Within a day only. The change of day is the day head's job, and an
+           overnight gap rendered at this scale would push the next morning off
+           the bottom of the screen. */ -}}
+    {{- $prev := false -}}
     {{- range $g.pages }}
     {{- $entry := . }}
-    <tr>
+    {{- $tok := "" }}{{ $lapse := "" -}}
+    {{- if and $gaps $prev (not .Date.IsZero) -}}
+      {{- /* Newest first, so the row above this one is the later of the two. */ -}}
+      {{- $mins := div (sub $prev.Unix .Date.Unix) 60 -}}
+      {{- if ge $mins 120 }}{{ $tok = "--s16" }}
+      {{- else if ge $mins 60 }}{{ $tok = "--s15" }}
+      {{- else if ge $mins 30 }}{{ $tok = "--s13" }}
+      {{- else if ge $mins 10 }}{{ $tok = "--s11" }}{{ end -}}
+      {{- /* The interval is printed only where the space is already wide
+             enough to read as deliberate. Below that the spacing says it and a
+             number would be one more thing in the column. */ -}}
+      {{- if ge $mins 60 }}{{ $lapse = printf "%dh %02dm" (div $mins 60) (mod $mins 60) }}
+      {{- else if ge $mins 30 }}{{ $lapse = printf "%dm" $mins }}{{ end -}}
+    {{- end -}}
+    {{- if not .Date.IsZero }}{{ $prev = .Date }}{{ end -}}
+    <tr{{ with $tok }} class="index__resume" style="{{ printf "--gap:var(%s)" . | safeCSS }}"{{ end }}>
       {{- if $dated }}
       {{- if .Date.IsZero }}<td class="index__time">&mdash;</td>
-      {{- else }}<td class="index__time"><time datetime="{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}">{{ (time.In $tz .Date).Format "15:04" }}</time></td>{{ end }}
+      {{- else }}<td class="index__time">
+        {{- /* aria-hidden: the interval is the difference between two times the
+               table announces either side of it, so speaking it spends an extra
+               utterance per gap restating what was just read out. The spacing
+               is the sighted affordance; the times are the accessible one. */ -}}
+        {{- with $lapse }}<span class="index__elapsed" aria-hidden="true">{{ . }}</span>{{ end -}}
+        <time datetime="{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}">{{ (time.In $tz .Date).Format "15:04" }}</time></td>{{ end }}
       {{- end }}
       <td>
         {{- /* The gradient is the same object in both views: an entry's

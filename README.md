@@ -70,6 +70,7 @@ timeZone = 'America/Chicago'   # the publication's zone; see below
   copyright  = ''              # the legal entity, when it is not `owner`
   themeCredit = true           # false removes the theme's line from the foot
   entryAside  = false          # true gives a branchless page the journal's panels
+  gapSpacing  = false          # true opens the index's row spacing to the elapsed gap
   timezone   = 'America/Chicago'  # must equal timeZone above
 
   [[params.spectrum.zones]]     # the clock's zone selector; any order
@@ -145,6 +146,22 @@ so navigation can never walk into an empty calendar.
 head. A horizontal line always means the date changed; everything else is
 separated by space. There are no row rules, no boxes and no hover
 backgrounds — the entry's own title underlines, in its own colour.
+
+**Time can be spacing.** Off by default. With `gapSpacing = true`, the space
+between two rows in the same day is scaled to the interval between them: rows
+filed minutes apart keep the table's normal spacing, and a gap of half an hour
+or more opens up and prints how long it was. Four steps of the spacing scale
+cover it, so a row that opens a gap still sits on the same vertical rhythm as
+one that does not, and the change of day is left to the day head — an overnight
+gap at this scale would push the next morning off the screen.
+
+It renders the interval and claims nothing else. A cluster of rows is not
+labelled a session or a sitting, because a timestamp records when an entry was
+filed and not when it was written, and on most publications those are hours
+apart. Read it as *this is how the filing went*, which is all the dates can
+support. The printed interval is `aria-hidden`: it is the difference between
+two times the table announces either side of it, so speaking it spends an extra
+utterance per gap restating what was just read out.
 
 **The second line is authored.** Under each title the index prints `claim`,
 falling back to `excerpt` and then `description` so a row is never empty. That

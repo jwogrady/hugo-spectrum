@@ -478,6 +478,40 @@
 /* The break between days: below the day that is ending, not above the
    one beginning, so it is not carried up the page by the sticky head. */
 .index__group:not(:last-child) > tr:last-child > td { padding-bottom: var(--s13); }
+
+/* The pause between entries within a day. --gap is set per row by
+   index-table.html, always to a step of the spacing scale, so a row that
+   opens a gap still sits on the same vertical rhythm as one that does not.
+
+   Carried as padding on the row's own cells rather than as a spacer row: an
+   empty <tr> in a data table is a row, and a screen reader stops on it and
+   announces it as blank. Padding is invisible to the accessibility tree, and
+   it survives the reflow below where the cells become blocks.
+
+   On every cell, not just the time. Table cells stretch to the row, so
+   padding one of them would drop the time down the row while the title
+   beside it stayed where it was. */
+.index__resume > td { padding-top: calc(var(--space-item) + var(--gap, 0)); }
+/* The interval floats in the space it measures. Positioned out of flow so it
+   cannot push the time off the line its title is on — the time column lines up
+   with the titles whether or not a gap above it is labelled. */
+.index__resume > .index__time { position: relative; }
+.index__elapsed {
+  position: absolute; left: 0;
+  /* Absolute positioning resolves against the padding box, so 0 is the top of
+     the gap. Half the gap, less half a line of the label, centres it in the
+     space — the height computed from the tokens it is set in rather than from
+     the lh unit, which would silently drop the whole declaration where it is
+     not supported. */
+  top: calc((var(--gap, 0) - var(--size-2xs) * var(--lh-label)) / 2);
+  font-family: var(--font-data); font-size: var(--size-2xs);
+  font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1;
+  /* Letterspaced like the day head and the table eyebrows, which is what
+     separates it from the times it sits among: same column, same size, and it
+     should read as a label about the column rather than another entry in it. */
+  letter-spacing: var(--tracking-eyebrow); line-height: var(--lh-label);
+  color: var(--ink-faint); white-space: nowrap;
+}
 /* The head keeps its rule: it is sticky, so rows have to visibly pass
    beneath it rather than merge into it. */
 
@@ -521,6 +555,20 @@
     padding-block: 0;
   }
   .index__day th { position: static; }
+  /* The pause, moved to the row. Narrow spacing lives on the tr because
+     .index td zeroes the cells' padding above, so a gap left on the cells is
+     a gap that silently stops working on a phone — and once the cells are
+     stacked blocks rather than columns, padding on both of them would open
+     the space twice, above the time and again above the title.
+
+     Specificity has to clear `.index tr`, which sets padding-block for every
+     row; a bare class would lose to it and the gap would never apply. */
+  .index tr.index__resume { padding-top: calc(var(--space-item) + var(--gap, 0)); }
+  /* Back into the flow. The absolute position resolves against the time
+     cell's padding box, and the gap is no longer on that cell, so the label
+     would be laid over the time instead of above it. A line of its own is
+     what there is room for here anyway. */
+  .index__elapsed { position: static; display: block; margin-bottom: var(--space-hair); }
 }
 
 /* The apex hue must be a registered property to be animatable and to

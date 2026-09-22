@@ -67,6 +67,14 @@
   .index__title a::after { content: " <" attr(href) ">"; font-family: var(--font-data); font-size: 7.5pt; color: #444; }
   a[href^="#"]::after, .masthead__identity::after { content: none; }
 
+  /* The pause collapses to one step. On screen the gap is scaled to the
+     interval; on paper the same scaling spends up to 86px of a fixed page on
+     white space, and a reader holding the sheet cannot scroll past it. One
+     step still separates the groups, and the interval is printed, so nothing
+     the spacing was carrying is lost. */
+  .index__resume > td { padding-top: 10pt; }
+  .index__elapsed { position: static; display: block; margin-bottom: 2pt; color: #444; }
+
   /* The day head inverts to a ruled caption. */
   .index__day th { border-top: 1.5pt solid #000; border-bottom: 0.5pt solid #000;
                    padding: 4pt 0; box-shadow: none; }
