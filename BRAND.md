@@ -27,6 +27,18 @@ quickly and will not be moved by decoration.
 5. **Restraint is the differentiator.** The market this speaks to has seen every
    gradient. Precision reads as competence; ornament reads as compensation.
 
+## Working log and reference previews
+
+Journal is finished writing; Lab Notes are the dated work behind it. Both
+belong to the same publication, not competing visual brands. A note uses a
+timestamp, a ruled entry, an authored excerpt and a stable link. It does not
+need the visual weight or narrative structure of a feature article.
+
+Docs may carry a small preview inside an index row. The title and explanation
+remain readable without it. A missing image becomes a labelled document
+plate—not a stock photograph, fake PDF cover or broken image. Downloads are
+named as downloads; web pages are not dressed as files they are not.
+
 ## Voice and tone
 
 - **Label, don't sell.** "Journal — publication index", not "Insights & Ideas".

@@ -35,6 +35,7 @@ timeZone = 'America/Chicago'
 [taxonomies]
   tag     = 'tags'
   archive = 'archives'
+  project = 'projects'
 
 # The masthead nav. Labels must match their own slug — check.sh fails a menu
 # that says "Documentation" and points at /docs/. The journal is the root, so
@@ -44,6 +45,10 @@ timeZone = 'America/Chicago'
     name     = 'Journal'
     pageRef  = '/'
     weight   = 10
+  [[menus.main]]
+    name     = 'Lab Notes'
+    pageRef  = '/lab-notes'
+    weight   = 15
   [[menus.main]]
     name     = 'Docs'
     pageRef  = '/docs'

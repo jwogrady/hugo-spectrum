@@ -1,0 +1,6 @@
+Publication review example
+
+Check text and assets.
+Check the selected writing type and stable links.
+Preview locally, including drafts.
+Publish only after explicit review.

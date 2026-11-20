@@ -1,0 +1,4 @@
+{{- $kind := "Document" -}}
+{{- if eq .Section (or site.Params.spectrum.journalSection "posts") }}{{ $kind = "Journal" }}{{ end -}}
+{{- if eq .Section (or site.Params.spectrum.labSection "lab-notes") }}{{ $kind = "Lab note" }}{{ end -}}
+{{- return $kind -}}

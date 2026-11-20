@@ -7,8 +7,10 @@
          one date head two groups and put the heads out of order — visible on
          /posts/ and on nothing the consuming site happened to have. */ -}}
   {{- $dated := false }}{{ range .Pages }}{{ if not .Date.IsZero }}{{ $dated = true }}{{ end }}{{ end }}
-  {{- $ordered := cond $dated (sort .Pages "Date" "desc") (sort .Pages "Title") }}
-  {{ partial "index-table.html" (dict "pages" $ordered "trail" "price_from") }}
+   {{- $ordered := cond $dated (sort .Pages "Date" "desc") .Pages.ByWeight }}
+   {{- $paged := .Paginate $ordered }}
+   {{ partial "index-table.html" (dict "pages" $paged.Pages "trail" "price_from" "previews" .Params.previews) }}
+   {{ partial "pager.html" . }}
   {{- else }}<p class="hint">Nothing here yet.</p>{{ end }}
 {{ end }}
 

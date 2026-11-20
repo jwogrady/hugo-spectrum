@@ -1,0 +1,3 @@
+{{- $url := .Params.download -}}
+{{- with .Resources.GetMatch $url }}{{ $url = .RelPermalink }}{{ else }}{{ $url = $url | relURL }}{{ end -}}
+{{- return $url -}}

@@ -10,6 +10,10 @@
                was two registers in three lines. */ -}}
         <p class="site-foot__notice">&copy; {{ now.Year }} {{ or site.Params.spectrum.copyright site.Params.spectrum.owner site.Title }}</p>
         {{- with site.Params.spectrum.footerNote }}<p class="hint">{{ . }}</p>{{ end }}
+        <nav class="publication-links" aria-label="Publication feeds">
+          {{ with site.Home.OutputFormats.Get "rss" }}<a href="{{ .RelPermalink }}">Journal RSS</a>{{ end }}
+          {{ with site.GetPage (or site.Params.spectrum.labSection "lab-notes") }}{{ with .OutputFormats.Get "rss" }}<a href="{{ .RelPermalink }}">Lab Notes RSS</a>{{ end }}{{ end }}
+        </nav>
         {{- /* Authorship, under the copyright it belongs beside. It used to
                restate the theme's own copyright here, which on any site
                owned by Status26 printed the same notice twice in one column

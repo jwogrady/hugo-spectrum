@@ -45,6 +45,62 @@ is built on them:
 | an `archives` taxonomy, one term per year, month and day, under `/archives/` | linked day heads, and previous/next that cannot walk into an empty calendar |
 | `timeZone`, mirrored to `params.spectrum.timezone` | every date on the site, and the clock |
 
+### Optional working log and document previews
+
+The homepage remains the Journal. Its collection is configurable with
+`params.spectrum.journalSection` (default `posts`). A separate section can use
+`layout = 'log'` for short, chronological working notes. Set
+`params.spectrum.labSection` to its section name (default `lab-notes`).
+No archive is automatically moved or reclassified. Both collections retain
+their page URLs; timestamps include the publication zone on Lab Notes.
+
+```toml
+# content/lab-notes/_index.md front matter
+title = 'Lab Notes'
+layout = 'log'
+columns = 'two'
+```
+
+Each note is an ordinary Hugo page, ideally a leaf bundle for its evidence.
+`<!--more-->` chooses the authored feed excerpt; otherwise Hugo's summary is
+used. The feed is paginated newest-first and links to the complete entry.
+Dates, `tags`, optional `projects` (a taxonomy declared by the site), and
+`related` (page paths or existing citation handles) connect the records.
+Related links include backlinks and are resolved only against pages visible
+in the current build. Draft titles cannot leak through those links.
+
+`{{< cite "/lab-notes/an-observation#finding" "the finding" >}}` links a note
+or anchor; `{{< cite "JRN 26-001" >}}` resolves an existing handle. A missing
+target, including an unpublished draft in a production build, is a build
+error. Keep referenced heading IDs stable once published.
+
+The homepage RSS feed is Journal-only, each section has its own feed, and
+taxonomy feeds include that taxonomy's visible records. Shared tag, archive
+and project indexes label Journal and Lab Notes separately. The theme adds
+neither search nor a JavaScript dependency for these features.
+
+For an illustrated reference index, set `previews = true` on a section.
+`index-table.html` retains the publication rows and inserts a small plate
+beside each record. Image selection is explicit `preview`, then `cover`,
+then `featured_image`; these are local page-resource or assets paths, or
+resource paths from another visible page. Missing or unsupported images use
+a labelled typographic plate. Raster previews use WebP derivatives, srcset,
+fixed dimensions and lazy loading; there is no remote fetch or document
+conversion service. Previews duplicate the linked title, so they are hidden
+from assistive technology rather than adding a second announcement.
+
+`description` supplies the short document explanation; optional `format`,
+`lastmod` and `download` supply real metadata. A page and a download can
+coexist: the title opens the page, and a separate link opens the download.
+Bundle downloads resolve as page resources, not relative to the index URL.
+Use `lastmod` only for an actual revision; equal creation/modification dates
+do not get an invented “Updated” label on dated entries.
+
+Capture, privacy review, draft defaults and publication approval remain the
+consuming site's responsibility. Spectrum never talks to Logseq, runs a
+notebook, reads a secret, or changes a draft flag. The demo includes working
+examples under `exampleSite/content/lab-notes/` and `docs/publication/`.
+
 `exampleSite/hugo.toml` is the shortest complete statement of it. Sections
 beyond `posts`, weights, menus and permalinks are yours, and a page gets
 whatever its own front matter asks for — `claim`, `resolves`, `sku`,

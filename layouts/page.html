@@ -8,15 +8,20 @@
     {{- $grad := partial "tags/title-gradient.html" (dict "page" .) }}
     <h1{{ with $grad }} class="spectral" style="--title-gradient:{{ . | safeCSS }}"{{ end }}>{{ .Title }}</h1>
     {{ partial "entry-meta.html" . }}
+    {{- if eq (partial "entry-kind.html" .) "Lab note" }}{{ partial "record-meta.html" . }}{{ end }}
+    {{- if and (eq (partial "entry-kind.html" .) "Journal") .Description }}<p class="entry-summary">{{ .Description }}</p>{{ end }}
     {{- with .Params.claim }}<p class="claim standout">{{ . }}</p>{{ end }}
     {{- with .Params.featured_image }}{{ with $.Resources.Get . }}{{ partial "figure.html" (dict "resource" .) }}{{ end }}{{ end }}
+    {{- if and (gt .WordCount 600) (findRE "<li>" .TableOfContents) }}<details class="reading-tools"><summary>On this page · {{ .ReadingTime }} min read</summary>{{ .TableOfContents }}</details>{{ end }}
     {{ .Content }}
+    {{- with .Params.download }}<p><a href="{{ partial "download-url.html" $ }}">Download {{ or $.Params.format "document" | upper }}</a></p>{{ end }}
     {{- with .Params.tags }}<div class="index__tags">{{ partial "tags/list.html" (dict "page" $) }}</div>{{ end }}
     {{- /* Documents carry their revision record; records do not. A post is
            what is published now, and one edited after its date has just been
            edited. A page is a standard, and changing a standard quietly is
            the thing the convention exists to prevent. */ -}}
     {{- if ne .Section "posts" }}{{ partial "revisions.html" . }}{{ end }}
+    {{ partial "related.html" . }}
   </article>
 {{ end }}
 

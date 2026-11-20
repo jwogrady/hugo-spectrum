@@ -47,7 +47,7 @@
        page claiming to be documentation. */ -}}
 {{- if eq $p.Layout "conversion" }}{{ $kind = "ItemPage" }}
 {{- else if eq $p.Layout "landing" }}{{ $kind = "WebPage" }}
-{{- else if and $p.IsPage (not $p.Date.IsZero) (eq $p.Section "posts") }}{{ $kind = "BlogPosting" }}
+{{- else if and $p.IsPage (not $p.Date.IsZero) (in (slice "Journal" "Lab note") (partial "entry-kind.html" $p)) }}{{ $kind = "BlogPosting" }}
 {{- else if and $p.IsPage (partial "branch-root.html" $p) }}{{ $kind = "TechArticle" }}
 {{- else if not $p.IsPage }}{{ $kind = "CollectionPage" }}{{ end -}}
 {{- if $p.Params.form }}{{ $kind = "ContactPage" }}{{ end -}}

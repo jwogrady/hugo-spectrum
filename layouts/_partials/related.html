@@ -1,0 +1,23 @@
+{{- $page := . -}}
+{{- $related := slice -}}
+{{- range .Params.related -}}
+  {{- with partial "resolve-reference.html" . }}{{ if ne . $page }}{{ $related = $related | append . }}{{ end }}{{ end -}}
+{{- end -}}
+{{- /* Only pages present in this build may contribute backlinks or titles.
+       A public page must never advertise a private draft. */ -}}
+{{- range site.RegularPages -}}
+  {{- $candidate := . -}}
+  {{- range .Params.related -}}
+    {{- with partial "resolve-reference.html" . -}}
+      {{- if eq . $page }}{{ $related = $related | append $candidate }}{{ end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $projects := .GetTerms "projects" -}}
+{{- if or $related $projects -}}
+<nav class="related-work" aria-label="Related work">
+  <h2>Related work</h2>
+  {{- with $projects }}<p class="record-meta">Projects: {{ range . }}<a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>{{ end }}</p>{{ end -}}
+  {{- with $related }}<ul>{{ range uniq . }}<li><a href="{{ .RelPermalink }}">{{ .Title }}</a> <span class="hint">{{ partial "entry-kind.html" . }}</span></li>{{ end }}</ul>{{ end -}}
+</nav>
+{{- end -}}

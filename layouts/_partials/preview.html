@@ -1,0 +1,25 @@
+{{- /* Local resources only. Never fetch a remote image during a build.
+       Explicit preview > cover > featured_image. A declared but missing
+       image deliberately falls back to the document plate. */ -}}
+{{- $p := . -}}
+{{- $src := or .Params.preview .Params.cover .Params.featured_image -}}
+{{- $image := false -}}
+{{- with $src -}}
+  {{- $image = $p.Resources.GetMatch . -}}
+  {{- if not $image }}{{ $image = resources.Get (strings.TrimPrefix "/" .) }}{{ end -}}
+  {{- if not $image -}}
+    {{- with site.GetPage (path.Dir .) }}{{ $image = .Resources.GetMatch (path.Base $src) }}{{ end -}}
+  {{- end -}}
+{{- end -}}
+<span class="doc-preview" aria-hidden="true">
+{{- if and $image (in (slice "image/jpeg" "image/png" "image/webp" "image/gif") $image.MediaType.Type) -}}
+  {{- $small := $image.Fit "160x120 webp q78" -}}
+  {{- $large := $image.Fit "320x240 webp q78" -}}
+  <img src="{{ $small.RelPermalink }}" srcset="{{ $small.RelPermalink }} {{ $small.Width }}w, {{ $large.RelPermalink }} {{ $large.Width }}w"
+       sizes="(max-width: 44rem) 68px, 110px" width="{{ $small.Width }}" height="{{ $small.Height }}"
+       alt="" loading="lazy" decoding="async">
+{{- else -}}
+  <span class="doc-preview__format">{{ or $p.Params.format "HTML" | upper }}</span>
+  <span class="doc-preview__title">{{ $p.LinkTitle }}</span>
+{{- end -}}
+</span>

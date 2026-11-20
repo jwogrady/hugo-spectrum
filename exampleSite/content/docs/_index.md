@@ -1,6 +1,7 @@
 +++
 title       = "Docs"
 description = "How the log is kept: the procedure, the conventions, and how to cite an entry."
+previews = true
 +++
 
 Pages nest; the journal does not. An entry is flat, dated and tagged, and the

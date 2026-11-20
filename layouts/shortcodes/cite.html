@@ -1,0 +1,10 @@
+{{- $ref := .Get 0 -}}
+{{- $parts := split $ref "#" -}}
+{{- $p := partial "resolve-reference.html" (index $parts 0) -}}
+{{- if not $p -}}
+  {{- errorf "Unresolved citation %q in %s (the target must be visible in this build)" $ref .Page.Path -}}
+{{- else -}}
+  {{- $href := $p.RelPermalink -}}
+  {{- if gt (len $parts) 1 }}{{ $href = printf "%s#%s" $href (index $parts 1 | urlize) }}{{ end -}}
+  <a href="{{ $href }}">{{ or (.Get 1) $p.Params.resolves $p.Title }}</a>
+{{- end -}}

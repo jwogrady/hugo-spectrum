@@ -1,7 +1,9 @@
 {{ define "main" }}
-{{- $posts := where site.RegularPages "Section" "posts" -}}
+{{- $posts := where site.RegularPages "Section" (or site.Params.spectrum.journalSection "posts") -}}
 {{ partial "page-head.html" (dict "page" . "crumb" false
      "title" "Journal") }}
+<div class="prose">{{ .Content }}</div>
+{{ with .OutputFormats.Get "rss" }}<p class="publication-links"><a href="{{ .RelPermalink }}">Subscribe to Journal · RSS</a></p>{{ end }}
 {{- if $posts }}
 {{- $paged := .Paginate (sort $posts "Date" "desc") }}
 {{ partial "index-table.html" (dict "pages" $paged.Pages) }}

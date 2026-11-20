@@ -1,0 +1,25 @@
+{{ define "main" }}
+  {{ partial "page-head.html" (dict "page" .) }}
+  <div class="prose">{{ .Content }}</div>
+  {{ with .OutputFormats.Get "rss" }}<p class="publication-links"><a href="{{ .RelPermalink }}">Subscribe to Lab Notes · RSS</a></p>{{ end }}
+  {{- $notes := .RegularPagesRecursive.ByDate.Reverse -}}
+  {{- if $notes -}}
+  {{- $paged := .Paginate $notes -}}
+  <div class="lab-log">
+    {{- range $paged.Pages -}}
+    <article class="lab-log__entry" id="{{ .File.ContentBaseName | urlize }}">
+      {{ partial "entry-meta.html" . }}
+      <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
+      {{ partial "record-meta.html" . }}
+      <div class="prose">{{ .Summary }}</div>
+      {{ partial "tags/list.html" (dict "page" .) }}
+      <p class="publication-links"><a href="{{ .RelPermalink }}">Open complete note<span class="u-sr">: {{ .Title }}</span></a></p>
+    </article>
+    {{- end -}}
+  </div>
+  {{ partial "pager.html" . }}
+  {{- else -}}
+  <p class="hint">No published notes yet. Working notes stay local until explicitly published.</p>
+  {{- end -}}
+{{ end }}
+{{ define "aside" }}{{ partialCached "aside.html" (dict "current" "" "limit" 24) "" 24 }}{{ end }}

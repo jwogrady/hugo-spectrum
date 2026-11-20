@@ -1,0 +1,8 @@
+{{- $ref := . -}}
+{{- $p := site.GetPage $ref -}}
+{{- if not $p -}}
+  {{- range site.RegularPages -}}
+    {{- if or (eq .Params.resolves $ref) (in (.Aliases | default slice) $ref) }}{{ $p = . }}{{ end -}}
+  {{- end -}}
+{{- end -}}
+{{- return $p -}}

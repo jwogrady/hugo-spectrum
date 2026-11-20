@@ -24,6 +24,7 @@
 {{- return (slice $fonts
       (resources.Get "css/tokens.css")
       (resources.Get "css/base.css")
-      (resources.Get "css/components.css")
+       (resources.Get "css/components.css")
+       (resources.Get "css/publication.css")
       (resources.Get "css/print.css")
     | resources.Concat "css/spectrum.css" | fingerprint) -}}

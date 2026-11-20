@@ -1,0 +1,26 @@
+{{- $pages := .RegularPagesRecursive -}}
+{{- if .IsHome }}{{ $pages = where site.RegularPages "Section" (or site.Params.spectrum.journalSection "posts") }}{{ end -}}
+{{- $pages = $pages.ByDate.Reverse -}}
+{{- $limit := site.Config.Services.RSS.Limit -}}
+{{- if ge $limit 0 }}{{ $pages = first $limit $pages }}{{ end -}}
+{{ printf "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>" | safeHTML }}
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+  <title>{{ if .IsHome }}Journal{{ else }}{{ .Title }}{{ end }} — {{ site.Title }}</title>
+  <link>{{ .Permalink }}</link>
+  <description>{{ or .Description site.Params.description }}</description>
+  <generator>Hugo</generator>
+  <language>{{ site.Language.Locale | default "en-us" }}</language>
+  {{ with .OutputFormats.Get "rss" }}<atom:link href="{{ .Permalink }}" rel="self" type="application/rss+xml"/>{{ end }}
+  {{ range $pages }}
+  <item>
+    <title>{{ .Title }}</title>
+    <link>{{ .Permalink }}</link>
+    <guid isPermaLink="true">{{ .Permalink }}</guid>
+    {{ if not .Date.IsZero }}<pubDate>{{ .Date.Format "Mon, 02 Jan 2006 15:04:05 -0700" }}</pubDate>{{ end }}
+    {{ range .Params.tags }}<category>{{ . }}</category>{{ end }}
+    <description>{{ printf "%s: %s" (partial "entry-kind.html" .) (or .Description (.Summary | plainify)) }}</description>
+  </item>
+  {{ end }}
+</channel>
+</rss>

@@ -5,7 +5,7 @@
   {{- /* The publication's zone, like everywhere else. Formatting the stored
          date here put an entry filed at 00:17 UTC under September 20 on its
          own page and 19 SEP in the journal — the same entry, two dates. */ -}}
-  <time datetime="{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}">{{ (time.In (or site.Params.spectrum.timezone "UTC") .Date).Format "January 2, 2006" }}</time>
+  <time datetime="{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}">{{ (time.In (or site.Params.spectrum.timezone "UTC") .Date).Format "January 2, 2006" }}{{ if eq (partial "entry-kind.html" .) "Lab note" }} · {{ (time.In (or site.Params.spectrum.timezone "UTC") .Date).Format "15:04 MST" }}{{ end }}</time>
   {{- end }}
 
   {{- with .Params.price_from }}

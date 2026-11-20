@@ -21,6 +21,7 @@
 {{- $pages := .pages -}}
 {{- $tags  := ne .tags false -}}
 {{- $trail := .trail -}}
+{{- $previews := .previews -}}
 {{- /* The publication's zone, mirrored from site timeZone. Not .Local: that
        is the build machine's zone, so the same commit grouped entries one way
        on a laptop in Chicago and another in a UTC runner. */ -}}
@@ -90,6 +91,9 @@
       {{- else }}<td class="index__time"><time datetime="{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}">{{ (time.In $tz .Date).Format "15:04" }}</time></td>{{ end }}
       {{- end }}
       <td>
+        <div class="index__record{{ if $previews }} index__record--preview{{ end }}">
+        {{ if $previews }}{{ partial "preview.html" . }}{{ end }}
+        <div>
         {{- /* The gradient is the same object in both views: an entry's
                headline carries its own subjects here and on its own page, so
                a title a reader recognises in the index is the title they
@@ -110,8 +114,12 @@
                fill with paragraphs that break mid-sentence. A row with
                nothing authored about it stays bare. */ -}}
         {{- with or .Params.claim .Params.excerpt .Description }}<p class="index__claim">{{ . }}</p>{{ end }}
+        {{- if or $previews (ne (partial "entry-kind.html" .) "Document") }}{{ partial "record-meta.html" . }}{{ end }}
+        {{- with .Params.download }}<p class="publication-links"><a href="{{ partial "download-url.html" $entry }}">Download {{ or $entry.Params.format "document" | upper }}</a></p>{{ end }}
         {{- if $tags }}{{ partial "tags/list.html" (dict "page" .) }}{{ end }}
         {{- with $trail }}{{ with (index $entry.Params .) }}<p class="index__trail"><span class="ref">from {{ . }}</span></p>{{ end }}{{ end }}
+        </div>
+        </div>
       </td>
     </tr>
     {{- end }}

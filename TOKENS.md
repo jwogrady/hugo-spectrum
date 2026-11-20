@@ -44,6 +44,21 @@ runs, in the publication's zone.
 
 ## Resize the scale
 
+Document previews reuse the space ladder (`--s17` on desktop, `--s15` on
+mobile); their text uses the same ink and surface tokens as the rest of the
+publication. There is no new palette or card system. `css/publication.css`
+contains the preview-row, working-log, related-work and reading-outline rules.
+
+```toml
+[params.spectrum]
+  journalSection = 'posts'
+  labSection = 'lab-notes'
+```
+
+For the section and front-matter contracts (`preview`, `format`, `download`,
+`related`, `projects`), see README's “Optional working log and document
+previews”. These are content choices, not CSS overrides.
+
 Type, space and the column frame all come from one ratio. The ladder is
 stated by index in `tokens.css` (`--s1`..`--s18`) with roles naming the steps
 the layout uses most, and `check.sh` fails the build on any length that is
