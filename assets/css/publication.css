@@ -16,11 +16,13 @@
   font-family: var(--font-sans); font-size: var(--size-xs); line-height: var(--lh-label);
   color: var(--ink-faint); margin: var(--s7) 0;
 }
-.lab-log__entry { border-top: var(--rule-hair) solid var(--rule-strong); padding-block: var(--space-block); }
-.lab-log { display: block; }
+.lab-log { display: block; min-width: 0; }
+.lab-log__entry { border-top: var(--rule-hair) solid var(--rule-strong); padding-block: var(--space-block); min-width: 0; }
 .lab-log__entry h2 { margin-top: 0; font-size: var(--size-lg); line-height: var(--lh-snug); }
 .lab-log__entry .meta { margin-bottom: var(--s7); }
-.lab-log__entry .prose { margin-block: var(--s9); }
+.lab-log__entry .prose { margin-block: var(--s9); min-width: 0; max-width: 100%; }
+.lab-log__entry .prose pre { max-width: 100%; }
+.lab-log__entry .prose pre code { white-space: pre; overflow-wrap: normal; word-break: normal; }
 .related-work { margin-top: var(--space-section); border-top: var(--rule-hair) solid var(--rule); }
 .related-work h2 { font-size: var(--size-lg); line-height: var(--lh-snug); }
 .related-work li { margin-bottom: var(--s7); }

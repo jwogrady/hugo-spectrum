@@ -1,0 +1,252 @@
+/* ═══ DOCS — DISTRIBUTABLE DOCUMENT ═════════════════════════════════════
+
+   A reference document, typeset. Reads as an authoritative standing page
+   on the web and prints as a clean standalone PDF.
+
+   The design relies on the publication's existing typography and ink
+   tokens so a document is visually one family with the rest of the site,
+   not a second brand hiding inside it.
+*/
+
+.doc {
+  max-width: var(--measure-tight);
+  counter-reset: doc-h2;
+}
+
+/* Document title block */
+.doc-head {
+  margin-bottom: var(--space-major);
+  padding-bottom: var(--space-item);
+  border-bottom: var(--rule-bold) solid var(--ink);
+}
+.doc-head__eyebrow {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: var(--size-2xs);
+  font-weight: var(--weight-label);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  line-height: var(--lh-label);
+  color: var(--ink-faint);
+  margin-bottom: var(--s5);
+}
+.doc-head__title {
+  font-family: var(--font-serif);
+  font-size: var(--size-3xl);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-nameplate);
+  margin: 0 0 var(--s7);
+  max-width: var(--measure-tight);
+}
+.doc-head__subtitle {
+  font-family: var(--font-serif);
+  font-size: var(--size-lg);
+  line-height: var(--lh-snug);
+  color: var(--ink-soft);
+  margin: 0 0 var(--space-item);
+  max-width: var(--measure);
+}
+.doc-head__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s5) var(--s11);
+  margin: var(--space-item) 0 0;
+  font-family: var(--font-data);
+  font-size: var(--size-2xs);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  line-height: var(--lh-label);
+  color: var(--ink-faint);
+}
+.doc-head__meta time { font-feature-settings: "tnum" 1; }
+.doc-head__meta .rev { color: var(--signal); }
+
+/* The document's own toolbar: print/download actions, right-aligned under
+   the head. Hidden in print. */
+.doc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--s7);
+  margin-top: var(--s7);
+}
+.doc-actions a, .doc-actions button {
+  font-family: var(--font-sans);
+  font-size: var(--size-xs);
+  line-height: var(--lh-label);
+  font-weight: var(--weight-label);
+  letter-spacing: var(--tracking-ref);
+  text-transform: uppercase;
+  color: var(--ink);
+  text-decoration: none;
+  padding: var(--s4) var(--s7);
+  border: var(--rule-hair) solid var(--rule);
+  border-radius: var(--radius-chip);
+  background: none;
+  cursor: pointer;
+}
+.doc-actions a:hover, .doc-actions button:hover {
+  border-color: var(--rule-strong);
+  color: var(--ink);
+}
+
+/* Section numbering. H2s are numbered, h3s are not — because an H3 within
+   a numbered section is a subheading of its section and the reader can
+   follow context without a double number. */
+.doc h2 {
+  counter-increment: doc-h2;
+  counter-reset: doc-h3;
+  font-family: var(--font-serif);
+  font-size: var(--size-xl);
+  line-height: var(--lh-snug);
+  margin: var(--space-section) 0 var(--s7);
+  break-after: avoid-page;
+}
+.doc h2::before {
+  content: counter(doc-h2) ". ";
+  font-family: var(--font-data);
+  font-weight: var(--weight-quiet);
+  color: var(--ink-faint);
+  padding-right: var(--s5);
+}
+.doc h3 {
+  counter-increment: doc-h3;
+  font-family: var(--font-serif);
+  font-size: var(--size-lg);
+  line-height: var(--lh-snug);
+  margin: var(--space-block) 0 var(--s6);
+  break-after: avoid-page;
+}
+.doc h3::before {
+  content: counter(doc-h2) "." counter(doc-h3) " ";
+  font-family: var(--font-data);
+  font-weight: var(--weight-quiet);
+  color: var(--ink-faint);
+  padding-right: var(--s5);
+}
+.doc h4 {
+  font-family: var(--font-sans);
+  font-size: var(--size-sm);
+  line-height: var(--lh-label);
+  font-weight: var(--weight-label);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: var(--space-item) 0 var(--s5);
+}
+
+/* Prose reuses the publication measure. A document is still prose. */
+.doc > .doc-body { max-width: var(--measure); }
+.doc p, .doc li { font-family: var(--font-serif); font-size: var(--size-prose); line-height: var(--lh-prose); text-wrap: pretty; }
+.doc p { margin: 0 0 var(--space-para); }
+
+/* Document table: slightly denser than the publication table, headers
+   repeat on print, and rows carry a hairline above (not below) so the
+   table reads top-down. */
+.doc table { margin: var(--space-block) 0; }
+.doc th { border-bottom: var(--rule-bold) solid var(--ink); }
+.doc td { border-bottom: var(--rule-hair) solid var(--rule); padding-block: var(--s5); }
+
+/* Figure captions are numbered. */
+.doc figure { counter-increment: doc-fig; margin: var(--space-block) 0; }
+.doc figcaption {
+  font-family: var(--font-sans);
+  font-size: var(--size-xs);
+  line-height: var(--lh-label);
+  color: var(--ink-faint);
+  margin-top: var(--s5);
+  padding-left: var(--s7);
+  border-left: var(--rule-hair) solid var(--rule);
+}
+.doc figcaption::before {
+  content: "Fig. " counter(doc-fig) ". ";
+  font-family: var(--font-data);
+  font-weight: var(--weight-label);
+  letter-spacing: var(--tracking-ref);
+  color: var(--ink-soft);
+}
+
+/* Footer of a document carries revision history and canonical URL —
+   renders only when the page provides them. */
+.doc-foot {
+  margin-top: var(--space-section);
+  padding-top: var(--space-item);
+  border-top: var(--rule-bold) solid var(--ink);
+  font-family: var(--font-data);
+  font-size: var(--size-2xs);
+  letter-spacing: var(--tracking-ref);
+  color: var(--ink-faint);
+  line-height: var(--lh-label);
+}
+.doc-foot__row { display: flex; flex-wrap: wrap; gap: var(--s5) var(--s11); margin-top: var(--s5); }
+
+/* Document section index that lives inside the doc (not the aside). */
+.doc-contents {
+  margin: var(--space-block) 0;
+  padding: var(--space-item);
+  border: var(--rule-hair) solid var(--rule);
+  background: var(--surface-raised);
+  max-width: var(--measure);
+}
+.doc-contents__title {
+  font-family: var(--font-sans);
+  font-size: var(--size-2xs);
+  line-height: var(--lh-label);
+  font-weight: var(--weight-label);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 var(--s5);
+}
+.doc-contents ol, .doc-contents ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: toc;
+}
+.doc-contents li {
+  counter-increment: toc;
+  font-family: var(--font-sans);
+  font-size: var(--size-sm);
+  line-height: var(--lh-body);
+  padding: var(--s3) 0;
+  display: flex;
+  gap: var(--s5);
+}
+.doc-contents li::before {
+  content: counter(toc) ".";
+  font-family: var(--font-data);
+  color: var(--ink-faint);
+  min-width: var(--s9);
+  font-variant-numeric: tabular-nums;
+}
+.doc-contents a { color: inherit; text-decoration: none; }
+.doc-contents a:hover { text-decoration: underline; text-decoration-thickness: var(--rule-hair); }
+
+/* ── print ───────────────────────────────────────────────────────────
+   This block runs alongside print.css. It makes a document look like a
+   printed reference instead of a web page. */
+@media print {
+  @page {
+    size: A4;
+    margin: 20mm 18mm 22mm 18mm;
+  }
+  body { background: #fff; color: #000; }
+  .masthead, .site-foot, .spread__aside, .skip, .doc-actions, .publication-links { display: none !important; }
+  .page, .spread { max-width: none; padding: 0; margin: 0; display: block; }
+  .spread__main, main.page { padding: 0; }
+  .doc, .doc > .doc-body { max-width: none; }
+  .doc-head { border-bottom: 1pt solid #000; margin-bottom: 10mm; }
+  .doc-head__title { font-size: 28pt; line-height: var(--lh-tight); }
+  .doc-head__subtitle { font-size: 14pt; line-height: var(--lh-snug); }
+  .doc-head__meta, .doc-contents__title { font-size: 9pt; }
+  .doc h2 { font-size: 16pt; margin-top: 10mm; break-after: avoid-page; break-inside: avoid-page; }
+  .doc h3 { font-size: 13pt; break-after: avoid-page; break-inside: avoid-page; }
+  .doc p, .doc li { font-size: 10.5pt; line-height: var(--lh-body); break-inside: avoid-page; }
+  .doc pre, .doc figure, .doc table { break-inside: avoid-page; }
+  .doc table { width: 100%; }
+  .doc thead { display: table-header-group; }
+  .doc tr, .doc img { break-inside: avoid-page; }
+  .doc a[href^="http"]::after { content: " \2039" attr(href) "\203A"; color: #555; font-size: 0.85em; }
+  .doc-foot { page-break-before: auto; }
+}

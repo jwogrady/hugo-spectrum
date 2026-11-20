@@ -1,0 +1,172 @@
+/* ═══ LAB NOTES — OUTLINER ═════════════════════════════════════════════
+
+   A working notebook, not a blog. Dense, bulleted, dated. The visual signal
+   is a left-edge rail with gutter markers; prose stays in the publication's
+   serif measure because a notebook still has to be readable in a sentence.
+
+   Semantic HTML throughout — real <ul>/<li>, real headings. The outliner
+   look is CSS on ordinary Markdown lists. If a reader switches off styles
+   the content remains a legible dated list of observations.
+*/
+
+.notebook { max-width: var(--measure); }
+
+.notebook > .meta { margin-bottom: var(--space-item); }
+
+/* Headings read as date-separators, not article titles. The h1 of a lab
+   note stays serif (it's still a publication) but at a smaller step. */
+.notebook h1 {
+  font-size: var(--size-2xl);
+  line-height: var(--lh-snug);
+  margin: 0 0 var(--s7);
+}
+.notebook h2 {
+  font-family: var(--font-sans);
+  font-size: var(--size-2xs);
+  line-height: var(--lh-label);
+  font-weight: var(--weight-label);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: var(--space-block) 0 var(--s5);
+  padding-bottom: var(--s4);
+  border-bottom: var(--rule-hair) solid var(--rule);
+}
+.notebook h3 {
+  font-family: var(--font-sans);
+  font-size: var(--size-xs);
+  line-height: var(--lh-label);
+  font-weight: var(--weight-label);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: var(--space-item) 0 var(--s4);
+}
+
+/* Lists are the core. Bullets become compact outline markers, every list
+   item carries a left gutter, and nested lists indent against the gutter
+   so the structure reads as an outline before the words do. */
+.notebook ul, .notebook ol {
+  list-style: none;
+  margin: 0 0 var(--space-item);
+  padding-left: var(--s11);
+  border-left: var(--rule-hair) solid var(--rule);
+}
+.notebook ul ul, .notebook ol ol, .notebook ul ol, .notebook ol ul {
+  margin-top: var(--s4);
+  margin-bottom: var(--s5);
+  padding-left: var(--s10);
+}
+.notebook li {
+  position: relative;
+  font-family: var(--font-serif);
+  font-size: var(--size-prose);
+  line-height: var(--lh-body);
+  margin: var(--s4) 0;
+  padding-left: var(--s7);
+  text-wrap: pretty;
+}
+.notebook li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--ink-faint);
+  font-size: var(--size-base);
+  line-height: var(--lh-body);
+}
+/* Nested bullets use a lighter ring marker: outline structure that doesn't
+   fight the content. */
+.notebook li li::before { content: "◦"; }
+.notebook li li li::before { content: "▸"; font-size: var(--size-2xs); line-height: var(--lh-label); }
+
+/* Ordered lists keep their numerals, right-aligned in the gutter. */
+.notebook ol { counter-reset: n; }
+.notebook ol > li { counter-increment: n; padding-left: var(--s11); }
+.notebook ol > li::before {
+  content: counter(n) ".";
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  width: var(--s10);
+  text-align: right;
+  padding-right: var(--s5);
+  color: var(--ink-faint);
+}
+
+/* Paragraphs inside a list item sit tightly so one observation reads as
+   one block even when it carries a second sentence of evidence. */
+.notebook li > p { margin: 0 0 var(--s4); font-family: var(--font-serif); font-size: var(--size-prose); line-height: var(--lh-body); }
+.notebook li > p:last-child { margin-bottom: 0; }
+
+/* Running prose between lists keeps the serif column but at a slightly
+   shorter leading than the article body, because the notebook mode is
+   denser on purpose. */
+.notebook > p {
+  font-family: var(--font-serif);
+  font-size: var(--size-prose);
+  line-height: var(--lh-body);
+  margin: 0 0 var(--space-item);
+  text-wrap: pretty;
+}
+.notebook > p:first-of-type { margin-top: 0; }
+
+/* Code blocks and figures: the publication's shared rules, but tighter. */
+.notebook pre { margin: var(--s7) 0; padding: var(--s7); font-size: var(--size-xs); line-height: var(--lh-body); }
+.notebook code { font-size: 0.92em; }
+.notebook figure { margin: var(--s9) 0; }
+
+/* Task markers so a lab note can honestly say what state its own experiment
+   is in — rendered from front-matter rather than typed into prose. */
+.state {
+  display: inline-block;
+  font-family: var(--font-data);
+  font-size: var(--size-3xs);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  line-height: var(--lh-label);
+  padding: var(--s1) var(--s5);
+  border: var(--rule-hair) solid var(--rule);
+  border-radius: var(--radius-chip);
+  color: var(--ink-soft);
+  background: var(--surface-raised);
+  margin-right: var(--s5);
+}
+.state--open { border-color: var(--signal); color: var(--signal); }
+.state--done { opacity: 0.7; }
+.state--blocked { border-color: var(--rule-strong); color: var(--ink-faint); }
+
+/* Lab-log entry card on the index already exists; this file only owns the
+   single-page outliner view. */
+
+/* The notebook's own blockquote — for the one place a quoted passage shows
+   up inside otherwise bulleted content. Smaller margin than the article
+   version because it's sitting inside a list gutter. */
+.notebook blockquote {
+  margin: var(--s5) 0;
+  padding: 0 0 0 var(--s7);
+  border-left: var(--rule-bold) solid var(--rule-strong);
+  color: var(--ink-soft);
+}
+
+/* Hairline between entries in the inline log. */
+.lab-log__entry + .lab-log__entry { border-top: var(--rule-hair) solid var(--rule); margin-top: var(--space-block); }
+
+/* The outline toolbar: a small header strip above the content showing
+   date, status, project, and a link back to the log. Uses tabular data
+   face throughout so dates and codes line up. */
+.outline-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s7) var(--s11);
+  align-items: baseline;
+  padding-bottom: var(--s7);
+  margin-bottom: var(--space-item);
+  border-bottom: var(--rule-bold) solid var(--ink);
+  font-family: var(--font-data);
+  font-size: var(--size-2xs);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  line-height: var(--lh-label);
+}
+.outline-head time { color: var(--signal); font-feature-settings: "tnum" 1; }
+.outline-head__kind { color: var(--ink-soft); }

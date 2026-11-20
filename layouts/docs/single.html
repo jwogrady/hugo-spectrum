@@ -1,0 +1,49 @@
+{{ define "main" }}
+  {{ partial "breadcrumb.html" . }}
+  <article class="doc">
+    <header class="doc-head">
+      <span class="doc-head__eyebrow">Technical reference{{ with .Params.serial }} · {{ . }}{{ end }}</span>
+      <h1 class="doc-head__title">{{ .Title }}</h1>
+      {{- with or .Params.subtitle .Description }}<p class="doc-head__subtitle">{{ . }}</p>{{ end }}
+      <div class="doc-head__meta">
+        {{- with site.Params.spectrum.owner }}<span>{{ . }}</span>{{ end }}
+        {{- with .Params.rev }}<span class="rev">Rev {{ . }}</span>{{ end }}
+        {{- $tz := or site.Params.spectrum.timezone "UTC" }}
+        {{- if not .Date.IsZero }}<time datetime="{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}">Issued {{ (time.In $tz .Date).Format "02 Jan 2006" }}</time>{{ end }}
+        {{- if not .Lastmod.IsZero }}{{ if .Lastmod.After .Date }}<time datetime="{{ .Lastmod.Format "2006-01-02T15:04:05Z07:00" }}">Updated {{ (time.In $tz .Lastmod).Format "02 Jan 2006" }}</time>{{ end }}{{ end }}
+      </div>
+      <div class="doc-actions">
+        {{- /* A pre-generated PDF at /static/docs/<path>/document.pdf wins; else fall back to the browser-native print-to-PDF, which still uses the print stylesheet. */ -}}
+        {{- $pdf := printf "/docs/%s/document.pdf" (strings.TrimSuffix "/" (strings.TrimPrefix "/docs/" .RelPermalink)) -}}
+        {{- if fileExists (printf "static%s" $pdf) }}
+        <a href="{{ $pdf | relURL }}" download>Download PDF</a>
+        {{- else }}
+        <button type="button" onclick="window.print()">Print or save PDF</button>
+        {{- end }}
+        {{- with .Params.download }}<a href="{{ partial "download-url.html" $ }}" download>Download source</a>{{ end }}
+      </div>
+    </header>
+    {{- if and (gt .WordCount 400) (findRE "<li>" .TableOfContents) }}
+    <nav class="doc-contents" aria-label="Contents">
+      <p class="doc-contents__title">Contents</p>
+      {{ .TableOfContents }}
+    </nav>
+    {{- end }}
+    <div class="doc-body">
+      {{ .Content }}
+    </div>
+    <footer class="doc-foot">
+      <div class="doc-foot__row">
+        <span>Canonical: <a href="{{ .Permalink }}">{{ .Permalink }}</a></span>
+        {{- with .Params.resolves }}<span>Reference: {{ . }}</span>{{ end }}
+        {{- with .Lastmod }}<span>Last revised {{ (time.In (or site.Params.spectrum.timezone "UTC") .).Format "02 Jan 2006" }}</span>{{ end }}
+      </div>
+    </footer>
+    {{ partial "revisions.html" . }}
+    {{ partial "related.html" . }}
+  </article>
+{{ end }}
+
+{{ define "aside" }}
+  {{- with partial "branch-root.html" . }}{{ partial "page-nav.html" (dict "root" . "current" $) }}{{ end }}
+{{ end }}
